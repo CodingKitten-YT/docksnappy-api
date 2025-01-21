@@ -1,7 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-
+const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -39,6 +39,34 @@ app.get('/apps/:id', (req, res) => {
 
         res.json(app);
     });
+});
+
+app.get('/apps/:id/compose', async (req, res) => {
+  const appId = req.params.id;
+
+  fs.readFile(dataPath, 'utf8', (err, data) => {
+      if (err) {
+          return res.status(500).json({ error: 'Failed to read apps data' });
+      }
+      const appsData = JSON.parse(data);
+      const app = appsData.apps.find(a => a.id === appId);
+
+      if (!app) {
+          return res.status(404).json({ error: 'App not found' });
+      }
+
+      // Generate the jsDelivr URL
+      const jsDelivrUrl = `https://cdn.jsdelivr.net/gh/CodingKitten-YT/docksnappy-api@master/data/apps/${app.name}/docker-compose.yml`;
+
+      // Check if the file exists on GitHub
+      axios.head(jsDelivrUrl)
+          .then(() => {
+              res.json({ url: jsDelivrUrl });
+          })
+          .catch(() => {
+              res.status(404).json({ error: 'Docker Compose file not found for this app' });
+          });
+  });
 });
 
 // Start the server
