@@ -3,13 +3,14 @@ const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 const app = express();
-const PORT = process.env.PORT || 3000;
+const cors = require('cors');
 
 // Path to the apps.json file
 const dataPath = path.join('data', 'apps.json');
 
 // Middleware to parse JSON bodies
 app.use(express.json());
+app.use(cors());
 
 // Route to get all apps
 app.get('/apps', (req, res) => {
@@ -70,6 +71,6 @@ app.get('/apps/:id/compose', async (req, res) => {
 });
 
 // Start the server
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+app.listen(3000, () => {
+    console.log(`Server is running on http://localhost:3000`);
 });
