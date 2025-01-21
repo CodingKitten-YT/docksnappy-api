@@ -10,7 +10,11 @@ const dataPath = path.join('data', 'apps.json');
 
 // Middleware to parse JSON bodies
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    origin: '*', // Allow all origins (or specify your origin)
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allow these methods
+    allowedHeaders: ['Content-Type', 'Authorization'] // Allow these headers
+}));
 
 // Route to get all apps
 app.get('/apps', (req, res) => {
