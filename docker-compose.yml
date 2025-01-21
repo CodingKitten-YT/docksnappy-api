@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  appstore-api:
+    build: .
+    ports:
+      - "3000:3000"  # Map port 3000 on the host to port 3000 in the container
+    volumes:
+      - ./data:/usr/src/app/data  # Mount the local data directory into the container
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped  # Automatically restart the container if it stops
