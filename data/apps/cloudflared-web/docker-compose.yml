@@ -1,0 +1,17 @@
+name: cloudflared-web
+services:
+  cloudflared-web:
+    container_name: cloudflared-web
+    image: wisdomsky/cloudflared-web:2024.12.2
+    restart: unless-stopped
+    network_mode: host
+    environment:
+    - WEBUI_PORT=14333
+    - EDGE_IP_VERSION=auto
+    - PROTOCOL=auto
+    - METRICS_ENABLE=false
+    - METRICS_PORT=60123
+    - BASIC_AUTH_USER=admin
+    - BASIC_AUTH_PASS=""
+    hostname: cloudflared-web
+minVersion: 0.14.0

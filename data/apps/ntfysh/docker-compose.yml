@@ -1,0 +1,21 @@
+name: ntfy
+services:
+  ntfysh:
+    image: binwiederhier/ntfy:v2.11.0
+    command:
+    - serve
+    environment:
+    - TZ=UTC
+    ports:
+    - 7200:80/tcp
+    restart: unless-stopped
+    volumes:
+    - type: volume
+      source: ntfysh-data
+      target: /var/cache/ntfy
+    - type: volume
+      source: ntfysh-data-2
+      target: /etc/ntfy
+    container_name: ntfysh
+    hostname: ntfysh
+minVersion: 0.14.0

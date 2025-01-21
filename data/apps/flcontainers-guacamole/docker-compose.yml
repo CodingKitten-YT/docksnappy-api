@@ -1,0 +1,13 @@
+name: flcontainers-guacamole
+services:
+  flcontainers-guacamole:
+    image: flcontainers/guacamole:1.5.5
+    container_name: flcontainers-guacamole
+    restart: always
+    environment:
+      tz: UTC
+      EXTENSIONS: auth-totp,auth-ldap
+    ports:
+    - 8080:8080
+    hostname: flcontainers-guacamole
+minVersion: 0.14.0

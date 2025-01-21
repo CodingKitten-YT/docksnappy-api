@@ -1,0 +1,12 @@
+name: retroarch-web
+services:
+  retroarch-web:
+    container_name: retroarch-web
+    image: inglebard/retroarch-web:latest
+    restart: unless-stopped
+    environment:
+    - ROOT_WWW_PATH="/var/www/html"
+    ports:
+    - 8080:80
+    hostname: retroarch-web
+minVersion: 0.14.0

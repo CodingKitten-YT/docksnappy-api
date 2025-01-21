@@ -1,0 +1,12 @@
+name: nexterm
+services:
+  nexterm:
+    container_name: nexterm
+    image: germannewsmaker/nexterm:1.0.2-OPEN-PREVIEW
+    restart: unless-stopped
+    volumes:
+    - nexterm-data:/app/data
+    ports:
+    - 6989:6989
+    hostname: nexterm
+minVersion: 0.14.0

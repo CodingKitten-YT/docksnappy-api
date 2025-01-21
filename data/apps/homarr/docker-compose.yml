@@ -1,0 +1,15 @@
+name: homarr
+services:
+  homarr:
+    container_name: homarr
+    image: ghcr.io/ajnart/homarr:0.15.10
+    restart: unless-stopped
+    volumes:
+    - homarr-data:/app/data/configs
+    - homarr-data-2:/app/public/icons
+    - homarr-data-3:/data
+    - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+    - 7575:7575
+    hostname: homarr
+minVersion: 0.14.0

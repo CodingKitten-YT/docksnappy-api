@@ -1,0 +1,20 @@
+name: rocket-chat
+services:
+  rocket-chat:
+    container_name: rocket-chat-app
+    image: rocket.chat:6.13.1
+    restart: unless-stopped
+    environment:
+      MONGO_OPLOG_URL: mongodb://db:27017/local
+      ROOT_URL: http://localhost:3000
+    ports:
+    - 3000:3000
+    depends_on:
+    - rocket-chat-app-db
+    networks:
+    - rocketchat-net
+    hostname: rocket-chat-app
+networks:
+  rocketchat-net:
+    driver: bridge
+minVersion: 0.14.0

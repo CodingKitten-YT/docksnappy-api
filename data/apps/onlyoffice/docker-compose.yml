@@ -1,0 +1,16 @@
+name: onlyoffice
+services:
+  onlyoffice:
+    image: onlyoffice/documentserver:8.2.2
+    container_name: onlyoffice
+    ports:
+    - 7400:80
+    volumes:
+    - onlyoffice-data:/var/log/onlyoffice
+    - onlyoffice-data-2:/var/www/onlyoffice/Data
+    - onlyoffice-data-3:/var/lib/onlyoffice
+    - onlyoffice-data-4:/var/lib/rabbitmq
+    - onlyoffice-data-5:/var/lib/redis
+    - onlyoffice-data-6:/var/lib/postgresql
+    hostname: onlyoffice
+minVersion: 0.14.0

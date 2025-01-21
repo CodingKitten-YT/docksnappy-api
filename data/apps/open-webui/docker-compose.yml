@@ -1,0 +1,15 @@
+name: open-webui
+services:
+  open-webui:
+    container_name: open-webui
+    image: ghcr.io/open-webui/open-webui:git-33e54a9
+    restart: unless-stopped
+    volumes:
+    - open-webui-data:/app/backend/data
+    environment:
+    - OLLAMA_BASE_URL=
+    - OPENAI_API_KEY=
+    ports:
+    - 8080:8080
+    hostname: open-webui
+minVersion: 0.14.0

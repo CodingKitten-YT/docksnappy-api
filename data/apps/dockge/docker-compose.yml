@@ -1,0 +1,16 @@
+name: dockge
+services:
+  dockge:
+    container_name: dockge
+    image: louislam/dockge:1.4.2
+    environment:
+      DOCKGE_STACKS_DIR: /DATA/AppData/big-bear-dockge/stacks
+    restart: unless-stopped
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - dockge-data:/app/data
+    - dockge-data-2:/DATA/AppData/big-bear-dockge/stacks
+    ports:
+    - 5001:5001
+    hostname: dockge
+minVersion: 0.14.0

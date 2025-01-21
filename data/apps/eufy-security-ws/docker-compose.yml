@@ -1,0 +1,16 @@
+name: eufy-security-ws
+services:
+  eufy-security-ws:
+    container_name: eufy-security-ws
+    image: bropat/eufy-security-ws:1.9.1
+    environment:
+      USERNAME: '[EUFY_USERNAME]'
+      PASSWORD: '[EUFY_PASSWORD]'
+      COUNTRY: US
+      LANGUAGE: en
+    restart: unless-stopped
+    volumes:
+    - eufy-security-ws-data:/data
+    network_mode: host
+    hostname: eufy-security-ws
+minVersion: 0.14.0

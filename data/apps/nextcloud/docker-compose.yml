@@ -1,0 +1,32 @@
+name: nextcloud
+services:
+  nextcloud:
+    container_name: nextcloud-nextcloud
+    image: bigbeartechworld/big-bear-nextcloud-with-smbclient:0.0.4
+    restart: unless-stopped
+    ports:
+    - 7580:80
+    volumes:
+    - nextcloud-nextcloud-nextcloud-data:/var/www/html
+    environment:
+    - POSTGRES_HOST=nextcloud-nextcloud-db-nextcloud
+    - REDIS_HOST=nextcloud-nextcloud-redis-nextcloud
+    - POSTGRES_PASSWORD=casaos
+    - POSTGRES_USER=casaos
+    - POSTGRES_DB=nextcloud
+    - NEXTCLOUD_ADMIN_USER=casaos
+    - NEXTCLOUD_ADMIN_PASSWORD=casaos
+    - TRUSTED_PROXIES=
+    - OVERWRITEPROTOCOL=http
+    - PHP_MEMORY_LIMIT=1024M
+    - PHP_UPLOAD_LIMIT=1024M
+    depends_on:
+    - nextcloud-nextcloud-db-nextcloud
+    - nextcloud-nextcloud-redis-nextcloud
+    networks:
+    - nextcloud_network
+    hostname: nextcloud-nextcloud
+networks:
+  nextcloud_network:
+    driver: bridge
+minVersion: 0.14.0

@@ -1,0 +1,17 @@
+name: obsidian
+services:
+  obsidian:
+    container_name: obsidian
+    image: linuxserver/obsidian:1.7.7
+    restart: unless-stopped
+    environment:
+    - PUID=1000
+    - PGID=1000
+    - TZ=Etc/UTC
+    volumes:
+    - obsidian-data:/config
+    ports:
+    - 3000:3000
+    - 3001:3001
+    hostname: obsidian
+minVersion: 0.14.0

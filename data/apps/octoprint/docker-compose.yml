@@ -1,0 +1,12 @@
+name: octoprint
+services:
+  octoprint:
+    container_name: octoprint
+    image: octoprint/octoprint:1.10.3
+    restart: unless-stopped
+    volumes:
+    - octoprint-data:/octoprint
+    ports:
+    - 1080:80
+    hostname: octoprint
+minVersion: 0.14.0

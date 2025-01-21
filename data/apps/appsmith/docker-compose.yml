@@ -1,0 +1,13 @@
+name: appsmith
+services:
+  appsmith:
+    image: appsmith/appsmith-ce:v1.53.1
+    container_name: appsmith
+    ports:
+    - 1080:80
+    - 10443:443
+    volumes:
+    - appsmith-data:/appsmith-stacks
+    restart: unless-stopped
+    hostname: appsmith
+minVersion: 0.14.0

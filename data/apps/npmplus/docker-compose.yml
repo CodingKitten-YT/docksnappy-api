@@ -1,0 +1,13 @@
+name: npmplus
+services:
+  npmplus:
+    container_name: npmplus
+    image: zoeyvid/npmplus:427
+    restart: unless-stopped
+    network_mode: host
+    environment:
+    - TZ=America/Chicago
+    volumes:
+    - npmplus-data:/data
+    hostname: npmplus
+minVersion: 0.14.0

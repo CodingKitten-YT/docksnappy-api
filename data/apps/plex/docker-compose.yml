@@ -1,0 +1,19 @@
+name: plex
+services:
+  plex:
+    container_name: plex
+    image: linuxserver/plex:1.41.3
+    environment:
+    - PUID=1000
+    - PGID=1000
+    - TZ=Etc/UTC
+    - VERSION=docker
+    - PLEX_CLAIM=
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+    - plex-data:/config
+    - plex-data-2:/tv
+    - plex-data-3:/movies
+    hostname: plex
+minVersion: 0.14.0

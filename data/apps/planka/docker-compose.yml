@@ -1,0 +1,29 @@
+name: planka
+services:
+  planka:
+    container_name: planka-big-bear-planka
+    image: ghcr.io/plankanban/planka:1.24.3
+    restart: unless-stopped
+    volumes:
+    - planka-big-bear-planka-big-bear-planka-data:/app/public/user-avatars
+    - planka-big-bear-planka-big-bear-planka-data-2:/app/public/project-background-images
+    - planka-big-bear-planka-big-bear-planka-data-3:/app/private/attachments
+    ports:
+    - 3000:1337
+    environment:
+    - BASE_URL=http://[YOUR_CASAOS_LAN_IP]:3000
+    - DATABASE_URL=postgresql://postgres@planka-big-bear-planka-big-bear-planka-postgres/planka
+    - SECRET_KEY=notsecretkey
+    - DEFAULT_ADMIN_EMAIL=demo@demo.demo
+    - DEFAULT_ADMIN_PASSWORD=demo
+    - DEFAULT_ADMIN_NAME=Demo Demo
+    - DEFAULT_ADMIN_USERNAME=demo
+    networks:
+    - big-bear-planka-network
+    depends_on:
+    - planka-big-bear-planka-big-bear-planka-postgres
+    hostname: planka-big-bear-planka
+networks:
+  big-bear-planka-network:
+    driver: bridge
+minVersion: 0.14.0

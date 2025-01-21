@@ -1,0 +1,12 @@
+name: homepage
+services:
+  Homepage:
+    image: ghcr.io/gethomepage/homepage:v0.10.9
+    container_name: Homepage
+    ports:
+    - 3000:3000
+    volumes:
+    - Homepage-data:/app/config
+    - /var/run/docker.sock:/var/run/docker.sock
+    hostname: Homepage
+minVersion: 0.14.0

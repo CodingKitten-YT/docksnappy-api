@@ -1,0 +1,14 @@
+name: python-matter-server
+services:
+  python-matter-server:
+    image: ghcr.io/home-assistant-libs/python-matter-server:7.0.1
+    container_name: python-matter-server
+    restart: unless-stopped
+    network_mode: host
+    security_opt:
+    - apparmor:unconfined
+    volumes:
+    - python-matter-server-data:/data/
+    - /run/dbus:/run/dbus:ro
+    hostname: python-matter-server
+minVersion: 0.14.0

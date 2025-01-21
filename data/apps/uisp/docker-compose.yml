@@ -1,0 +1,15 @@
+name: uisp
+services:
+  uisp:
+    container_name: uisp
+    image: nico640/docker-unms:2.4.155.1
+    restart: unless-stopped
+    environment:
+    - TZ=UTC
+    volumes:
+    - uisp-data:/config
+    ports:
+    - 8080:80
+    - 10443:443
+    hostname: uisp
+minVersion: 0.14.0

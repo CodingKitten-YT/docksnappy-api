@@ -1,0 +1,10 @@
+name: excalidraw
+services:
+  excalidraw:
+    container_name: excalidraw
+    image: excalidraw/excalidraw:latest
+    restart: unless-stopped
+    ports:
+    - 8000:80
+    hostname: excalidraw
+minVersion: 0.14.0

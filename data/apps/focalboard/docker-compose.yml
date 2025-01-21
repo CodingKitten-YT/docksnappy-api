@@ -1,0 +1,13 @@
+name: focalboard
+services:
+  focalboard:
+    container_name: focalboard
+    image: mattermost/focalboard:7.11.4
+    restart: unless-stopped
+    ports:
+    - 8000:8000
+    network_mode: bridge
+    volumes:
+    - focalboard-data:/opt/focalboard/data
+    hostname: focalboard
+minVersion: 0.14.0

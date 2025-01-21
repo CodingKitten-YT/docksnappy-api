@@ -1,0 +1,17 @@
+name: ollama-cpu
+services:
+  ollama-cpu:
+    container_name: ollama-cpu
+    image: ollama/ollama:0.5.7
+    restart: unless-stopped
+    environment:
+    - PORT=11434
+    volumes:
+    - ollama-cpu-data:/root/.ollama
+    ports:
+    - 11434:11434
+    devices:
+    - /dev/kfd
+    - /dev/dri
+    hostname: ollama-cpu
+minVersion: 0.14.0

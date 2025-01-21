@@ -1,0 +1,17 @@
+name: zigbee2mqtt
+services:
+  zigbee2mqtt:
+    container_name: zigbee2mqtt
+    image: koenkk/zigbee2mqtt:2.0.0
+    restart: unless-stopped
+    volumes:
+    - zigbee2mqtt-data:/app/data
+    - /run/udev:/run/udev:ro
+    ports:
+    - 8080:8080
+    environment:
+    - TZ=UTC
+    devices:
+    - /dev/serial/by-id/usb-Texas_Instruments_TI_CC2531_USB_CDC___0X00124B0018ED3DDF-if00:/dev/ttyACM0
+    hostname: zigbee2mqtt
+minVersion: 0.14.0

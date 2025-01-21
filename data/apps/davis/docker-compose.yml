@@ -1,0 +1,35 @@
+name: davis
+services:
+  davis:
+    container_name: davis-big-bear-davis
+    image: ghcr.io/tchapi/davis-standalone:5.0.2
+    restart: unless-stopped
+    environment:
+    - APP_ENV=prod
+    - DATABASE_DRIVER=mysql
+    - DATABASE_URL=mysql://bigbear:0c9d2acc-d4f3-423c-8361-86f35cdd3eb2@big-bear-davis-mysql:3306/davis?serverVersion=10.6.10&charset=utf8mb4
+    - MAILER_DSN=smtp://:@big-bear-davis-mailpit:1025
+    - ADMIN_LOGIN=bigbear
+    - ADMIN_PASSWORD=aa9405b8-426c-41a1-bbc6-2924d8ec7eb3
+    - AUTH_REALM=
+    - AUTH_METHOD=
+    - CALDAV_ENABLED=
+    - CARDDAV_ENABLED=
+    - WEBDAV_ENABLED=
+    - WEBDAV_TMP_DIR=
+    - WEBDAV_PUBLIC_DIR=
+    - WEBDAV_HOMES_DIR=
+    - INVITE_FROM_ADDRESS=
+    - APP_TIMEZONE=UTC
+    ports:
+    - 9000:9000
+    networks:
+    - big-bear-davis-network
+    depends_on:
+    - davis-big-bear-davis-big-bear-davis-mysql
+    - davis-big-bear-davis-big-bear-davis-mailpit
+    hostname: davis-big-bear-davis
+networks:
+  big-bear-davis-network:
+    driver: bridge
+minVersion: 0.14.0

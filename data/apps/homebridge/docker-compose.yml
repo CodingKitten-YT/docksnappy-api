@@ -1,0 +1,14 @@
+name: homebridge
+services:
+  homebridge:
+    container_name: homebridge
+    image: homebridge/homebridge:2024-05-02
+    restart: unless-stopped
+    environment:
+    - TZ=UTC
+    privileged: true
+    network_mode: host
+    volumes:
+    - homebridge-data:/homebridge
+    hostname: homebridge
+minVersion: 0.14.0

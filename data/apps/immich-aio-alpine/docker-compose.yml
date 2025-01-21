@@ -1,0 +1,36 @@
+name: immich-aio-alpine
+services:
+  immich-aio-alpine:
+    container_name: immich-aio-alpine-big-bear-immich-aio-alpine
+    image: ghcr.io/imagegenius/immich:1.124.2-alpine
+    ports:
+    - 2283:8080
+    volumes:
+    - immich-aio-alpine-big-bear-immich-aio-alpine-big-bear-immich-aio-alpine-data:/config
+    - immich-aio-alpine-big-bear-immich-aio-alpine-big-bear-immich-aio-alpine-data-2:/usr/src/app/photos
+    environment:
+    - PUID=1000
+    - PGID=1000
+    - TZ=Etc/UTC
+    - DB_HOSTNAME=big-bear-immich-db
+    - DB_USERNAME=casaos
+    - DB_PASSWORD=casaos
+    - DB_DATABASE_NAME=immich
+    - REDIS_HOSTNAME=big-bear-immich-redis
+    - DB_PORT=5432
+    - REDIS_PORT=6379
+    - REDIS_PASSWORD=
+    - MACHINE_LEARNING_GPU_ACCELERATION=
+    - MACHINE_LEARNING_WORKERS=1
+    - MACHINE_LEARNING_WORKER_TIMEOUT=120
+    depends_on:
+    - immich-aio-alpine-big-bear-immich-aio-alpine-big-bear-immich-redis
+    - immich-aio-alpine-big-bear-immich-aio-alpine-big-bear-immich-db
+    restart: unless-stopped
+    networks:
+    - big_bear_immich_network
+    hostname: immich-aio-alpine-big-bear-immich-aio-alpine
+networks:
+  big_bear_immich_network:
+    driver: bridge
+minVersion: 0.14.0

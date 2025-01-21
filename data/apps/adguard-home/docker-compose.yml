@@ -1,0 +1,24 @@
+name: adguard-home
+services:
+  adguard-home:
+    container_name: adguard-home
+    image: adguard/adguardhome:v0.107.55
+    deploy:
+      resources:
+        reservations:
+          memory: 64M
+    volumes:
+    - adguard-home-data:/opt/adguardhome/work
+    - adguard-home-data-2:/opt/adguardhome/conf
+    restart: unless-stopped
+    ports:
+    - 53:53/tcp
+    - 53:53/udp
+    - 8080:80
+    networks:
+    - adguard-home-network
+    hostname: adguard-home
+networks:
+  adguard-home-network:
+    driver: bridge
+minVersion: 0.14.0

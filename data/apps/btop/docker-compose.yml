@@ -1,0 +1,17 @@
+name: btop
+services:
+  btop:
+    container_name: btop
+    image: bigbeartechworld/big-bear-btop:0.0.8
+    restart: unless-stopped
+    privileged: true
+    volumes:
+    - /proc:/proc
+    - /sys:/sys
+    - /dev:/dev
+    - /etc/localtime:/etc/localtime:ro
+    - btop-data:/root/.config/btop
+    ports:
+    - 7681:7681
+    hostname: btop
+minVersion: 0.14.0

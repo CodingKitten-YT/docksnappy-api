@@ -1,0 +1,35 @@
+name: invoice-ninja
+services:
+  invoice-ninja:
+    image: invoiceninja/invoiceninja:5.11.27
+    container_name: invoice-ninja-big-bear-invoice-ninja
+    restart: unless-stopped
+    user: 1500:1500
+    environment:
+    - IN_USER_EMAIL=admin@bigbeartechworld.com
+    - IN_PASSWORD=ad178c4b-302f-44e6-937f-8c7808f23795
+    - APP_URL=http://big-bear-invoice-ninja-web
+    - APP_KEY=base64:4doW1cidLuSqm7Z/BhPu/bn5HGnCKyEcSSlbVPTYYRU=
+    - APP_CIPHER=AES-256-CBC
+    - DB_HOST=invoice-ninja-big-bear-invoice-ninja-big-bear-invoice-ninja-db
+    - DB_PORT=3306
+    - DB_DATABASE=ninja
+    - DB_USERNAME=ninja
+    - DB_PASSWORD=ninja
+    - REQUIRE_HTTPS=false
+    - QUEUE_CONNECTION=database
+    - IS_DOCKER=TRUE
+    volumes:
+    - invoice-ninja-big-bear-invoice-ninja-big-bear-invoice-ninja-data:/var/www/app/public
+    - invoice-ninja-big-bear-invoice-ninja-big-bear-invoice-ninja-data-2:/var/www/app/storage
+    - invoice-ninja-big-bear-invoice-ninja-big-bear-invoice-ninja-data-3:/usr/local/etc/php/php.ini
+    - invoice-ninja-big-bear-invoice-ninja-big-bear-invoice-ninja-data-4:/usr/local/etc/php/php-cli.ini
+    depends_on:
+    - invoice-ninja-big-bear-invoice-ninja-big-bear-invoice-ninja-db
+    networks:
+    - big-bear-invoice-ninja-network
+    hostname: invoice-ninja-big-bear-invoice-ninja
+networks:
+  big-bear-invoice-ninja-network:
+    driver: bridge
+minVersion: 0.14.0

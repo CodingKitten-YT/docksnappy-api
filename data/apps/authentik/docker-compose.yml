@@ -1,0 +1,28 @@
+name: authentik
+services:
+  authentik:
+    container_name: authentik-big-bear-authentik
+    image: ghcr.io/goauthentik/server:2024.12.2
+    command: server
+    environment:
+      AUTHENTIK_REDIS__HOST: big-bear-authentik-redis
+      AUTHENTIK_POSTGRESQL__HOST: big-bear-authentik-db
+      AUTHENTIK_POSTGRESQL__USER: authentik
+      AUTHENTIK_POSTGRESQL__NAME: authentik
+      AUTHENTIK_POSTGRESQL__PASSWORD: authentik-password
+      AUTHENTIK_SECRET_KEY: changeme
+    volumes:
+    - authentik-big-bear-authentik-big-bear-authentik-data:/media
+    - authentik-big-bear-authentik-big-bear-authentik-data-2:/templates
+    ports:
+    - 9443:9443
+    depends_on:
+    - authentik-big-bear-authentik-big-bear-authentik-db
+    - authentik-big-bear-authentik-big-bear-authentik-redis
+    networks:
+    - big_bear_authentik_network
+    hostname: authentik-big-bear-authentik
+networks:
+  big_bear_authentik_network:
+    driver: bridge
+minVersion: 0.14.0

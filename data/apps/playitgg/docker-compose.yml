@@ -1,0 +1,10 @@
+name: playitgg
+services:
+  playitgg:
+    container_name: playitgg
+    image: dysta/playitgg:1.1.0
+    restart: unless-stopped
+    volumes:
+    - playitgg-data:/secrets
+    hostname: playitgg
+minVersion: 0.14.0

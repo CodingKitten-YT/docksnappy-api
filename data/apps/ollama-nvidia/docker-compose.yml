@@ -1,0 +1,20 @@
+name: ollama-nvidia
+services:
+  ollama-nvidia:
+    container_name: ollama-nvidia
+    image: ollama/ollama:0.5.7
+    restart: unless-stopped
+    volumes:
+    - ollama-nvidia-data:/root/.ollama
+    ports:
+    - 11434:11434
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            count: all
+            capabilities:
+            - gpu
+    hostname: ollama-nvidia
+minVersion: 0.14.0

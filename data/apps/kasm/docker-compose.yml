@@ -1,0 +1,20 @@
+name: kasm
+services:
+  kasm:
+    container_name: kasm
+    image: linuxserver/kasm:1.120.20221218
+    restart: unless-stopped
+    privileged: true
+    network_mode: bridge
+    volumes:
+    - kasm-data:/opt
+    - kasm-data-2:/profiles
+    - /dev/input:/dev/input
+    - /run/udev/data:/run/udev/data
+    ports:
+    - 3000:3000
+    - 443:443
+    environment:
+    - KASM_PORT=443
+    hostname: kasm
+minVersion: 0.14.0

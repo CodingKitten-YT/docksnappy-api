@@ -1,0 +1,10 @@
+name: cyberchef
+services:
+  cyberchef:
+    container_name: cyberchef
+    image: ghcr.io/gchq/cyberchef:10.19.4
+    restart: unless-stopped
+    ports:
+    - 8080:80
+    hostname: cyberchef
+minVersion: 0.14.0

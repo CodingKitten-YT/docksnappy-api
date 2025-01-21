@@ -1,0 +1,15 @@
+name: gotify
+services:
+  gotify:
+    image: gotify/server:2.6.1
+    ports:
+    - 8091:80
+    environment:
+    - GOTIFY_DEFAULTUSER_NAME=admin
+    - GOTIFY_DEFAULTUSER_PASS=custom
+    volumes:
+    - gotify-data:/app/data
+    network_mode: bridge
+    container_name: gotify
+    hostname: gotify
+minVersion: 0.14.0

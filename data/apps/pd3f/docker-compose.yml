@@ -1,0 +1,26 @@
+name: pd3f
+services:
+  pd3f:
+    container_name: pd3f-web
+    image: pd3f/pd3f:latest
+    restart: unless-stopped
+    volumes:
+    - pd3f-web-web-data:/uploads/
+    ports:
+    - 1616:5000
+    command:
+    - gunicorn
+    - app:app
+    - --bind=0.0.0.0:5000
+    depends_on:
+    - pd3f-web-redis
+    - pd3f-web-parsr
+    - pd3f-web-worker
+    - pd3f-web-ocr_worker
+    networks:
+    - big-bear-pd3f-network
+    hostname: pd3f-web
+networks:
+  big-bear-pd3f-network:
+    name: big-bear-pd3f-network
+minVersion: 0.14.0

@@ -1,0 +1,18 @@
+name: farmos
+services:
+  farmos:
+    container_name: farmos-big-bear-farmos
+    image: farmos/farmos:3.3.3
+    restart: unless-stopped
+    volumes:
+    - farmos-big-bear-farmos-big-bear-farmos-data:/opt/drupal/web/sites
+    ports:
+    - 8080:80
+    networks:
+    - big-bear-farmos-network
+    hostname: farmos-big-bear-farmos
+networks:
+  big-bear-farmos-network:
+    name: big-bear-farmos-network
+    driver: bridge
+minVersion: 0.14.0

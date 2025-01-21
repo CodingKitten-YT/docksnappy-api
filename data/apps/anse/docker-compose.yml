@@ -1,0 +1,12 @@
+name: anse
+services:
+  anse:
+    container_name: anse
+    image: ddiu8081/anse:v1.1.11
+    restart: unless-stopped
+    environment:
+    - PORT=8014
+    ports:
+    - 8014:8014
+    hostname: anse
+minVersion: 0.14.0

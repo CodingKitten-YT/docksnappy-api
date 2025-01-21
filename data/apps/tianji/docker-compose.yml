@@ -1,0 +1,22 @@
+name: tianji
+services:
+  tianji:
+    container_name: tianji-big-bear-tianji
+    image: moonrailgun/tianji:1.17.6
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://tianji-user:227453b7-1286-48cc-b471-1c269495c5fc@tianji-big-bear-tianji-db:5432/tianji
+      JWT_SECRET: replace-me-with-a-random-string
+      ALLOW_REGISTER: 'false'
+      ALLOW_OPENAPI: 'true'
+    ports:
+    - 12345:12345
+    networks:
+    - big_bear_tianji_network
+    depends_on:
+    - tianji-big-bear-tianji-big-bear-tianji-db
+    hostname: tianji-big-bear-tianji
+networks:
+  big_bear_tianji_network:
+    driver: bridge
+minVersion: 0.14.0

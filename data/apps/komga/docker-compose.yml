@@ -1,0 +1,15 @@
+name: komga
+services:
+  komga:
+    container_name: komga
+    image: ghcr.io/gotson/komga:1.18.0
+    restart: unless-stopped
+    environment:
+    - TZ=UTC
+    volumes:
+    - komga-data:/config
+    - komga-data-2:/data
+    ports:
+    - 25600:25600
+    hostname: komga
+minVersion: 0.14.0

@@ -1,0 +1,2675 @@
+{
+  "generated_at": "2025-01-21T17:30:27.647702",
+  "apps": [
+    {
+      "id": "8c54ab5fcb74",
+      "name": "2fauth",
+      "path": "apps/2fauth",
+      "last_modified": "2025-01-21T16:53:19.806303",
+      "description": "A Web app to manage your Two-Factor Authentication (2FA) accounts and generate their security codes",
+      "longDescription": "A Web app to manage your Two-Factor Authentication (2FA) accounts and generate their security codes",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://user-images.githubusercontent.com/1289128/276442834-bdb528d0-78fa-4155-ba15-7165d88b9836.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://user-images.githubusercontent.com/1289128/276442834-bdb528d0-78fa-4155-ba15-7165d88b9836.png"
+    },
+    {
+      "id": "45ead7d6b7c5",
+      "name": "actual-server",
+      "path": "apps/actual-server",
+      "last_modified": "2025-01-21T16:53:19.816329",
+      "description": "Local-first OpenSource Budget tool",
+      "longDescription": "Actual Budget is a super fast and privacy-focused app for managing your finances. At its heart is the well proven and much loved Envelope Budgeting methodology. You own your data and can do whatever you want with it. Featuring multi-device sync, optional end-to-end encryption and so much more.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons@master/png/actual.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons@master/png/actual.png"
+    },
+    {
+      "id": "87a8b5c2cafb",
+      "name": "adguard-home",
+      "path": "apps/adguard-home",
+      "last_modified": "2025-01-21T16:53:19.819841",
+      "description": "Network-wide ads & trackers blocking DNS server.",
+      "longDescription": "AdGuard Home is a network-wide software for blocking ads and tracking. After you set it up, it'll cover all your home devices, and you won't need any client-side software for that. Learn more on our official Github repository.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/adguard-home.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64",
+        "arm"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/adguard-home.png"
+    },
+    {
+      "id": "cc4c222e758d",
+      "name": "adguard-home-host",
+      "path": "apps/adguard-home-host",
+      "last_modified": "2025-01-21T16:53:19.817885",
+      "description": "Network Mode is host. Network-wide ads & trackers blocking DNS server.",
+      "longDescription": "Use if you're going to use Adguard Home as a DHCP server. AdGuard Home is a network-wide software for blocking ads and tracking. After you set it up, it'll cover all your home devices, and you won't need any client-side software for that. Learn more on our official Github repository.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/adguard-home.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64",
+        "arm"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/adguard-home.png"
+    },
+    {
+      "id": "bbbfdd699d03",
+      "name": "anse",
+      "path": "apps/anse",
+      "last_modified": "2025-01-21T16:53:19.821846",
+      "description": "Fully optimized UI for AI Chats.",
+      "longDescription": "Anse is a fully optimized UI for AI Chats. Supercharged experience for multiple models such as ChatGPT, DALL-E and Stable Diffusion.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/anse/logo.jpg",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/anse/logo.jpg"
+    },
+    {
+      "id": "51beaa670ef7",
+      "name": "appsmith",
+      "path": "apps/appsmith",
+      "last_modified": "2025-01-21T16:53:19.824357",
+      "description": "Appsmith",
+      "longDescription": "Low code project to build admin panels, internal tools, and dashboards, integrating 15+ databases.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/appsmithorg/appsmith/static/logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/appsmithorg/appsmith/static/logo.png"
+    },
+    {
+      "id": "5fcaff0a2103",
+      "name": "audiobookshelf",
+      "path": "apps/audiobookshelf",
+      "last_modified": "2025-01-21T16:53:19.826358",
+      "description": "Audiobookshelf is a self-hosted audiobook and podcast server.",
+      "longDescription": "Audiobookshelf is a self-hosted audiobook server for managing and playing your audiobooks. Audiobookshelf has a clean, accessible design that's loaded with features but not overly complicated.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/audiobookshelf.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/audiobookshelf.png"
+    },
+    {
+      "id": "04c3788bcb68",
+      "name": "authentik",
+      "path": "apps/authentik",
+      "last_modified": "2025-01-21T16:53:19.827863",
+      "description": "Authentik",
+      "longDescription": "Authentik is a self-hosted identity and access management platform that provides a secure and scalable solution for managing user accounts, authentication, and authorization. It offers a range of features, including user management, role-based access control, and multi-factor authentication. Authentik is designed to be easy to use and integrate with your existing systems, making it a great choice for organizations looking to improve their security and compliance.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/authentik.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/authentik.png"
+    },
+    {
+      "id": "a44c5dd89156",
+      "name": "ayon",
+      "path": "apps/ayon",
+      "last_modified": "2025-01-21T16:53:19.831875",
+      "description": "Ayon",
+      "longDescription": "This is the official Docker-based deployment for the Ayon Server. Ayon is a robust tool designed to manage and automate workflows in the animation and visual effects industries.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/ayon/logo.png",
+      "supported_architectures": [
+        "amd64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/ayon/logo.png"
+    },
+    {
+      "id": "f753e2fcfb6d",
+      "name": "baserow",
+      "path": "apps/baserow",
+      "last_modified": "2025-01-21T16:53:19.833380",
+      "description": "Baserow",
+      "longDescription": "Create your own online database without technical experience. Our user-friendly no-code tool gives you the powers of a developer without leaving your browser.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/baserow.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/baserow.png"
+    },
+    {
+      "id": "72ae9cf99b60",
+      "name": "beszel",
+      "path": "apps/beszel",
+      "last_modified": "2025-01-21T16:53:19.835387",
+      "description": "Server Monitoring Hub",
+      "longDescription": "A lightweight server resource monitoring hub with historical data, docker stats, and alerts.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/beszel/logo.jpg",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/beszel/logo.jpg"
+    },
+    {
+      "id": "cf50d7f304ff",
+      "name": "big-bear-casaos-user-management",
+      "path": "apps/big-bear-casaos-user-management",
+      "last_modified": "2025-01-21T16:53:19.837892",
+      "description": "Manage users in CasaOS",
+      "longDescription": "Manage users in CasaOS",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": ""
+    },
+    {
+      "id": "071ec3e9560f",
+      "name": "bookstack",
+      "path": "apps/bookstack",
+      "last_modified": "2025-01-21T16:53:19.839898",
+      "description": "BookStack",
+      "longDescription": "BookStack is a simple, self-hosted, easy-to-use platform for organising and storing information. Default login admin@admin.com password password",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/bookstack.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/bookstack.png"
+    },
+    {
+      "id": "4a89b9caff8c",
+      "name": "brave",
+      "path": "apps/brave",
+      "last_modified": "2025-01-21T16:53:19.841897",
+      "description": "Brave",
+      "longDescription": "This Image contains a browser-accessible version of Brave.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/brave.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/brave.png"
+    },
+    {
+      "id": "29e4986d5dbb",
+      "name": "btop",
+      "path": "apps/btop",
+      "last_modified": "2025-01-21T16:53:19.843401",
+      "description": "A monitor of resources",
+      "longDescription": "A monitor of resources. Software made by Aristocratos at https://github.com/aristocratos/btop",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/aristocratos/btop/Img/icon.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/aristocratos/btop/Img/icon.png"
+    },
+    {
+      "id": "cb7ce4a75f84",
+      "name": "budibase",
+      "path": "apps/budibase",
+      "last_modified": "2025-01-21T16:53:19.846408",
+      "description": "Internal tools made easy.",
+      "longDescription": "Low code platform for creating internal tools, workflows, and admin panels in minutes. Supports PostgreSQL, MySQL, MSSQL, MongoDB, Rest API, Docker, K8s, and more 🚀. Budibase, the low code platform you'll enjoy using ⚡",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/budibase.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/budibase.png"
+    },
+    {
+      "id": "ba609c201ca7",
+      "name": "cadvisor",
+      "path": "apps/cadvisor",
+      "last_modified": "2025-01-21T16:53:19.848919",
+      "description": "cAdvisor",
+      "longDescription": "cAdvisor (Container Advisor) provides container users an understanding of the resource usage and performance characteristics of their running containers. It is a running daemon that collects, aggregates, processes, and exports information about running containers. Specifically, for each container it keeps resource isolation parameters, historical resource usage, histograms of complete historical resource usage and network statistics. This data is exported by container and machine-wide.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/cadvisor.png",
+      "supported_architectures": [
+        "amd64",
+        "arm",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/cadvisor.png"
+    },
+    {
+      "id": "f33e1e22bb75",
+      "name": "calcom",
+      "path": "apps/calcom",
+      "last_modified": "2025-01-21T16:53:19.850926",
+      "description": "Cal.com",
+      "longDescription": "The open source Calendly successor. You are in charge of your own data, workflow, and appearance.\\nCalendly and other scheduling tools are awesome. It made our lives massively easier. We're using it for business meetings, seminars, yoga classes, and even calls with our families. However, most tools are very limited in terms of control and customization.\\n    That's where Cal.com comes in. Self-hosted or hosted by us. White-label by design. API-driven and ready to be deployed on your own domain. Full control of your events and data.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/calcom/logo.jpg",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/calcom/logo.jpg"
+    },
+    {
+      "id": "3fb53d04b698",
+      "name": "changedetection",
+      "path": "apps/changedetection",
+      "last_modified": "2025-01-21T16:53:19.853430",
+      "description": "Website change detection.",
+      "longDescription": "The best and simplest free open source website change detection, restock monitor and notification service.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/changedetection-io.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/changedetection-io.png"
+    },
+    {
+      "id": "b22283120023",
+      "name": "chatpad",
+      "path": "apps/chatpad",
+      "last_modified": "2025-01-21T16:53:19.854943",
+      "description": "Not just another ChatGPT user-interface!",
+      "longDescription": "Recently, there has been a surge of UIs for ChatGPT, making it the new \"to-do app\" that everyone wants to try their hand at. Chatpad sets itself apart with a broader vision - to become the ultimate interface for ChatGPT users.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/chatpad/logo.jpeg",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/chatpad/logo.jpeg"
+    },
+    {
+      "id": "f201266d41ec",
+      "name": "chrome",
+      "path": "apps/chrome",
+      "last_modified": "2025-01-21T16:53:19.855949",
+      "description": "chrome",
+      "longDescription": "This Image contains a browser-accessible version of chrome.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/chrome.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/chrome.png"
+    },
+    {
+      "id": "bdf922179e07",
+      "name": "chromium",
+      "path": "apps/chromium",
+      "last_modified": "2025-01-21T16:53:19.859459",
+      "description": "chromium",
+      "longDescription": "This Image contains a browser-accessible version of chromium.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/chromium.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/chromium.png"
+    },
+    {
+      "id": "1d3fda69c810",
+      "name": "cloudflared-web",
+      "path": "apps/cloudflared-web",
+      "last_modified": "2025-01-21T16:53:19.861465",
+      "description": "Cloudflared Web",
+      "longDescription": "Cloudflared-web is a docker image that packages both cloudflared cli and a simple Web UI to easily start or stop remotely-managed Cloudflare tunnel.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/cloudflare.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/cloudflare.png"
+    },
+    {
+      "id": "6b21550b0cef",
+      "name": "code-server",
+      "path": "apps/code-server",
+      "last_modified": "2025-01-21T16:53:19.863465",
+      "description": "Code Server",
+      "longDescription": "Run VS Code on any machine anywhere and access it in the browser.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/code-server.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/code-server.png"
+    },
+    {
+      "id": "7439397d9654",
+      "name": "codex-docs",
+      "path": "apps/codex-docs",
+      "last_modified": "2025-01-21T16:53:19.865976",
+      "description": "CodeX Docs",
+      "longDescription": "CodeX Docs is a free docs application. It's based on Editor.js ecosystem which gives all modern opportunities for working with content.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/codex-docs/logo.jpg",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/codex-docs/logo.jpg"
+    },
+    {
+      "id": "badc24fa115b",
+      "name": "coolify",
+      "path": "apps/coolify",
+      "last_modified": "2025-01-21T16:53:19.867954",
+      "description": "Coolify",
+      "longDescription": "Coolify is a self-hosted web application that allows you to manage your servers, applications, and services. It provides a simple and intuitive interface for managing your infrastructure, making it easy to deploy and manage your applications. With Coolify, you can easily manage your servers, applications, and services, providing a streamlined experience for managing your infrastructure.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/coolify/logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/coolify/logo.png"
+    },
+    {
+      "id": "096c192eefef",
+      "name": "crafty",
+      "path": "apps/crafty",
+      "last_modified": "2025-01-21T16:53:19.869960",
+      "description": "Crafty Controller",
+      "longDescription": "Crafty 4 is the next iteration of our Minecraft Server Wrapper / Controller / Launcher.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/crafty-controller.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/crafty-controller.png"
+    },
+    {
+      "id": "4eaaac22a1f6",
+      "name": "cyberchef",
+      "path": "apps/cyberchef",
+      "last_modified": "2025-01-21T16:53:19.871466",
+      "description": "The Cyber Swiss Army Knife",
+      "longDescription": "CyberChef is a simple, intuitive web app for carrying out all manner of \"cyber\" operations within a web browser. These operations include simple encoding like XOR and Base64, more complex encryption like AES, DES and Blowfish, creating binary and hexdumps, compression and decompression of data, calculating hashes and checksums, IPv6 and X.509 parsing, changing character encodings, and much more.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/cyberchef.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/cyberchef.png"
+    },
+    {
+      "id": "b5bfa4a14c26",
+      "name": "dashdot",
+      "path": "apps/dashdot",
+      "last_modified": "2025-01-21T16:53:19.873470",
+      "description": "dash. - a modern server dashboard",
+      "longDescription": "About A simple, modern server dashboard, primarily used by smaller private servers.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/dashdot.png",
+      "supported_architectures": [
+        "amd64",
+        "arm",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/dashdot.png"
+    },
+    {
+      "id": "b782f0001e5c",
+      "name": "dashy",
+      "path": "apps/dashy",
+      "last_modified": "2025-01-21T16:53:19.875476",
+      "description": "Dashy",
+      "longDescription": "Dashy helps you organize your self-hosted services by making them accessible from a single place",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/dashy.png",
+      "supported_architectures": [
+        "amd64",
+        "arm",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/dashy.png"
+    },
+    {
+      "id": "7774103a33f8",
+      "name": "davis",
+      "path": "apps/davis",
+      "last_modified": "2025-01-21T16:53:19.876476",
+      "description": "Davis",
+      "longDescription": "A simple, fully translatable admin interface for sabre/dav based on Symfony 5 and Bootstrap 5, initially inspired by Baïkal. Provides user edition, calendar creation and sharing, and address book creation. The interface is simple and straightforward, responsive, and provides a light and a dark mode.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/davis/logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/davis/logo.png"
+    },
+    {
+      "id": "bb3acdf825a3",
+      "name": "dbgate",
+      "path": "apps/dbgate",
+      "last_modified": "2025-01-21T16:53:19.879988",
+      "description": "DBGate",
+      "longDescription": "Web based UI for managing and exploring SQL database data",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/dbgate/logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/dbgate/logo.png"
+    },
+    {
+      "id": "fe2c566258e2",
+      "name": "diun",
+      "path": "apps/diun",
+      "last_modified": "2025-01-21T16:53:19.881993",
+      "description": "Docker Image Update Notifier",
+      "longDescription": "Docker Image Update Notifier is a CLI application written in Go and delivered as a single executable (and a Docker image) to receive notifications when a Docker image is updated on a Docker registry.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/diun.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/diun.png"
+    },
+    {
+      "id": "2147dfb2a7b6",
+      "name": "docker-cron-restart-notifier",
+      "path": "apps/docker-cron-restart-notifier",
+      "last_modified": "2025-01-21T16:53:19.884502",
+      "description": "Automatically restart specified Docker containers and send notifications to a Discord channel",
+      "longDescription": "This Docker image is designed to automatically restart specified Docker containers and send notifications to a Discord channel upon each restart. It's particularly useful for maintaining long-running services, ensuring they're periodically refreshed and stakeholders are informed of these actions.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/docker-cron-restart-notifier/logo.png",
+      "supported_architectures": [
+        "amd64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/docker-cron-restart-notifier/logo.png"
+    },
+    {
+      "id": "8c7eb4a6afce",
+      "name": "dockge",
+      "path": "apps/dockge",
+      "last_modified": "2025-01-21T16:53:19.886503",
+      "description": "Dockge",
+      "longDescription": "A fancy, easy-to-use and reactive docker `compose.yaml` stack-oriented manager",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/dockge.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/dockge.png"
+    },
+    {
+      "id": "4c82ccb7285f",
+      "name": "docmost",
+      "path": "apps/docmost",
+      "last_modified": "2025-01-21T16:53:19.888008",
+      "description": "Docmost",
+      "longDescription": "Docmost is an open-source alternative to the likes of Notion and Confluence. Whether you're managing a wiki, a knowledge base, or extensive project documentation, Docmost provides the tools you need to create, collaborate, and share knowledge effortlessly.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/docmost/logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/docmost/logo.png"
+    },
+    {
+      "id": "5fbefe0e8c14",
+      "name": "dozzle",
+      "path": "apps/dozzle",
+      "last_modified": "2025-01-21T16:53:19.890014",
+      "description": "Dozzle is a real-time log viewer for docker containers.",
+      "longDescription": "Dozzle is a real-time log viewer for docker containers.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/dozzle/logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/dozzle/logo.png"
+    },
+    {
+      "id": "58871640571c",
+      "name": "ejbca-ce",
+      "path": "apps/ejbca-ce",
+      "last_modified": "2025-01-21T16:53:19.892021",
+      "description": "The open-source public key infrastructure (PKI) and certificate authority (CA)",
+      "longDescription": "The open-source public key infrastructure (PKI) and certificate authority (CA) software EJBCA is one of the longest running CA software projects. EJBCA covers all your needs - from certificate enrollment, via certificate management, to certificate validation.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/Keyfactor/ejbca-ce/.github/images/community-ejbca-icon.png",
+      "supported_architectures": [
+        "amd64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/Keyfactor/ejbca-ce/.github/images/community-ejbca-icon.png"
+    },
+    {
+      "id": "9fca2ed0d47c",
+      "name": "eufy-security-ws",
+      "path": "apps/eufy-security-ws",
+      "last_modified": "2025-01-21T16:53:19.893526",
+      "description": "eufy-security-ws",
+      "longDescription": "eufy-security-ws is a small server wrapper around the eufy-security-client library to access it via a WebSocket. It allows you to control Eufy security devices by connecting to the Eufy cloud servers and local/remote stations.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": ""
+    },
+    {
+      "id": "4651bbb7ecdb",
+      "name": "excalidraw",
+      "path": "apps/excalidraw",
+      "last_modified": "2025-01-21T16:53:19.896532",
+      "description": "Virtual whiteboard for sketching hand-drawn like diagrams",
+      "longDescription": "Virtual whiteboard for sketching hand-drawn like diagrams",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/excalidraw/logo.png",
+      "supported_architectures": [
+        "amd64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/excalidraw/logo.png"
+    },
+    {
+      "id": "3641c1822117",
+      "name": "farmos",
+      "path": "apps/farmos",
+      "last_modified": "2025-01-21T16:53:19.898036",
+      "description": "A web-based farm record keeping application.",
+      "longDescription": "farmOS is a web-based application for farm management, planning, and record keeping. It is developed by a community of volunteers and aims to provide a standard platform for farmers, developers, and researchers to build upon.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/farmos/logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/farmos/logo.png"
+    },
+    {
+      "id": "e03c64afa5e8",
+      "name": "faster-whisper",
+      "path": "apps/faster-whisper",
+      "last_modified": "2025-01-21T16:53:19.908061",
+      "description": "Faster-whisper",
+      "longDescription": "Faster-whisper is a reimplementation of OpenAI's Whisper model using CTranslate2, which is a fast inference engine for Transformer models. This container provides a Wyoming protocol server for faster-whisper.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/faster-whisper/logo.png",
+      "supported_architectures": [
+        "amd64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/faster-whisper/logo.png"
+    },
+    {
+      "id": "a2d92d84be63",
+      "name": "fastfetch",
+      "path": "apps/fastfetch",
+      "last_modified": "2025-01-21T16:53:19.910068",
+      "description": "Fastfetch is a neofetch-like tool.",
+      "longDescription": "Fastfetch is a neofetch-like tool for fetching system information and displaying it prettily. It is written mainly in C, with performance and customizability in mind. Currently, Linux, Android, FreeBSD, macOS, SunOS and Windows 7+ are supported. https://github.com/fastfetch-cli/fastfetch",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/fastfetch/logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/fastfetch/logo.png"
+    },
+    {
+      "id": "3473157ca3c8",
+      "name": "filebrowser",
+      "path": "apps/filebrowser",
+      "last_modified": "2025-01-21T16:53:19.912067",
+      "description": "Access your homeserver files from your browser",
+      "longDescription": "Reliable and Performant File Management Desktop Sync and File Sharing Tool.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/filebrowser.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/filebrowser.png"
+    },
+    {
+      "id": "ee860c035acf",
+      "name": "financial-freedom",
+      "path": "apps/financial-freedom",
+      "last_modified": "2025-01-21T16:53:19.913573",
+      "description": "Financial Freedom",
+      "longDescription": "Keep investors and their buyers out of your financial data. Own 100% of your data and start building financial wealth.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/financial-freedom/logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/financial-freedom/logo.png"
+    },
+    {
+      "id": "b570be70c077",
+      "name": "firefox",
+      "path": "apps/firefox",
+      "last_modified": "2025-01-21T16:53:19.914579",
+      "description": "Firefox",
+      "longDescription": "This Image contains a browser-accessible version of Firefox.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/firefox.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/firefox.png"
+    },
+    {
+      "id": "b51e27ca5ed3",
+      "name": "flame",
+      "path": "apps/flame",
+      "last_modified": "2025-01-21T16:53:19.916579",
+      "description": "Flame is a self-hosted startpage for your server. Manage your apps and bookmarks effortlessly with built-in editors.",
+      "longDescription": "Flame is a self-hosted startpage for your server. Its design is heavily inspired by SUI. Flame is user-friendly and easy to set up. With its built-in editors, users can quickly establish their own application hub without any file editing.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/flame.png",
+      "supported_architectures": [
+        "amd64",
+        "arm",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/flame.png"
+    },
+    {
+      "id": "797f32369690",
+      "name": "flcontainers-guacamole",
+      "path": "apps/flcontainers-guacamole",
+      "last_modified": "2025-01-21T16:53:19.920097",
+      "description": "Fully packaged Multi-Arch Guacamole.",
+      "longDescription": "A Docker Container for Apache Guacamole, a client-less remote desktop gateway. It supports standard protocols like VNC, RDP, and SSH over HTML5.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/guacamole.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/guacamole.png"
+    },
+    {
+      "id": "6a2a70ec0a08",
+      "name": "flowise",
+      "path": "apps/flowise",
+      "last_modified": "2025-01-21T16:53:19.922097",
+      "description": "Build LLM Apps Easily",
+      "longDescription": "Flowise AI is an Open source UI visual tool to build your customized LLM orchestration flow & AI agents. Developing LLM apps takeslength iterations. With low code approach, Flowise AI enable quick iterations to go from testing to production.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/flowise/logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/flowise/logo.png"
+    },
+    {
+      "id": "c5d42f3916f0",
+      "name": "focalboard",
+      "path": "apps/focalboard",
+      "last_modified": "2025-01-21T16:53:19.923603",
+      "description": "Focalboard is an open source, self-hosted alternative to Trello, Notion, and Asana.",
+      "longDescription": "Focalboard is an open source, multilingual, self-hosted project management tool that's an alternative to Trello, Notion, and Asana.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/focalboard.png",
+      "supported_architectures": [
+        "amd64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/focalboard.png"
+    },
+    {
+      "id": "16cb75aa8c44",
+      "name": "GemDigest",
+      "path": "apps/GemDigest",
+      "last_modified": "2025-01-21T16:53:19.808813",
+      "description": "Your personal article summarizer",
+      "longDescription": "Simplify your reads, amplify your time! 📚✨ GemDigest is a Telegram bot that summarizes articles from any website into bite-sized nuggets, saving you time and energy for what matters most. 📱👋",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/Piero24/GemDigest/.github/images/casOS_logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/Piero24/GemDigest/.github/images/casOS_logo.png"
+    },
+    {
+      "id": "8dc2ba809d34",
+      "name": "genmon",
+      "path": "apps/genmon",
+      "last_modified": "2025-01-21T16:53:19.925610",
+      "description": "Genmon",
+      "longDescription": "Generac (and other models) Generator Monitoring using a Raspberry Pi and WiFi",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/genmon/logo.jpeg",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/genmon/logo.jpeg"
+    },
+    {
+      "id": "61884c9c2408",
+      "name": "ghost",
+      "path": "apps/ghost",
+      "last_modified": "2025-01-21T16:53:19.931125",
+      "description": "Ghost is a free and open source blogging platform",
+      "longDescription": "Ghost is a free and open source blogging platform written in JavaScript and distributed under the MIT License, designed to simplify the process of online publishing for individual bloggers as well as online publications.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/ghost.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/ghost.png"
+    },
+    {
+      "id": "a7bcc18f0450",
+      "name": "ghostfolio",
+      "path": "apps/ghostfolio",
+      "last_modified": "2025-01-21T16:53:19.932125",
+      "description": "Ghostfolio",
+      "longDescription": "Open Source Wealth Management Software. Angular + NestJS + Prisma + Nx + TypeScript 🤍",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/ghostfolio.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/ghostfolio.png"
+    },
+    {
+      "id": "cc566216fd20",
+      "name": "gladys",
+      "path": "apps/gladys",
+      "last_modified": "2025-01-21T16:53:19.934635",
+      "description": "A privacy-first, open-source home assistant.",
+      "longDescription": "Gladys Assistant is a modern, privacy-first & open-source home automation software that runs anywhere.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://gladysassistant.com/img/external/github-gladys-logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://gladysassistant.com/img/external/github-gladys-logo.png"
+    },
+    {
+      "id": "536cea02dfa1",
+      "name": "glances",
+      "path": "apps/glances",
+      "last_modified": "2025-01-21T16:53:19.936637",
+      "description": "Glances",
+      "longDescription": "Glances is an open-source system cross-platform monitoring tool. It allows real-time monitoring of various aspects of your system such as CPU, memory, disk, network usage etc. It also allows monitoring of running processes, logged in users, temperatures, voltages, fan speeds etc. It also supports container monitoring, it supports different container management systems such as Docker, LXC. The information is presented in an easy to read dashboard and can also be used for remote monitoring of systems via a web interface or command line interface. It is easy to install and use and can be customized to show only the information that you are interested in.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/glances.png",
+      "supported_architectures": [
+        "amd64",
+        "arm",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/glances.png"
+    },
+    {
+      "id": "bfcf09d8ff09",
+      "name": "gluetun",
+      "path": "apps/gluetun",
+      "last_modified": "2025-01-21T16:53:19.939147",
+      "description": "Gluetun",
+      "longDescription": "Lightweight swiss-knife-like VPN client to multiple VPN service providers",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/gluetun.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/gluetun.png"
+    },
+    {
+      "id": "edd3c089db78",
+      "name": "gotify",
+      "path": "apps/gotify",
+      "last_modified": "2025-01-21T16:53:19.940153",
+      "description": "Gotify",
+      "longDescription": "a simple server for sending and receiving messages",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/gotify.png",
+      "supported_architectures": [
+        "amd64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/gotify.png"
+    },
+    {
+      "id": "f41f21fe7b6c",
+      "name": "guacamole",
+      "path": "apps/guacamole",
+      "last_modified": "2025-01-21T16:53:19.943656",
+      "description": "Guacamole",
+      "longDescription": "Apache Guacamole is a free and open-source, cross-platform, clientless remote desktop gateway maintained by the Apache Software Foundation.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/guacamole.png",
+      "supported_architectures": [
+        "amd64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/guacamole.png"
+    },
+    {
+      "id": "6ae4c63a81d2",
+      "name": "healthchecks",
+      "path": "apps/healthchecks",
+      "last_modified": "2025-01-21T16:53:19.945662",
+      "description": "Healthchecks",
+      "longDescription": "Healthchecks is a watchdog for your cron jobs. It's a web server that listens for pings from your cron jobs, plus a web interface.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/healthchecks.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/healthchecks.png"
+    },
+    {
+      "id": "4f176e2309eb",
+      "name": "homarr",
+      "path": "apps/homarr",
+      "last_modified": "2025-01-21T16:53:19.947660",
+      "description": "Homarr",
+      "longDescription": "Simplify the management of your server with Homarr - a sleek, modern dashboard that puts all of your apps and services at your fingertips. With Homarr, you can access and control everything in one convenient location. Homarr seamlessly integrates with the apps you've added, providing you with valuable information and giving you complete control. Installation is a breeze, and Homarr supports a wide range of deployment methods.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/homarr.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/homarr.png"
+    },
+    {
+      "id": "c6738769a0b6",
+      "name": "home-assistant",
+      "path": "apps/home-assistant",
+      "last_modified": "2025-01-21T16:53:19.949171",
+      "description": "Home Automation",
+      "longDescription": "Open source home automation that puts local control and privacy first. Powered by a worldwide community of tinkerers and DIY enthusiasts. Perfect to run on a Raspberry Pi or a local server.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/home-assistant.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/home-assistant.png"
+    },
+    {
+      "id": "7535c22d57c1",
+      "name": "homebridge",
+      "path": "apps/homebridge",
+      "last_modified": "2025-01-21T16:53:19.951176",
+      "description": "HomeKit support for the impatient.",
+      "longDescription": "HomeKit support for the impatient.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/homebridge.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/homebridge.png"
+    },
+    {
+      "id": "bf48dccfebff",
+      "name": "Homepage",
+      "path": "apps/Homepage",
+      "last_modified": "2025-01-21T16:53:19.811819",
+      "description": "Homepage",
+      "longDescription": "A modern, fully static, fast, secure fully proxied, highly customizable application dashboard with integrations for over 100 services and translations into multiple languages. Easily configured via YAML files or through docker label discovery.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://gethomepage.dev/v0.7.3/assets/light_squircle@2x.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://gethomepage.dev/v0.7.3/assets/light_squircle@2x.png"
+    },
+    {
+      "id": "f94f528b17df",
+      "name": "homer",
+      "path": "apps/homer",
+      "last_modified": "2025-01-21T16:53:19.953681",
+      "description": "Homer",
+      "longDescription": "A dead simple static HOMepage for your servER to keep your services on hand, from a simple yaml configuration file.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/homer.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/homer.png"
+    },
+    {
+      "id": "0852dfe91623",
+      "name": "ihatemoney",
+      "path": "apps/ihatemoney",
+      "last_modified": "2025-01-21T16:53:19.955693",
+      "description": "A simple shared budget manager web application",
+      "longDescription": "I hate money is a web application made to ease shared budget management. It keeps track of who bought what, when, and for whom; and helps to settle the bills.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/ihatemoney.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/ihatemoney.png"
+    },
+    {
+      "id": "0c21f23c450b",
+      "name": "immich",
+      "path": "apps/immich",
+      "last_modified": "2025-01-21T16:53:19.962208",
+      "description": "Immich",
+      "longDescription": "Self-hosted photo and video storage.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/immich.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/immich.png"
+    },
+    {
+      "id": "da78c1a8fe66",
+      "name": "immich-aio-alpine",
+      "path": "apps/immich-aio-alpine",
+      "last_modified": "2025-01-21T16:53:19.958198",
+      "description": "Immich All In One Alpine",
+      "longDescription": "AIO Alpine. Self-hosted photo and video storage.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/immich.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/immich.png"
+    },
+    {
+      "id": "c0c46a8a8113",
+      "name": "immich-without-machine-learning",
+      "path": "apps/immich-without-machine-learning",
+      "last_modified": "2025-01-21T16:53:19.960210",
+      "description": "Immich without machine learning",
+      "longDescription": "Self-hosted photo and video storage. This does not include the machine learning part.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/immich.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/immich.png"
+    },
+    {
+      "id": "65f05875b1ca",
+      "name": "invoice-ninja",
+      "path": "apps/invoice-ninja",
+      "last_modified": "2025-01-21T16:53:19.963714",
+      "description": "Invoice Ninja",
+      "longDescription": "Invoice Ninja is a free and open-source invoice and expense management system. It is a web-based application that allows you to create, manage, and track invoices and expenses.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/invoiceninja.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/invoiceninja.png"
+    },
+    {
+      "id": "332a890a4879",
+      "name": "it-tools",
+      "path": "apps/it-tools",
+      "last_modified": "2025-01-21T16:53:19.965720",
+      "description": "IT Tools",
+      "longDescription": "Collection of handy online tools for developers, with great UX as a web app.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/it-tools.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/it-tools.png"
+    },
+    {
+      "id": "6a5fbf82accb",
+      "name": "jellyseerr",
+      "path": "apps/jellyseerr",
+      "last_modified": "2025-01-21T16:53:19.967721",
+      "description": "Jellyseerr is a free and open source software application for managing requests for your media library. It is a fork of Overseerr built to bring support for Jellyfin & Emby media servers!",
+      "longDescription": "Jellyseerr is a free and open source software application for managing requests for your media library. It is a fork of Overseerr built to bring support for Jellyfin & Emby media servers!",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://static-00.iconduck.com/assets.00/jellyseerr-icon-512x492-iwuo1nft.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://static-00.iconduck.com/assets.00/jellyseerr-icon-512x492-iwuo1nft.png"
+    },
+    {
+      "id": "eeba3a7bdc57",
+      "name": "jellystat",
+      "path": "apps/jellystat",
+      "last_modified": "2025-01-21T16:53:19.971008",
+      "description": "Jellystat",
+      "longDescription": "Jellystat is a free and open source Statistics App for Jellyfin! (This project is still in development - expect some weirdness)",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/jellystat.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/jellystat.png"
+    },
+    {
+      "id": "4fae74fd6d6b",
+      "name": "jlesage-firefox",
+      "path": "apps/jlesage-firefox",
+      "last_modified": "2025-01-21T16:53:19.973513",
+      "description": "This project implements a Docker container for Firefox.",
+      "longDescription": "The GUI of the application is accessed through a modern web browser (no installation or configuration needed on the client side) or via any VNC client.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/firefox.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/firefox.png"
+    },
+    {
+      "id": "3d89bd082305",
+      "name": "joplin",
+      "path": "apps/joplin",
+      "last_modified": "2025-01-21T16:53:19.976275",
+      "description": "joplin",
+      "longDescription": "Note taking and to-do application with synchronisation",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/joplin.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/joplin.png"
+    },
+    {
+      "id": "a4d2ea36aaff",
+      "name": "kasm",
+      "path": "apps/kasm",
+      "last_modified": "2025-01-21T16:53:19.977780",
+      "description": "Kasm",
+      "longDescription": "The Container Streaming Platform - Streaming containerized apps and desktops to end-users. The Workspaces platform provides enterprise-class orchestration, data loss prevention, and web streaming technology to enable the delivery of containerized workloads to your browser.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://avatars.githubusercontent.com/u/44181855?s=280&v=4",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://avatars.githubusercontent.com/u/44181855?s=280&v=4"
+    },
+    {
+      "id": "1758044ebe4c",
+      "name": "kavita",
+      "path": "apps/kavita",
+      "last_modified": "2025-01-21T16:53:19.979786",
+      "description": "Kavita",
+      "longDescription": "Kavita is a fast, feature rich, cross platform reading server",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/kavita.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/kavita.png"
+    },
+    {
+      "id": "06785bd47141",
+      "name": "kiwix-serve",
+      "path": "apps/kiwix-serve",
+      "last_modified": "2025-01-21T16:53:19.981791",
+      "description": "Kiwix Server",
+      "longDescription": "Kiwix Server is a web server for hosting .zim files",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/kiwix.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/kiwix.png"
+    },
+    {
+      "id": "3f1f65c822bf",
+      "name": "komf",
+      "path": "apps/komf",
+      "last_modified": "2025-01-21T16:53:19.984301",
+      "description": "Komga and Kavita Metadata Fetcher",
+      "longDescription": "Komga and Kavita Metadata Fetcher is a tool that fetches metadata and thumbnails for your digital comic book library. It can automatically pick up added series and update their metadata and thumbnail. You can also manually search and identify series, or match the entire library or a series. Additionally, you can install the Komf userscript to add Komf integration directly to Komga and Kavita UI, allowing you to launch manual or automatic metadata identification.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/komf.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/komf.png"
+    },
+    {
+      "id": "bdf497faa93e",
+      "name": "komga",
+      "path": "apps/komga",
+      "last_modified": "2025-01-21T16:53:19.985301",
+      "description": "A media server for your comics, mangas, BDs, magazines and eBooks.",
+      "longDescription": "A media server for your comics, mangas, BDs, magazines and eBooks.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/komga.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/komga.png"
+    },
+    {
+      "id": "33344109391d",
+      "name": "kopia",
+      "path": "apps/kopia",
+      "last_modified": "2025-01-21T16:53:19.986302",
+      "description": "Kopia",
+      "longDescription": "Kopia is a fast and secure open-source backup/restore tool that allows you to create encrypted snapshots of your data and save the snapshots to remote or cloud storage of your choice, to network-attached storage or server, or locally on your machine.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/kopia.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/kopia.png"
+    },
+    {
+      "id": "bd4699db8dcd",
+      "name": "lancache",
+      "path": "apps/lancache",
+      "last_modified": "2025-01-21T16:53:19.990818",
+      "description": "LAN Party game caching made easy",
+      "longDescription": "Make the most of your network. Get more play for your gamers. Download your games once and serve them out to many people at your LAN.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/lancache.png",
+      "supported_architectures": [
+        "amd64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/lancache.png"
+    },
+    {
+      "id": "507ce672c6a3",
+      "name": "libretranslate",
+      "path": "apps/libretranslate",
+      "last_modified": "2025-01-21T16:53:19.991817",
+      "description": "Free and Open Source Machine Translation API. 100% self-hosted, offline capable and easy to setup.",
+      "longDescription": "Free and Open Source Machine Translation API, entirely self-hosted. Unlike other APIs, it doesn't rely on proprietary providers such as Google or Azure to perform translations. Instead, its translation engine is powered by the open source Argos Translate library.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/libretranslate/logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/libretranslate/logo.png"
+    },
+    {
+      "id": "fcda51f5e835",
+      "name": "linkstack",
+      "path": "apps/linkstack",
+      "last_modified": "2025-01-21T16:53:19.994329",
+      "description": "Your all-in-one link sharing solution",
+      "longDescription": "LinkStack is a link-in-bio tool that allows you to create a personalized and easily customizable page that houses all the important links you want to share with your audience.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/linkstack.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/linkstack.png"
+    },
+    {
+      "id": "488ddf7129de",
+      "name": "linkwarden",
+      "path": "apps/linkwarden",
+      "last_modified": "2025-01-21T16:53:19.996330",
+      "description": "Linkwarden",
+      "longDescription": "⚡️⚡️⚡️Self-hosted collaborative bookmark manager to collect, organize, and preserve webpages and articles.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/linkwarden.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/linkwarden.png"
+    },
+    {
+      "id": "82bc5e7a6d33",
+      "name": "lobe-chat",
+      "path": "apps/lobe-chat",
+      "last_modified": "2025-01-21T16:53:19.998843",
+      "description": "LobeChat",
+      "longDescription": "LobeChat is a open-source, extensible (Function Calling), high-performance chatbot framework. It supports one-click free deployment of your private ChatGPT/LLM web application.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/lobe-chat.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/lobe-chat.png"
+    },
+    {
+      "id": "a30ba4d7a413",
+      "name": "lyrionmusicserver",
+      "path": "apps/lyrionmusicserver",
+      "last_modified": "2025-01-21T16:53:20.004357",
+      "description": "Streaming audio server",
+      "longDescription": "Simplify the management of your server with Homarr - a sleek, modern dashboard that puts all of your apps and services at your fingertips. With Homarr, you can access and control everything in one convenient location. Homarr seamlessly integrates with the apps you've added, providing you with valuable information and giving you complete control. Installation is a breeze, and Homarr supports a wide range of deployment methods.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/lyrionmusicserver/logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/lyrionmusicserver/logo.png"
+    },
+    {
+      "id": "5551af3cee4e",
+      "name": "mailpit",
+      "path": "apps/mailpit",
+      "last_modified": "2025-01-21T16:53:20.006358",
+      "description": "Mailpit",
+      "longDescription": "Mailpit is a multi-platform email testing tool & API for developers.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/mailpit/logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/mailpit/logo.png"
+    },
+    {
+      "id": "0a18ca9b892d",
+      "name": "mealie",
+      "path": "apps/mealie",
+      "last_modified": "2025-01-21T16:53:20.008871",
+      "description": "Mealie",
+      "longDescription": "Mealie is a self hosted recipe manager and meal planner with a RestAPI backend and a reactive frontend application built in Vue for a pleasant user experience for the whole family. Easily add recipes into your database by providing the url and mealie will automatically import the relevant data or add a family recipe with the UI editor",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/mealie.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/mealie.png"
+    },
+    {
+      "id": "d366c49de166",
+      "name": "mind",
+      "path": "apps/mind",
+      "last_modified": "2025-01-21T16:53:20.010875",
+      "description": "A simple self hosted reminder application that can send push notifications to your device. Set the reminder and forget about it!",
+      "longDescription": "A simple self hosted reminder application that can send push notifications to your device. Set the reminder and forget about it!",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://i.imgur.com/UgjalkK.png",
+      "supported_architectures": [
+        "amd64",
+        "arm",
+        "arm64"
+      ],
+      "icon": "https://i.imgur.com/UgjalkK.png"
+    },
+    {
+      "id": "71d400c50a47",
+      "name": "minio",
+      "path": "apps/minio",
+      "last_modified": "2025-01-21T16:53:20.013381",
+      "description": "An open-source S3 alternative",
+      "longDescription": "A distributed object storage server built for cloud applications and devops. Default credentials 'minioadmin:minioadmin', we recommend that you change these values with 'MINIO_ROOT_USER' and 'MINIO_ROOT_PASSWORD' environment variables.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons@master/png/minio.png",
+      "supported_architectures": [
+        "amd64",
+        "arm",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons@master/png/minio.png"
+    },
+    {
+      "id": "976ef78d982d",
+      "name": "monica",
+      "path": "apps/monica",
+      "last_modified": "2025-01-21T16:53:20.014388",
+      "description": "A Personal Relationship Management tool to help you document your social life.",
+      "longDescription": "Monica is an open-source web application to organize and record your interactions with your loved ones. We call it a PRM, or Personal Relationship Management. Think of it as a CRM (a popular tool used by sales teams in the corporate world) for your friends or family.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/monica.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/monica.png"
+    },
+    {
+      "id": "02dcd20b0bca",
+      "name": "mumble-server",
+      "path": "apps/mumble-server",
+      "last_modified": "2025-01-21T16:53:20.016388",
+      "description": "Mumble Server",
+      "longDescription": "Mumble is a free, open source, low latency, high quality voice chat application.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/mumble.png",
+      "supported_architectures": [
+        "amd64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/mumble.png"
+    },
+    {
+      "id": "b2b5260440ba",
+      "name": "myspeed",
+      "path": "apps/myspeed",
+      "last_modified": "2025-01-21T16:53:20.018898",
+      "description": "A speed test analysis software that shows your internet speed for up to 30 days",
+      "longDescription": "MySpeed is a speed test analysis software that records your internet speed for up to 30 days.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/myspeed/logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/myspeed/logo.png"
+    },
+    {
+      "id": "8935e479e7d1",
+      "name": "n8n",
+      "path": "apps/n8n",
+      "last_modified": "2025-01-21T16:53:20.020903",
+      "description": "Workflow automation tool",
+      "longDescription": "Free and open fair-code licensed node based Workflow Automation Tool.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/n8n.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/n8n.png"
+    },
+    {
+      "id": "b3d77f6952cc",
+      "name": "ncdu",
+      "path": "apps/ncdu",
+      "last_modified": "2025-01-21T16:53:20.023409",
+      "description": "Ncdu is a disk usage analyzer with an ncurses interface.",
+      "longDescription": "Ncdu is a disk usage analyzer with an ncurses interface. It is designed to find space hogs on a remote server where you don’t have an entire graphical setup available, but it is a useful tool even on regular desktop systems. Ncdu aims to be fast, simple and easy to use, and should be able to run in any minimal POSIX-like environment with ncurses installed. Software made by Yorhel at https://dev.yorhel.nl/ncdu",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/ncdu/logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/ncdu/logo.png"
+    },
+    {
+      "id": "cf86f85d5bf7",
+      "name": "neko-firefox",
+      "path": "apps/neko-firefox",
+      "last_modified": "2025-01-21T16:53:20.025414",
+      "description": "A self hosted virtual browser that runs in docker and uses WebRTC.",
+      "longDescription": "Welcome to Neko, a self-hosted virtual browser that runs in Docker and uses WebRTC technology. Neko is a powerful tool that allows you to run a fully-functional browser in a virtual environment, giving you the ability to access the internet securely and privately from anywhere. With Neko, you can browse the web, run applications, and perform other tasks just as you would on a regular browser, all within a secure and isolated environment. Whether you are a developer looking to test web applications, a privacy-conscious user seeking a secure browsing experience, or simply someone who wants to take advantage of the convenience and flexibility of a virtual browser, Neko is the perfect solution.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/neko.png",
+      "supported_architectures": [
+        "amd64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/neko.png"
+    },
+    {
+      "id": "b70c0892d04f",
+      "name": "netalertx",
+      "path": "apps/netalertx",
+      "last_modified": "2025-01-21T16:53:20.027920",
+      "description": "NetAlertX",
+      "longDescription": "WIFI / LAN intruder detector. Scans for devices connected to your network and alerts you if new and unknown devices are found.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/pi-alert.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/pi-alert.png"
+    },
+    {
+      "id": "a4e4647455ab",
+      "name": "nextcloud",
+      "path": "apps/nextcloud",
+      "last_modified": "2025-01-21T16:53:20.033439",
+      "description": "The productivity platform that keeps you in control",
+      "longDescription": "Nextcloud puts your data at your fingertips, under your control. Store your documents, calendar, contacts and photos on a server at home, at one of our providers or in a data center you trust.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/nextcloud.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/nextcloud.png"
+    },
+    {
+      "id": "741429c04e99",
+      "name": "nextcloud-ls",
+      "path": "apps/nextcloud-ls",
+      "last_modified": "2025-01-21T16:53:20.028926",
+      "description": "LinuxServer - The productivity platform that keeps you in control",
+      "longDescription": "Nextcloud puts your data at your fingertips, under your control. Store your documents, calendar, contacts and photos on a server at home, at one of our providers or in a data center you trust.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/nextcloud.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/nextcloud.png"
+    },
+    {
+      "id": "bee896021f6b",
+      "name": "nextcloud-with-smbclient",
+      "path": "apps/nextcloud-with-smbclient",
+      "last_modified": "2025-01-21T16:53:20.030934",
+      "description": "The productivity platform that keeps you in control",
+      "longDescription": "This is legacy and you should use the BigBearCasaOS Nextcloud instead. Nextcloud puts your data at your fingertips, under your control. Store your documents, calendar, contacts and photos on a server at home, at one of our providers or in a data center you trust.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/nextcloud.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/nextcloud.png"
+    },
+    {
+      "id": "c10812769ae2",
+      "name": "nexterm",
+      "path": "apps/nexterm",
+      "last_modified": "2025-01-21T16:53:20.034446",
+      "description": "Nexterm",
+      "longDescription": "The open source server management software for SSH, VNC & RDP. This is in Preview Release.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/nexterm/logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/nexterm/logo.png"
+    },
+    {
+      "id": "ad0b49d6fcff",
+      "name": "nightscout",
+      "path": "apps/nightscout",
+      "last_modified": "2025-01-21T16:53:20.037951",
+      "description": "Nightscout",
+      "longDescription": "This acts as a web-based CGM (Continuous Glucose Monitor) to allow multiple caregivers to remotely view a patient's glucose data in real time. The server reads a MongoDB which is intended to be data from a physical CGM, where it sends new SGV (sensor glucose values) as the data becomes available. The data is then displayed graphically and blood glucose values are predicted 0.5 hours ahead using an autoregressive second order model. Alarms are generated for high and low values, which can be cleared by any watcher of the data.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/nightscout.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/nightscout.png"
+    },
+    {
+      "id": "123e3234b1a6",
+      "name": "nocodb",
+      "path": "apps/nocodb",
+      "last_modified": "2025-01-21T16:53:20.040963",
+      "description": "🔥 🔥 🔥 Open Source Airtable Alternative",
+      "longDescription": "NocoDB allows building no-code database solutions with ease of spreadsheets. Bring your own database or choose ours! Millions of rows? Not a problem. Your Data. Your rules. You are in control.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/nocodb.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/nocodb.png"
+    },
+    {
+      "id": "4f02a6ba3c32",
+      "name": "node-red",
+      "path": "apps/node-red",
+      "last_modified": "2025-01-21T16:53:20.041963",
+      "description": "Low-code programming for event-driven applications",
+      "longDescription": "Node-RED is a programming tool for wiring together hardware devices, APIs and online services in new and interesting ways.  It provides a browser-based editor that makes it easy to wire together flows using the wide range of nodes in the palette that can be deployed to its runtime in a single-click.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/node-red.png",
+      "supported_architectures": [
+        "amd64",
+        "arm",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/node-red.png"
+    },
+    {
+      "id": "0dad54a9eec0",
+      "name": "note-mark-aio",
+      "path": "apps/note-mark-aio",
+      "last_modified": "2025-01-21T16:53:20.044476",
+      "description": "Note Mark Aio",
+      "longDescription": "Note Mark Aio is a self-hosted note taking app that allows you to create, organize, and share notes. It's a fork of the popular note-mark app with a focus on simplicity and ease of use.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/note-mark-aio/logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/note-mark-aio/logo.png"
+    },
+    {
+      "id": "057e06ad5c45",
+      "name": "npmplus",
+      "path": "apps/npmplus",
+      "last_modified": "2025-01-21T16:53:20.046477",
+      "description": "NPMPlus",
+      "longDescription": "Docker container for managing Nginx proxy hosts with a simple, powerful interface",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/npmplus.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/npmplus.png"
+    },
+    {
+      "id": "a89f532a0454",
+      "name": "ntfysh",
+      "path": "apps/ntfysh",
+      "last_modified": "2025-01-21T16:53:20.047981",
+      "description": "A simple HTTP-based pub-sub notification service",
+      "longDescription": "ntfy (pronounced notify) is a simple HTTP-based pub-sub notification service. It allows you to send notifications to your phone or desktop via scripts from any computer, and/or using a REST API. It's infinitely flexible, and 100% free software.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/ntfy.png",
+      "supported_architectures": [
+        "amd64",
+        "arm",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/ntfy.png"
+    },
+    {
+      "id": "53ddc7d747d4",
+      "name": "obsidian",
+      "path": "apps/obsidian",
+      "last_modified": "2025-01-21T16:53:20.053499",
+      "description": "Obsidian",
+      "longDescription": "Obsidian is a note-taking app that lets you create, link, and organize your notes on your device, with hundreds of plugins and themes to customize your workflow. You can also publish your notes online, access them offline, and sync them securely with end-to-end encryption.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/obsidian.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/obsidian.png"
+    },
+    {
+      "id": "2b80a78d311e",
+      "name": "obsidian-livesync",
+      "path": "apps/obsidian-livesync",
+      "last_modified": "2025-01-21T16:53:20.049988",
+      "description": "Self-hosted database for synchronizing Obsidian vaults.",
+      "longDescription": "Self-hosted database for synchronizing Obsidian vaults.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/obsidian.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/obsidian.png"
+    },
+    {
+      "id": "23de2f932943",
+      "name": "octoprint",
+      "path": "apps/octoprint",
+      "last_modified": "2025-01-21T16:53:20.055554",
+      "description": "OctoPrint",
+      "longDescription": "OctoPrint is the snappy web interface for your 3D printer!",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/octoprint.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/octoprint.png"
+    },
+    {
+      "id": "f391235c8b6b",
+      "name": "odoo",
+      "path": "apps/odoo",
+      "last_modified": "2025-01-21T16:53:20.056555",
+      "description": "Open-source business management software with modular applications for streamlined operations.",
+      "longDescription": "Open-source business management software suite designed to streamline various aspects of business operations. With its modular structure, users can choose and integrate specific applications such as accounting, inventory, and sales. Odoo provides a user-friendly interface, scalability for businesses of all sizes, and is available in both community (free) and enterprise editions. Its integrated approach and customization options make it a popular choice for comprehensive ERP (Enterprise Resource Planning) solutions.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/odoo/logo.jpg",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/odoo/logo.jpg"
+    },
+    {
+      "id": "9f6298041bdc",
+      "name": "ollama-amd",
+      "path": "apps/ollama-amd",
+      "last_modified": "2025-01-21T16:53:20.059065",
+      "description": "LLMs inference server with OpenAI compatible API",
+      "longDescription": "Get up and running with Llama 3, Mistral, Gemma, and other large language models.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/ollama-amd.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/ollama-amd.png"
+    },
+    {
+      "id": "028ef865cd4b",
+      "name": "ollama-cpu",
+      "path": "apps/ollama-cpu",
+      "last_modified": "2025-01-21T16:53:20.061065",
+      "description": "LLMs inference server with OpenAI compatible API",
+      "longDescription": "Get up and running with Llama 3, Mistral, Gemma, and other large language models.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/ollama-cpu.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/ollama-cpu.png"
+    },
+    {
+      "id": "6dc92c8b5e2d",
+      "name": "ollama-nvidia",
+      "path": "apps/ollama-nvidia",
+      "last_modified": "2025-01-21T16:53:20.062065",
+      "description": "LLMs inference server with OpenAI compatible API",
+      "longDescription": "Get up and running with Llama 3, Mistral, Gemma, and other large language models.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/ollama-nvidia.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/ollama-nvidia.png"
+    },
+    {
+      "id": "80d16ba93a7a",
+      "name": "onedev",
+      "path": "apps/onedev",
+      "last_modified": "2025-01-21T16:53:20.064575",
+      "description": "Self-hosted Git Server with Kanban and CI/CD",
+      "longDescription": "Self-hosted Git Server with Kanban and CI/CD",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/onedev.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/onedev.png"
+    },
+    {
+      "id": "fc249ccafd26",
+      "name": "onlyoffice",
+      "path": "apps/onlyoffice",
+      "last_modified": "2025-01-21T16:53:20.066575",
+      "description": "OnlyOffice",
+      "longDescription": "Feature-rich web-based office suite with a vast range of collaborative capabilities",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/onlyoffice.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/onlyoffice.png"
+    },
+    {
+      "id": "65b289ce90bb",
+      "name": "open-webui",
+      "path": "apps/open-webui",
+      "last_modified": "2025-01-21T16:53:20.068079",
+      "description": "User-friendly WebUI for LLMs",
+      "longDescription": "Open WebUI is an extensible, feature-rich, and user-friendly self-hosted WebUI designed to operate entirely offline.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/open-webui.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/open-webui.png"
+    },
+    {
+      "id": "ed272bd51f04",
+      "name": "openvpn-as",
+      "path": "apps/openvpn-as",
+      "last_modified": "2025-01-21T16:53:20.070091",
+      "description": "OpenVPN is an open-source commercial software that implements virtual private network (VPN).",
+      "longDescription": "OpenVPN is an open-source commercial software that implements virtual private network (VPN) techniques to create secure point-to-point or site-to-site connections in routed or bridged configurations and remote access facilities.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://static-00.iconduck.com/assets.00/openvpn-icon-512x512-nmf6geqm.png",
+      "supported_architectures": [
+        "amd64"
+      ],
+      "icon": "https://static-00.iconduck.com/assets.00/openvpn-icon-512x512-nmf6geqm.png"
+    },
+    {
+      "id": "a698c3a645dc",
+      "name": "owncloud",
+      "path": "apps/owncloud",
+      "last_modified": "2025-01-21T16:53:20.072091",
+      "description": "ownCloud",
+      "longDescription": "ownCloud offers file sharing and collaboration trusted by 200+ million users worldwide regardless of device or location.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/owncloud.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/owncloud.png"
+    },
+    {
+      "id": "113a690a04c6",
+      "name": "paperless-ngx",
+      "path": "apps/paperless-ngx",
+      "last_modified": "2025-01-21T16:53:20.073597",
+      "description": "Paperless-ngx",
+      "longDescription": "Paperless-ngx is a community-supported open-source document management system that transforms your physical documents into a searchable online archive so you can keep, well, less paper.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/paperless.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/paperless.png"
+    },
+    {
+      "id": "0ca223ca044b",
+      "name": "passwordpusher",
+      "path": "apps/passwordpusher",
+      "last_modified": "2025-01-21T16:53:20.075604",
+      "description": "Give your users the tools to be secure by default.",
+      "longDescription": "Password Pusher is an open source application to communicate passwords over the web. Links to passwords expire after a certain number of views and/or time has passed.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/passwordpusher.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/passwordpusher.png"
+    },
+    {
+      "id": "f52204e91430",
+      "name": "pd3f",
+      "path": "apps/pd3f",
+      "last_modified": "2025-01-21T16:53:20.077604",
+      "description": "PD3F",
+      "longDescription": "pd3f is a PDF text extraction pipeline that is self-hosted, local-first and Docker-based. It reconstructs the original continuous text with the help of machine learning.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/pd3f/logo.jpg",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/pd3f/logo.jpg"
+    },
+    {
+      "id": "36a0c7420e11",
+      "name": "penpot",
+      "path": "apps/penpot",
+      "last_modified": "2025-01-21T16:53:20.079956",
+      "description": "Bring Design Freedom to your Product Team",
+      "longDescription": "Designers and developers can finally work in unison to build beautifully designed software experiences that truly scale up.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/penpot/logo.jpg",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/penpot/logo.jpg"
+    },
+    {
+      "id": "00293f2a9e52",
+      "name": "peppermint",
+      "path": "apps/peppermint",
+      "last_modified": "2025-01-21T16:53:20.081961",
+      "description": "peppermint",
+      "longDescription": "Peppermint is a central hub for your help desk. A powerfully easy system for tracking, prioritising, and solving customer support tickets.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/peppermint/logo.png",
+      "supported_architectures": [
+        "amd64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/peppermint/logo.png"
+    },
+    {
+      "id": "4510acc4492a",
+      "name": "photoprism",
+      "path": "apps/photoprism",
+      "last_modified": "2025-01-21T16:53:20.084291",
+      "description": "AI-Powered Photos App",
+      "longDescription": "PhotoPrism® is an AI-Powered Photos App for the Decentralized Web. It makes use of the latest technologies to tag and find pictures automatically without getting in your way. You can run it at home, on a private server, or in the cloud.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/photoprism.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/photoprism.png"
+    },
+    {
+      "id": "2beb1718a08c",
+      "name": "phpmyadmin",
+      "path": "apps/phpmyadmin",
+      "last_modified": "2025-01-21T16:53:20.086026",
+      "description": "phpMyAdmin",
+      "longDescription": "phpMyAdmin - A web interface for MySQL and MariaDB.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/phpmyadmin.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/phpmyadmin.png"
+    },
+    {
+      "id": "1c1180aabdef",
+      "name": "pihole",
+      "path": "apps/pihole",
+      "last_modified": "2025-01-21T16:53:20.090551",
+      "description": "A black hole for Internet advertisements",
+      "longDescription": "The Pi-hole® is a DNS sinkhole that protects your devices from unwanted content without installing any client-side software.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/pi-hole.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/pi-hole.png"
+    },
+    {
+      "id": "23173d076c77",
+      "name": "pihole-unbound",
+      "path": "apps/pihole-unbound",
+      "last_modified": "2025-01-21T16:53:20.088537",
+      "description": "Pi-hole and Unbound",
+      "longDescription": "This is a custom pihole and unbound setup.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/pi-hole-unbound.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/pi-hole-unbound.png"
+    },
+    {
+      "id": "33aa7310f259",
+      "name": "pingvin-share",
+      "path": "apps/pingvin-share",
+      "last_modified": "2025-01-21T16:53:20.092551",
+      "description": "Pingvin Share",
+      "longDescription": "Pingvin Share is self-hosted file sharing platform and an alternative for WeTransfer.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/pingvin.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/pingvin.png"
+    },
+    {
+      "id": "f6ebaa572d60",
+      "name": "piwigo",
+      "path": "apps/piwigo",
+      "last_modified": "2025-01-21T16:53:20.096060",
+      "description": "Piwigo",
+      "longDescription": "Piwigo is a photo gallery software for the web that comes with powerful features to publish and manage your collection of pictures.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/piwigo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/piwigo.png"
+    },
+    {
+      "id": "ec3a34e811e6",
+      "name": "planka",
+      "path": "apps/planka",
+      "last_modified": "2025-01-21T16:53:20.097060",
+      "description": "Free open source kanban board for workgroups.",
+      "longDescription": "The realtime kanban board for workgroups built with React and Redux.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/planka.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/planka.png"
+    },
+    {
+      "id": "ace5500b65fa",
+      "name": "plant-it",
+      "path": "apps/plant-it",
+      "last_modified": "2025-01-21T16:53:20.099571",
+      "description": "Self-hosted, open source gardening companion app",
+      "longDescription": "Plant-it is a self-hosted gardening companion app. Useful for keeping track of plant care, receiving notifications about when to water plants, uploading plant images, and more.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/plant-it/logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/plant-it/logo.png"
+    },
+    {
+      "id": "92cfe6b7d5aa",
+      "name": "playit-docker-web",
+      "path": "apps/playit-docker-web",
+      "last_modified": "2025-01-21T16:53:20.101575",
+      "description": "Playit.gg is a global proxy that allows anyone to host a server without port forwarding.",
+      "longDescription": "Playit.gg is a global proxy that allows anyone to host a server without port forwarding. We use tunneling. Only the server needs to run the program, not every player!",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/playit-docker-web/logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/playit-docker-web/logo.png"
+    },
+    {
+      "id": "a504dffd284b",
+      "name": "playitgg",
+      "path": "apps/playitgg",
+      "last_modified": "2025-01-21T16:53:20.103576",
+      "description": "playit.gg is a global proxy that allows anyone to host a server without port forwarding. We use tunneling. Only the server needs to run the program, not every player!",
+      "longDescription": "playit.gg is a global proxy that allows anyone to host a server without port forwarding. We use tunneling. Only the server needs to run the program, not every player!",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://media.forgecdn.net/avatars/848/399/638248438568793075.png",
+      "supported_architectures": [
+        "amd64"
+      ],
+      "icon": "https://media.forgecdn.net/avatars/848/399/638248438568793075.png"
+    },
+    {
+      "id": "17c376b010fb",
+      "name": "plex",
+      "path": "apps/plex",
+      "last_modified": "2025-01-21T16:53:20.105087",
+      "description": "Stream Movies & TV Shows",
+      "longDescription": "Stream Movies & TV Shows",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/plex.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/plex.png"
+    },
+    {
+      "id": "554d9ec37f45",
+      "name": "portainer",
+      "path": "apps/portainer",
+      "last_modified": "2025-01-21T16:53:20.108598",
+      "description": "Portainer",
+      "longDescription": "Irrespective of your industry, orchestration platform, or computing device, Portainer is the most versatile container management software that simplifies your secure adoption of containers with remarkable speed.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/portainer-alt.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/portainer-alt.png"
+    },
+    {
+      "id": "6dc88720bd4f",
+      "name": "portainer-agent",
+      "path": "apps/portainer-agent",
+      "last_modified": "2025-01-21T16:53:20.106086",
+      "description": "Portainer Agent",
+      "longDescription": "Portainer uses the Portainer Agent container to communicate with the Portainer Server instance and provide access to the node's resources. This document will outline how to install the Portainer Agent on your node and how to connect to it from your Portainer Server instance. If you do not have a working Portainer Server instance yet, please refer to the Portainer Server installation guide first.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/portainer-alt.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/portainer-alt.png"
+    },
+    {
+      "id": "d51f5fdf8508",
+      "name": "project-management",
+      "path": "apps/project-management",
+      "last_modified": "2025-01-21T16:53:20.110604",
+      "description": "Project Management",
+      "longDescription": "An open source Project management tool based on Laravel and Filament",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/project-management/logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/project-management/logo.png"
+    },
+    {
+      "id": "1e9e1f1ed8d9",
+      "name": "pterodactyl-panel",
+      "path": "apps/pterodactyl-panel",
+      "last_modified": "2025-01-21T16:53:20.111603",
+      "description": "Pterodactyl Panel",
+      "longDescription": "Pterodactyl® is a free, open-source game server management panel built with PHP, React, and Go. Designed with security in mind, Pterodactyl runs all game servers in isolated Docker containers while exposing a beautiful and intuitive UI to end users.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/pterodactyl.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/pterodactyl.png"
+    },
+    {
+      "id": "067409a9af21",
+      "name": "pterodactyl-wings",
+      "path": "apps/pterodactyl-wings",
+      "last_modified": "2025-01-21T16:53:20.115113",
+      "description": "Pterodactyl Wings",
+      "longDescription": "Wings is Pterodactyl's server control plane, built for the rapidly changing gaming industry and designed to be highly performant and secure. Wings provides an HTTP API allowing you to interface directly with running server instances, fetch server logs, generate backups, and control all aspects of the server lifecycle.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/pterodactyl.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/pterodactyl.png"
+    },
+    {
+      "id": "066c9700b65d",
+      "name": "python-matter-server",
+      "path": "apps/python-matter-server",
+      "last_modified": "2025-01-21T16:53:20.116112",
+      "description": "Python Matter Server",
+      "longDescription": "This project implements a Matter Controller Server over WebSockets using the official Matter (formerly CHIP) SDK as a base and provides both a server and client implementation. The goal of this project is primary to have Matter support in Home Assistant but its universal approach makes it suitable to be used in other projects too.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/python-matter-server/logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/python-matter-server/logo.png"
+    },
+    {
+      "id": "e2bb88ed2b1e",
+      "name": "rallly",
+      "path": "apps/rallly",
+      "last_modified": "2025-01-21T16:53:20.119624",
+      "description": "Rallly",
+      "longDescription": "Rallly is an open-source scheduling and collaboration tool designed to make organizing events and meetings easier.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/rallly.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/rallly.png"
+    },
+    {
+      "id": "8e2edfd2be7a",
+      "name": "reactive-resume",
+      "path": "apps/reactive-resume",
+      "last_modified": "2025-01-21T16:53:20.120629",
+      "description": "A free and open-source resume builder",
+      "longDescription": "A free and open-source resume builder that simplifies the process of creating, updating, and sharing your resume.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/reactive-resume/logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/reactive-resume/logo.png"
+    },
+    {
+      "id": "5950d8d414f1",
+      "name": "retroarch-web",
+      "path": "apps/retroarch-web",
+      "last_modified": "2025-01-21T16:53:20.123629",
+      "description": "RetroArch Web Player",
+      "longDescription": "Online retro games emulator.The RetroArch Web Player is RetroArch compiled through Emscripten.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/retroarch-web/logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/retroarch-web/logo.png"
+    },
+    {
+      "id": "ac0a182bd00e",
+      "name": "rocket-chat",
+      "path": "apps/rocket-chat",
+      "last_modified": "2025-01-21T16:53:20.125140",
+      "description": "The communications platform that puts data protection first.",
+      "longDescription": "Rocket.Chat is an open-source fully customizable communications platform [...]",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/rocketchat.png",
+      "supported_architectures": [
+        "amd64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/rocketchat.png"
+    },
+    {
+      "id": "8d319cd4b15d",
+      "name": "romm",
+      "path": "apps/Romm",
+      "last_modified": "2025-01-21T16:53:20.127644",
+      "description": "RomM",
+      "longDescription": "ROM manager for organizing, enriching, and playing retro games, with support for 400+ platforms.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/romm.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/romm.png"
+    },
+    {
+      "id": "300b2021c7a5",
+      "name": "scrutiny",
+      "path": "apps/scrutiny",
+      "last_modified": "2025-01-21T16:53:20.129651",
+      "description": "Monitor your server's hard disk health",
+      "longDescription": "If you run a server with more than a couple of hard drives, you're probably already familiar with S.M.A.R.T and the smartd daemon.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/scrutiny.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/scrutiny.png"
+    },
+    {
+      "id": "f6d183857c63",
+      "name": "scrypted",
+      "path": "apps/scrypted",
+      "last_modified": "2025-01-21T16:53:20.131658",
+      "description": "Scrypted",
+      "longDescription": "Scrypted is an open source video integration platform. Using various Plugins, Scrypted can receive streams from a range of cameras and send them to other platforms (HomeKit, Google Home, Alexa, Home Assistant).",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/scrypted.png",
+      "supported_architectures": [
+        "amd64",
+        "arm",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/scrypted.png"
+    },
+    {
+      "id": "c519883f7664",
+      "name": "seafile",
+      "path": "apps/seafile",
+      "last_modified": "2025-01-21T16:53:20.134169",
+      "description": "Seafile is an open source file sync and share platform, focusing on reliability and performance.",
+      "longDescription": "Seafile is an open source file sync and share platform, focusing on reliability and performance. Seafile's built-in collaborative document SeaDoc, make it easy for collaborative writing and publishing documents.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/seafile.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/seafile.png"
+    },
+    {
+      "id": "982b2620d28a",
+      "name": "semaphore",
+      "path": "apps/semaphore",
+      "last_modified": "2025-01-21T16:53:20.136170",
+      "description": "Ansible Semaphore",
+      "longDescription": "Ansible Semaphore is a modern UI for Ansible. It lets you easily run Ansible playbooks, get notifications about fails, control access to deployment system.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/semaphore.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/semaphore.png"
+    },
+    {
+      "id": "a2697bf75331",
+      "name": "sftpgo",
+      "path": "apps/sftpgo",
+      "last_modified": "2025-01-21T16:53:20.137675",
+      "description": "SFTPGO",
+      "longDescription": "Full-featured and highly configurable SFTP, HTTP/S, FTP/S and WebDAV server - S3, Google Cloud Storage, Azure Blob",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/sftpgo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/sftpgo.png"
+    },
+    {
+      "id": "27fd785c3c4c",
+      "name": "speedtest-tracker",
+      "path": "apps/speedtest-tracker",
+      "last_modified": "2025-01-21T16:53:20.139681",
+      "description": "Speedtest Tracker",
+      "longDescription": "A Docker image to check your internet speed using Ookla's Speedtest service. Build using Laravel and the Speedtest CLI.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/alexjustesen/speedtest-tracker/public/img/speedtest-tracker-icon.png",
+      "supported_architectures": [
+        "amd64",
+        "arm",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/alexjustesen/speedtest-tracker/public/img/speedtest-tracker-icon.png"
+    },
+    {
+      "id": "8db032a6ed54",
+      "name": "stirling-pdf",
+      "path": "apps/stirling-pdf",
+      "last_modified": "2025-01-21T16:53:20.141686",
+      "description": "Stirling PDF - Local hosted web based PDF editor",
+      "longDescription": "Stirling PDF - Local hosted web based PDF editor",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/stirling-pdf/logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/stirling-pdf/logo.png"
+    },
+    {
+      "id": "be150ca5413f",
+      "name": "syncthing",
+      "path": "apps/syncthing",
+      "last_modified": "2025-01-21T16:53:20.144198",
+      "description": "Peer-to-peer file synchronization between your devices",
+      "longDescription": "Syncthing is a continuous file synchronization program. It synchronizes files between two or more computers. We strive to fulfill the goals below. The goals are listed in order of importance, the most important one being the first.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/syncthing.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/syncthing.png"
+    },
+    {
+      "id": "8dff7cc0537f",
+      "name": "tailscale",
+      "path": "apps/tailscale",
+      "last_modified": "2025-01-21T16:53:20.146724",
+      "description": "The easiest, most secure way to use WireGuard and 2FA.",
+      "longDescription": "Zero config VPN. Installs on any device in minutes, manages firewall rules for you, and works from anywhere.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/tailscale.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/tailscale.png"
+    },
+    {
+      "id": "d04fe16b77a1",
+      "name": "tandoor",
+      "path": "apps/tandoor",
+      "last_modified": "2025-01-21T16:53:20.148997",
+      "description": "Recipe collection manager.",
+      "longDescription": "Drop your collection of links and notes. Get Tandoor and never look back onto a time without recipe management, storage, sharing and collaborative cooking!",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/tandoor.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/tandoor.png"
+    },
+    {
+      "id": "2d90c4b65080",
+      "name": "tianji",
+      "path": "apps/tianji",
+      "last_modified": "2025-01-21T16:53:20.151142",
+      "description": "Tianji: Insight into everything, Website Analytics + Uptime Monitor + Server Status. not only another GA alternatives",
+      "longDescription": "During our observations of the website. We often need to use multiple applications together. For example, we need analysis tools such as GA/umami to check pv/uv and the number of visits to each page, we need an uptime monitor to check the network quality and connectivity of the server, and we need to use prometheus to obtain the status reported by the server to check the quality of the server. In addition, if we develop an application that allows open source deployment, we often need a telemetry system to help us collect the simplest information about other people's deployment situations. I think these tools should serve the same purpose, so is there an application that can integrate these common needs in a lightweight way? After all, most of the time we don't need very professional and in-depth functions. But in order to achieve comprehensive monitoring, I need to install so many services. It's good to specialize in one thing, if we are experts in related abilities we need such specialized tools. But for most users who only have lightweight needs, an All-in-One application will be more convenient and easier to use.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/tianji/logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/tianji/logo.png"
+    },
+    {
+      "id": "31fd1811dc1b",
+      "name": "tp-link-omada-controller",
+      "path": "apps/tp-link-omada-controller",
+      "last_modified": "2025-01-21T16:53:20.153416",
+      "description": "TP-Link Omada Controller",
+      "longDescription": "Docker image for TP-Link Omada Controller to control TP-Link Omada Hardware",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/omada.png",
+      "supported_architectures": [
+        "amd64",
+        "arm",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/omada.png"
+    },
+    {
+      "id": "57ef49b4eede",
+      "name": "traccar",
+      "path": "apps/traccar",
+      "last_modified": "2025-01-21T16:53:20.155507",
+      "description": "Traccar",
+      "longDescription": "Traccar GPS Tracking System in Docker image.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/traccar.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/traccar.png"
+    },
+    {
+      "id": "2f37fe84f48f",
+      "name": "trilium",
+      "path": "apps/trilium",
+      "last_modified": "2025-01-21T16:53:20.157731",
+      "description": "Build your personal knowledge base with Trilium Notes",
+      "longDescription": "Build your personal knowledge base with Trilium Notes",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/trilium.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/trilium.png"
+    },
+    {
+      "id": "79caee346d25",
+      "name": "tududi",
+      "path": "apps/tududi",
+      "last_modified": "2025-01-21T16:53:20.160554",
+      "description": "tududi is a task and project management web application built with Sinatra",
+      "longDescription": "tududi is a task and project management web application built with Sinatra. It allows users to efficiently manage their tasks and projects, categorize them into different areas, and track due dates. tududi is designed to be intuitive and easy to use, providing a seamless experience for personal productivity.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/tududi/logo.png",
+      "supported_architectures": [
+        "amd64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/tududi/logo.png"
+    },
+    {
+      "id": "a10cc89b59ad",
+      "name": "uisp",
+      "path": "apps/uisp",
+      "last_modified": "2025-01-21T16:53:20.165173",
+      "description": "UISP",
+      "longDescription": "All-in-one docker image for Ubiquiti UISP (formerly UNMS). Supports x86_64 and ARM (Raspberry Pi).",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-icons/Apps/uisp/logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-icons/Apps/uisp/logo.png"
+    },
+    {
+      "id": "6ae9ce5597ed",
+      "name": "umami",
+      "path": "apps/umami",
+      "last_modified": "2025-01-21T16:53:20.166217",
+      "description": "Umami is a simple, fast, privacy-focused alternative to Google Analytics.",
+      "longDescription": "Umami is a simple, fast, privacy-focused alternative to Google Analytics.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/umami.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/umami.png"
+    },
+    {
+      "id": "39f0b689a297",
+      "name": "umbrel-os",
+      "path": "apps/umbrel-os",
+      "last_modified": "2025-01-21T16:53:20.168289",
+      "description": "Umbrel OS",
+      "longDescription": "Umbrel is a personal server OS that makes self-hosting accessible to everyone.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/umbrel.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/umbrel.png"
+    },
+    {
+      "id": "3f4b365a7c44",
+      "name": "unifi-network-application",
+      "path": "apps/unifi-network-application",
+      "last_modified": "2025-01-21T16:53:20.175981",
+      "description": "The Unifi-network-application",
+      "longDescription": "The Unifi-network-application software is a powerful, enterprise wireless software engine ideal for high-density client deployments requiring low latency and high uptime performance.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/unifi.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/unifi.png"
+    },
+    {
+      "id": "6c3fe77a4137",
+      "name": "unifi-network-application-mongo-4",
+      "path": "apps/unifi-network-application-mongo-4",
+      "last_modified": "2025-01-21T16:53:20.170550",
+      "description": "The Unifi-network-application MongoDB 4",
+      "longDescription": "Supports Zimaboards and PI's. The Unifi-network-application software is a powerful, enterprise wireless software engine ideal for high-density client deployments requiring low latency and high uptime performance.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/unifi.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/unifi.png"
+    },
+    {
+      "id": "801c4ee500d5",
+      "name": "upsnap",
+      "path": "apps/upsnap",
+      "last_modified": "2025-01-21T16:53:20.179996",
+      "description": "Upsnap",
+      "longDescription": "A simple wake on lan web app written with SvelteKit, Go and PocketBase.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/upsnap.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/upsnap.png"
+    },
+    {
+      "id": "5b8a173991ce",
+      "name": "uptime-kuma",
+      "path": "apps/uptime-kuma",
+      "last_modified": "2025-01-21T16:53:20.183510",
+      "description": "A fancy self-hosted monitoring tool",
+      "longDescription": "A fancy self-hosted monitoring tool",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/uptime-kuma.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/uptime-kuma.png"
+    },
+    {
+      "id": "363035f521a6",
+      "name": "vikunja",
+      "path": "apps/vikunja",
+      "last_modified": "2025-01-21T16:53:20.186025",
+      "description": "Vikunja",
+      "longDescription": "The open-source, self-hostable to-do app. Organize everything, on all platforms.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/vikunja.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/vikunja.png"
+    },
+    {
+      "id": "d78ce39da792",
+      "name": "viseron",
+      "path": "apps/viseron",
+      "last_modified": "2025-01-21T16:53:20.191053",
+      "description": "Viseron",
+      "longDescription": "Viseron is a self-hosted, local only NVR and AI Computer Vision software",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/viseron/logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/viseron/logo.png"
+    },
+    {
+      "id": "7729890103f1",
+      "name": "wallos",
+      "path": "apps/wallos",
+      "last_modified": "2025-01-21T16:53:20.192056",
+      "description": "Wallos",
+      "longDescription": "Wallos: Open-Source Personal Subscription Tracker",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/wallos.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/wallos.png"
+    },
+    {
+      "id": "287adfa6fe48",
+      "name": "wg-easy",
+      "path": "apps/wg-easy",
+      "last_modified": "2025-01-21T16:53:20.195084",
+      "description": "VPN server for your homeserver",
+      "longDescription": "Access your homeserver from anywhere even on your mobile device. Wireguard-easy is a simple tool to configure and manage Wireguard VPN servers. It is written in Go and uses the official Wireguard client. You have to open and redirect port 51820 to your homeserver in order to connect.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/wg-easy/logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/wg-easy/logo.png"
+    },
+    {
+      "id": "09b7a08b900f",
+      "name": "whats-up-docker",
+      "path": "apps/whats-up-docker",
+      "last_modified": "2025-01-21T16:53:20.196083",
+      "description": "What's Up Docker",
+      "longDescription": "Gets you notified when new versions of your Docker containers are available and lets you react the way you want.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/whats-up-docker.png",
+      "supported_architectures": [
+        "amd64",
+        "arm",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/whats-up-docker.png"
+    },
+    {
+      "id": "6a2b39c44fab",
+      "name": "wordpress",
+      "path": "apps/wordpress",
+      "last_modified": "2025-01-21T16:53:20.199595",
+      "description": "WordPress",
+      "longDescription": "Initially started as a blogging tool in 2003, it has evolved into a highly flexible CMS that powers over 40% of the web (as of my last training data in 2022).",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/wordpress.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64",
+        "arm"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/wordpress.png"
+    },
+    {
+      "id": "0e6003c26d97",
+      "name": "zigbee2mqtt",
+      "path": "apps/zigbee2mqtt",
+      "last_modified": "2025-01-21T16:53:20.201599",
+      "description": "Zigbee to MQTT bridge",
+      "longDescription": "Zigbee to MQTT bridge, get rid of your proprietary Zigbee bridges",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/zigbee2mqtt.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/zigbee2mqtt.png"
+    },
+    {
+      "id": "30aec12f9a6e",
+      "name": "zipline",
+      "path": "apps/zipline",
+      "last_modified": "2025-01-21T16:53:20.204106",
+      "description": "zipline",
+      "longDescription": "A ShareX/file upload server that is easy to use, packed with features, and with an easy setup!",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://github.com/bigbeartechworld/big-bear-casaos/assets/1289128/3b655316-f72c-4b89-8138-0abee624e9b8",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://github.com/bigbeartechworld/big-bear-casaos/assets/1289128/3b655316-f72c-4b89-8138-0abee624e9b8"
+    },
+    {
+      "id": "66b7cb45b0e0",
+      "name": "zotero",
+      "path": "apps/zotero",
+      "last_modified": "2025-01-21T16:53:20.206616",
+      "description": "Zotero",
+      "longDescription": "Zotero is a free, easy-to-use tool to help you collect, organize, annotate, cite, and share research.",
+      "repository": "https://github.com/bigbeartechworld/big-bear-casaos",
+      "image": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/zotero/logo.png",
+      "supported_architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/bigbeartechworld/big-bear-casaos/Apps/zotero/logo.png"
+    }
+  ]
+}

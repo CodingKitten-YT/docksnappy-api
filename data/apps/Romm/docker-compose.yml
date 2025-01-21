@@ -1,0 +1,38 @@
+name: romm
+services:
+  Romm:
+    image: rommapp/romm:3.7.2
+    container_name: Romm-big-bear-romm
+    environment:
+    - DB_HOST=Romm-big-bear-romm-big-bear-rommdb
+    - DB_PORT=3306
+    - DB_USER=romm-user
+    - DB_NAME=romm
+    - DB_PASSWD=casaos
+    - ROMM_AUTH_SECRET_KEY=<secret key>
+    - IGDB_CLIENT_ID=<igdb client id>
+    - IGDB_CLIENT_SECRET=<igdb client secret>
+    - MOBYGAMES_API_KEY=<moby api key>
+    - STEAMGRIDDB_API_KEY=<sgdb api key>
+    - ENABLE_RESCAN_ON_FILESYSTEM_CHANGE=true
+    - ENABLE_SCHEDULED_RESCAN=true
+    - ENABLE_SCHEDULED_UPDATE_SWITCH_TITLEDB=true
+    volumes:
+    - Romm-big-bear-romm-big-bear-romm-data:/romm/resources
+    - Romm-big-bear-romm-big-bear-romm-data-2:/redis-data
+    - Romm-big-bear-romm-big-bear-romm-data-3:/romm/library
+    - Romm-big-bear-romm-big-bear-romm-data-4:/romm/assets
+    - Romm-big-bear-romm-big-bear-romm-data-5:/romm/config
+    - Romm-big-bear-romm-big-bear-romm-data-6:/romm/logs
+    ports:
+    - 1080:8080
+    depends_on:
+    - Romm-big-bear-romm-big-bear-rommdb
+    restart: unless-stopped
+    networks:
+    - big-bear-romm-network
+    hostname: Romm-big-bear-romm
+networks:
+  big-bear-romm-network:
+    driver: bridge
+minVersion: 0.14.0

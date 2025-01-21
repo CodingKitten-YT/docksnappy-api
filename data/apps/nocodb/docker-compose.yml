@@ -1,0 +1,21 @@
+name: nocodb
+services:
+  nocodb:
+    image: nocodb/nocodb:0.260.2
+    container_name: nocodb-big-bear-nocodb
+    restart: unless-stopped
+    environment:
+    - DATABASE_URL=postgres://nocodb:nocodb@big-bear-nocodb-db:5432/nocodb
+    - NC_AUTH_JWT_SECRET=899499fc-36a0-4131-b077-7bb9f051ac9b
+    - NC_REDIS_URL=redis://default:casaos@big-bear-nocodb-redis:6379
+    ports:
+    - 8080:8080
+    volumes:
+    - nocodb-big-bear-nocodb-big-bear-nocodb-data:/usr/src/app/data
+    networks:
+    - big-bear-nocodb-network
+    hostname: nocodb-big-bear-nocodb
+networks:
+  big-bear-nocodb-network:
+    driver: bridge
+minVersion: 0.14.0

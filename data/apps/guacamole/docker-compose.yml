@@ -1,0 +1,8 @@
+name: guacamole
+services:
+  guacamole:
+    image: guacamole/guacd:1.5.5
+    restart: always
+    container_name: guacamole-guacd
+    hostname: guacamole-guacd
+minVersion: 0.14.0
