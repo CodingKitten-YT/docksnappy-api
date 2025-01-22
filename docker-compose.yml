@@ -4,9 +4,19 @@ services:
   appstore-api:
     build: .
     ports:
-      - "3000:3000"  # Map port 3000 on the host to port 3000 in the container
-    volumes:
-      - ./data:/usr/src/app/data  # Mount the local data directory into the container
+      - "3000:3000"
     environment:
       - NODE_ENV=production
-    restart: unless-stopped  # Automatically restart the container if it stops
+      - MONGODB_URI=mongodb://mongodb:27017/appstore
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+
+volumes:
+  mongodb-data:
