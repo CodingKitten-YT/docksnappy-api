@@ -8,6 +8,7 @@ services:
     environment:
       - NODE_ENV=production
       - MONGODB_URI=mongodb://mongodb:27017/appstore
+      - API_KEY=abc
     depends_on:
       - mongodb
 

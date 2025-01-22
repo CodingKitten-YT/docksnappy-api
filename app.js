@@ -18,6 +18,18 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+// API Key Middleware
+const API_KEY = process.env.API_KEY;
+
+function apiKeyMiddleware(req, res, next) {
+    const apiKey = req.headers['x-api-key'];
+    if (apiKey && apiKey === API_KEY) {
+        next();
+    } else {
+        res.status(403).json({ error: 'Forbidden: Invalid API key' });
+    }
+}
+
 // MongoDB Connection Function
 async function connectToDatabase() {
     try {
@@ -77,7 +89,7 @@ app.get('/apps/:id/compose', async (req, res) => {
 });
 
 // Add a new app
-app.post('/apps', async (req, res) => {
+app.post('/apps', apiKeyMiddleware, async (req, res) => {
     const newApp = req.body;
 
     if (!newApp._id || !newApp.name || !newApp.description) {
@@ -94,7 +106,7 @@ app.post('/apps', async (req, res) => {
 });
 
 // Update an app
-app.put('/apps/:id', async (req, res) => {
+app.put('/apps/:id', apiKeyMiddleware, async (req, res) => {
     const appId = req.params.id;
     const updatedApp = req.body;
 
@@ -115,7 +127,7 @@ app.put('/apps/:id', async (req, res) => {
 });
 
 // Delete an app
-app.delete('/apps/:id', async (req, res) => {
+app.delete('/apps/:id', apiKeyMiddleware, async (req, res) => {
     const appId = req.params.id;
 
     try {
