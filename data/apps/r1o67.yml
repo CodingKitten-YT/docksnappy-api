@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  airflow:
+    image: apache/airflow:2.5.0
+    container_name: airflow
+    restart: unless-stopped
+    ports:
+      - "8080:8080" # Web UI on port 8080
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=mysql+mysqlconnector://airflow_user:airflow_password@mysql/airflow
+      - AIRFLOW__CORE__FERNET_KEY=your_fernet_key_here
+      - AIRFLOW__API__AUTH_BACKEND=airflow.api.auth.backend.basic_auth
+      - AIRFLOW__WEBSERVER__RBAC=True
+      - TZ=Etc/UTC # Replace with your timezone
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags # Persistent DAGs storage
+      - ./airflow/logs:/opt/airflow/logs # Persistent logs storage
+      - ./airflow/plugins:/opt/airflow/plugins # Persistent plugins storage
+    depends_on:
+      - mysql
+      - redis
+
+  mysql:
+    image: mysql:8.0
+    container_name: airflow_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD=root_password # Replace with a secure password
+      MYSQL_DATABASE=airflow
+      MYSQL_USER=airflow_user
+      MYSQL_PASSWORD=airflow_password
+    volumes:
+      - ./airflow/mysql:/var/lib/mysql # Persistent MySQL storage
+
+  redis:
+    image: redis:alpine
+    container_name: airflow_redis
+    restart: unless-stopped
+    volumes:
+      - ./airflow/redis:/data # Persistent Redis storage

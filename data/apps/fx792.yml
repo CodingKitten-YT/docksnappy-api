@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  ansible-nas:
+    image: devopstoday/ansible-nas:latest
+    container_name: ansible-nas
+    restart: unless-stopped
+    ports:
+      - "80:80"  # Web UI on port 80
+    volumes:
+      - ./ansible-nas/config:/config # Persistent configuration storage
+      - ./ansible-nas/data:/data # Data storage for NAS
+      - ./ansible-nas/playbooks:/playbooks # Ansible playbooks
+    environment:
+      - TZ=Etc/UTC # Replace with your timezone

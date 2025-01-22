@@ -1,0 +1,24 @@
+version: '3.4'
+services:
+  app:
+    image: rojen/amusewiki:package
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      - POST_DOMAIN=localhost
+      - CHANGE_PASSWORD_BEFORE_RUN=true
+      - AMW_USERNAME=amusewiki
+      - AMW_PASSWORD=changeme
+    volumes:
+      - repo:/var/lib/amusewiki/repo
+      - thumb:/var/lib/amusewiki/thumbnails
+      - staging:/var/lib/amusewiki/staging
+      - db:/var/lib/dbconfig-common/sqlite3/amusewiki
+      - web:/etc/nginx/sites-enabled
+volumes:
+  repo:
+  thumb:
+  staging:
+  db:
+  web:

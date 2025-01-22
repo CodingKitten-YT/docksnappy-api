@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  algernon:
+    image: algernon:latest
+    container_name: algernon
+    restart: unless-stopped
+    ports:
+      - "8080:8080" # Maps Algernon's port 8080 to the host
+    volumes:
+      - ./algernon/data:/data # Persistent data storage
+    environment:
+      - TZ=Etc/UTC # Replace with your timezone

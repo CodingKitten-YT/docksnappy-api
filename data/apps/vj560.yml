@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  apache:
+    image: httpd:latest
+    container_name: apache
+    restart: unless-stopped
+    ports:
+      - "80:80"   # HTTP port
+      - "443:443" # HTTPS port (if needed)
+    volumes:
+      - ./apache/html:/usr/local/apache2/htdocs # Serve static files from ./apache/html
+      - ./apache/config:/usr/local/apache2/conf # Custom Apache configuration
+    environment:
+      - TZ=Etc/UTC # Replace with your timezone

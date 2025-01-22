@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  admidio:
+    image: admidio/admidio:latest
+    container_name: admidio
+    restart: unless-stopped
+    ports:
+      - "8080:80" # Maps port 80 in the container to port 8080 on the host
+    volumes:
+      - ./admidio/uploads:/var/www/html/uploads # Persistent uploads storage
+      - ./admidio/config:/var/www/html/config # Configuration storage
+      - ./admidio/customizing:/var/www/html/customizing # Customizations
+    environment:
+      - TZ=Etc/UTC # Set your timezone, e.g., 'America/New_York'
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    container_name: admidio_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password # Replace with a secure root password
+      MYSQL_DATABASE: admidio # Database name for Admidio
+      MYSQL_USER: admidio_user # Database user
+      MYSQL_PASSWORD: admidio_password # Replace with a secure password
+    volumes:
+      - ./admidio/db:/var/lib/mysql # Persistent database storage
+
+volumes:
+  admidio_uploads:
+  admidio_config:
+  admidio_customizing:
+  admidio_db:

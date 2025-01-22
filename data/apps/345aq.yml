@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  alerthub:
+    image: alerthub/alerthub:latest
+    container_name: alerthub
+    restart: unless-stopped
+    ports:
+      - "3000:3000" # Expose the application on port 3000
+    volumes:
+      - ./alerthub/config:/app/config # Persistent configuration storage
+    environment:
+      - NODE_ENV=production
+      - TZ=Etc/UTC # Replace with your timezone, e.g., 'America/New_York'

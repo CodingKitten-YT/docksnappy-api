@@ -58,7 +58,7 @@
     {
         "Name": "Akkoma",
         "Description": "Federated microblogging server with Mastodon, GNU social, and ActivityPub compatibility.",
-        "Source Code": null,
+        "Source Code": "https://github.com/BDX-town/Akkoma",
         "License": " AGPL-3.0",
         "Tag": " Communication - Social Networks and Forums",
         "ID": "a99r6"
@@ -130,7 +130,7 @@
     {
         "Name": "Apache HTTP Server",
         "Description": "Secure, efficient and extensible server that provides HTTP services in sync with the current HTTP standards.",
-        "Source Code": null,
+        "Source Code": "https://github.com/apache/httpd",
         "License": " Apache-2.0",
         "Tag": " Web Servers",
         "ID": "vj560"

@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  anycable:
+    image: anycable/anycable-go:latest
+    container_name: anycable
+    restart: unless-stopped
+    ports:
+      - "3333:3333" # WebSocket server on port 3333
+    volumes:
+      - ./anycable/config:/etc/anycable # Persistent configuration storage
+    environment:
+      - ANYCABLE_REDIS_URL=redis://redis:6379/0 # Redis connection URL
+      - ANYCABLE_RPC_HOST=0.0.0.0
+      - ANYCABLE_RPC_PORT=50051
+      - TZ=Etc/UTC # Replace with your timezone
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:alpine
+    container_name: anycable_redis
+    restart: unless-stopped
+    volumes:
+      - ./anycable/redis:/data # Persistent Redis storage
