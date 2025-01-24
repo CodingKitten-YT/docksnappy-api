@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  octobox:
+    image: "octobox/octobox:latest"
+    container_name: octobox
+    restart: unless-stopped
+    environment:
+      OCTOBOX_LICENSE_KEY: your_license_key # Replace with your Octobox license key
+      OCTOBOX_EMAIL: your_email@example.com # Replace with your email address
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+    volumes:
+      - "./octobox:/data"
+    networks:
+      - octobox_network
+
+networks:
+  octobox_network:
+    driver: bridge

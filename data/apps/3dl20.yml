@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  flagsmith-feature-toggle:
+    image: flagsmith/flagsmith:latest
+    command: >
+      /bin/entrypoint.sh configure --type=haproxy --haproxy_config.backend_mode=http_bridge
+    environment:
+      - FLAGSMITH_ADMINS=admin@example.com
+      - FLAGSMITH_ORGANISATION=my-org
+      - FLAGSMITH_ENVIRONMENT=production
+      # Optionally, set the feature store S3 bucket if you are using it
+      - FLAGSMITH_AWS_S3_BUCKET=my-feature-store-bucket
+    ports:
+      - "9090:9090"
+    networks:
+      - flagsmith-net
+
+  flagsmith-ui:
+    image: flagsmith/flagsmith-ui:latest
+    environment:
+      - REACT_APP_FLAGSMITH_SERVER=http://feature-toggle:9090
+      - REACT_APP_FLAGSMITH_ORGANISATION=my-org
+      - REACT_APP_FLAGSMITH_ENVIRONMENT=production
+    ports:
+      - "5000:5000"
+    depends_on:
+      - flagsmith-feature-toggle
+    networks:
+      - flagsmith-net
+
+networks:
+  flagsmith-net:
+    driver: bridge

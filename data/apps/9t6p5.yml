@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  haproxy:
+    image: haproxy:latest  # or specify a particular version like 'haproxy:2.1'
+    container_name: haproxy
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - backend
+    volumes:
+      - ./haproxy/configs:/usr/share/nginx/html  # If you want to use custom configs
+      - /dev/urandom:/dev/urandom  # For entropy source (not required but recommended)
+    restart: unless-stopped
+    command: "-f /usr/local/etc/haproxy/haproxy.cfg"  # Use your custom haproxy.cfg file if you have one
+
+networks:
+  backend:
+    driver: overlay

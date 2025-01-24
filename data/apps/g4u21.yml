@@ -1,0 +1,21 @@
+version: '3.7'
+
+services:
+  mirotalk-p2p:
+    image: 'mirotalk/mirotalk-p2p:latest' # Use the official MiroTalk P2P image
+    container_name: mirotalk-p2p
+    ports:
+      - "8080:8080" # HTTP API
+      - "8432:8432" # WebSocket server (optional, if you want to expose it)
+    volumes:
+      - "./mirotalk-data:/data" # Mount for data persistence
+    environment:
+      - PEERS=peer1.mirotalk.net:5006,peer2.mirotalk.net:5006 # Replace with actual peers
+      - NODE_ID=yournodeid # Set a unique ID for your node
+      - MY_EXTERNAL_IP=yourpublicip # Set your public IP or DNS if you want your network to be accessible from the internet
+    networks:
+      - mirotalk-network
+
+networks:
+  mirotalk-network:
+    driver: overlay

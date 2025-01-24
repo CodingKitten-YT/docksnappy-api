@@ -1,0 +1,123 @@
+version: '3.8'
+
+services:
+  formiojs:
+    image: formio/formio.js:latest
+    ports:
+      - "3000:3000"
+    networks:
+      - formio_net
+    environment:
+      - FORMIO_ANONYMOUS_SUBMIT=true
+      - FORMIO_API_CORS=*
+    command: >
+      ({
+        FROM_ENVIRONMENT: true;
+        initialEnv: {
+          NODE_ENV: 'development',
+          HOST: '0.0.0.0'
+        };
+      }) => import('@formio/react').default
+
+  formio-postgresql:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=formio
+      - POSTGRES_USER=formio
+      - POSTGRES_PASSWORD=formio
+    volumes:
+      - formio-postgresql-data:/var/lib/postgresql/data
+    networks:
+      - formio_net
+
+  formio-redis:
+    image: redis:6-alpine
+    volumes:
+      - formio-redis-data:/data
+    networks:
+      - formio_net
+
+  formio-mongodb:
+    image: mongo:latest
+    command: --smallfiles
+    volumes:
+      - formio-mongodb-data:/data/db
+    networks:
+      - formio_net
+
+  minio:
+    image: minIO:latest
+    ports:
+      - "9000:9000"
+    command: server /data --console-address :9001
+    volumes:
+      - formio-minio-data:/data
+    environment:
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+    networks:
+      - formio_net
+
+  formio-task-queue-beanstalkd:
+    image: beanstalkd:latest
+    networks:
+      - formio_net
+
+# The database service can be one of 'postgres', 'mongodb' or 'sqlite'.
+# Uncomment and modify the appropriate section below depending on your choice.
+# For example, to use PostgreSQL, uncomment the 'formio-db' section and modify as needed.
+
+# formio-db:
+#   build: .
+#   image: formio/formio-server:latest
+#   environment:
+#     FORMIO_DB_ADAPTER=postgresql
+#     FORMIO_DB_HOST=formio-postgresql
+#     FORMIO_DB_NAME=formio
+#     FORMIO_DB_USER=formio
+#     FORMIO_DB_PASSWORD=formio
+#   volumes:
+#     - .:/app
+#   networks:
+#     - formio_net
+#   depends_on:
+#     - formio-postgresql
+
+# For MongoDB, uncomment and modify the following section.
+# formio-db:
+#   build: .
+#   image: formio/formio-server:latest
+#   environment:
+#     FORMIO_DB_ADAPTER=mongodb
+#     FORMIO_DB_HOST=formio-mongodb
+#     FORMIO_DB_NAME=formio
+#     FORMIO_DB_USER=formio
+#     FORMIO_DB_PASSWORD=formio
+#   volumes:
+#     - .:/app
+#   networks:
+#     - formio_net
+#   depends_on:
+#     - formio-mongodb
+
+# For SQLite, uncomment and modify the following section.
+# formio-db:
+#   build: .
+#   image: formio/formio-server:latest
+#   environment:
+#     FORMIO_DB_ADAPTER=sqlite
+#     FORMIO_DB_NAME=./formio.db
+#   volumes:
+#     - .:/app
+#   networks:
+#     - formio_net
+
+volumes:
+  formio-postgresql-data:
+  formio-redis-data:
+  formio-mongodb-data:
+  formio-minio-data:
+
+networks:
+  formio_net:
+    driver: bridge

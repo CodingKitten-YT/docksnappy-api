@@ -1,0 +1,48 @@
+version: '3.8'
+services:
+  app:
+    image: azimutt/azimutt:latest
+    container_name: azimutt
+    environment:
+      - DB_HOST=db
+      - DB_USERNAME=user
+      - DB_PASSWORD=password
+      - DB_DATABASE=azimutt
+      - DJANGO_SECRET_KEY=mysecretkey
+      - AZIMUTT_EMAIL_HOST=email-service
+      - AZIMUTT_EMAIL_PORT=587
+      - AZIMUTT_EMAIL_USER=your-email@example.com
+      - AZIMUTT_EMAIL_PASSWORD=youremailpassword
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - email-service
+    volumes:
+      - ./media:/code/media
+      - ./static:/code/static
+    restart: unless-stopped
+
+  db:
+    image: postgres:13
+    container_name: azimutt_db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: azimutt
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  email-service:
+    image: postfix:2.11
+    container_name: azimutt_email
+    environment:
+      TLS_MODE=none
+      MYDOMAIN=example.com
+    ports:
+      - "25:25"
+      - "587:587"
+    restart: unless-stopped
+
+volumes:
+  db-data:

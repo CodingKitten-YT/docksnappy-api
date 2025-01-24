@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  jitsi-meet:
+    image: jitsi/jitsi-meet:latest  # or use a specific version if needed, e.g., 'jitsi/jitsi-meet:4.0.2169-rc1'
+    platform: linux
+    ports:
+      - "80:8443"  # HTTP to WSS
+      - "443:443"   # HTTPS to HTTPS
+      - "8080:8080" # Admin web interface
+      - "5060:5060" # Jitsi Video Bridge (JVB) XMPP component
+      - "5280:5280" # Jicofo configuration UI
+    volumes:
+      - jitsi-meet-configs:/var/lib/jitsi/configs  # Keep the configs persistent across updates
+      - jitsi-meet-data:/var/lib/jitsi  # Data directory for Jitsi Meet and Jicofo, including JVB recordings
+      - jitsi-meet-logs:/var/log/jitsi  # Log files of Jitsi components (optional, but recommended for monitoring)
+    environment:
+      JITSICLIENT_REMOTE_DOMAIN: yourdomain.com  # Replace with your domain
+      JITSICLIENT_HOSTNAME: yourdomain.com
+      JICOFO_hostname: yourdomain.com
+      JVB_allow_all_ports: "true"  # Required for XMPP traffic
+    depends_on:
+      - jitsi-meet-postgres
+
+  jitsi-meet-postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: jitsi
+      POSTGRES_USER: jitsi
+      POSTGRES_PASSWORD: change_this_password
+    volumes:
+      - jitsi-meet-db:/var/lib/postgresql/data
+
+  jitsi-meet-redis:
+    image: redis:latest
+
+volumes:
+  jitsi-meet-configs:
+  jitsi-meet-data:
+  jitsi-meet-db:
+  jitsi-meet-logs:

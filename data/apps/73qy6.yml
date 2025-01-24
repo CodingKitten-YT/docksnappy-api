@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  openttd:
+    image: 'openTTD/openTTD:latest' # Use the official OpenTTD image from Docker Hub
+    container_name: openttd
+    ports:
+      - "12345:4096" # Maps port 4096 inside the container to port 12345 on the host
+    environment:
+      - TT_OPTIONS="-resolution 1280x720 -fullscreen" # Default resolution and fullscreen mode
+      # Additional environment variables can be set here, e.g., for setting a specific map or other options
+    volumes:
+      - "${HOME}/.openTTD:/root/.openTTD" # Persists OpenTTD settings across container restarts
+      - "./OpenTTD_saved_games:/var/openTTD/saved_games" # Maps a local directory for saved games to the container
+      - "./OpenTTD_config:/root/openTTD_config" # Maps a local directory for custom configs to the container
+    networks:
+      - openttd_network
+
+  database:
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=openTTD
+      - POSTGRES_PASSWORD=change_this_password
+      # The default database name is 'postgres', but you can change it in the next step if desired.
+    volumes:
+      - open tt d_db:/var/lib/postgresql/data
+    networks:
+      - openttd_network
+
+networks:
+  openttd_network:
+    driver: bridge
+
+volumes:
+  open tt d_db:
+  openTTD_saved_games:
+  openTTD_config:

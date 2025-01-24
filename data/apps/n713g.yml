@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  app:
+    image: note_mark:latest  # Ensure you have this image available or build it with a Dockerfile in the context directory
+    ports:
+      - "5000:5000"  # Expose the port Note Mark runs on (default is typically 5000)
+    volumes:
+      - .:/usr/src/app  # For local development; mounts the current directory into the container
+      - app/node_modules:/usr/src/app/node_modules  # Prevents rebuilding node modules on every container start (for production, remove this or change to read-only)
+    environment:
+      - NODE_ENV=production  # Set to 'development' for development mode
+    command: >
+      yarn install && \
+      yarn run build && \
+      yarn run serve  # Adjust the commands as needed, e.g., build and start scripts from package.json
+
+  db:
+    image: postgres:latest
+    volumes:
+      - note-mark-db:/var/lib/postgresql  # Use a named volume for persistence (create this with `docker volume create note-mark-db`)
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=note_mark_db  # Adjust these to your database configuration
+
+volumes:
+  note-mark-db:
+
+networks:
+  default:
+    driver: bridge

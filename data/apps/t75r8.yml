@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  # Node1 of the OpenSearch cluster (single-node mode by default)
+  opensearch:
+    image: opensearch:8.4.3
+    container_name: opensearch
+    environment:
+      OPENSEARCH_MEMORY_LOCKS_Total_MB: "512"
+      OPENSEARCH_JVM_OPTS: "-Xms512m -Xmx512m"
+      DISABLE_OPENSearch_SECURITY: "true" # Use 'false' to enable default security features
+      EULA_ACCEPTED: "true"             # Required for all licenses, including the free one
+    ulimits:
+      memlock:
+        soft: -1
+        hard: 2048m
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - opensearch_network
+    volumes:
+      - ${OPENSEARCH_DATA:/docker/opensearch/data}
+
+# Nodes for the discovery-type cluster transport (optional)
+  # Useful when running OpenSearch on cloud providers where EC2 metadata is not accessible.
+  opensearch-discovery1:
+    image: opensearch:8.4.3
+    container_name: opensearch-discovery
+    environment:
+      OPENSEARCH_JVM_OPTS: "-Xms512m -Xmx512m"
+      DISABLE_OPENSearch_REST_API: "true" # Set to 'false' to enable the REST API
+    networks:
+      - opensearch_network
+    volumes:
+      - ${OPENSEARCH_DATA:/docker/opensearch/data}
+
+# Nodes for the cluster transport (optional)
+  # Useful when running OpenSearch on cloud providers where EC2 metadata is not accessible.
+  # At least two instances are required for a multi-node cluster.
+  opensearch-transport1:
+    image: opensearch:8.4.3
+    container_name: opensearch-transport
+    environment:
+      OPENSEARCH_JVM_OPTS: "-Xms512m -Xmx512m"
+      DISABLE_OPENSearch_REST_API: "true" # Set to 'false' to enable the REST API
+    networks:
+      - opensearch_network
+    volumes:
+      - ${OPENSEARCH_DATA:/docker/opensearch/data}
+
+# Load Balancer for OpenSearch (optional)
+  # Useful when exposing OpenSearch to a public network or scaling.
+  loadbalancer:
+    image: openzipkin/istio-proxyv2:latest
+    container_name: opensearch-loadbalancer
+    networks:
+      - opensearch_network
+    ports:
+      - "9000-9100:9000-9100" # Configure the range of ports that the load balancer will listen on.
+
+networks:
+  opensearch_network:
+    driver: bridge
+
+# Optional volumes for data persistence (Uncomment and configure paths as needed)
+volumes:
+  opensearch-data:
+    driver: local

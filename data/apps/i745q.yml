@@ -1,0 +1,51 @@
+version: '3.8'
+services:
+  app:
+    image: forgejo/forgejo-server:latest
+    container_name: forgejo-server
+    environment:
+      FORGEJO_ENVIRONMENT: production # or use another mode like development, testing, etc.
+      JWT_SECRET: your_jwt_secret # replace with a strong secret key
+      DATABASE_HOST: db
+      DATABASE_NAME: forgejo
+      DATABASE_USER: forgejo_user
+      DATABASE_PASSWORD: forgejo_password
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    volumes:
+      - ./app:/var/app
+      - ./data:/var/data
+    restart: unless-stopped
+
+  db:
+    image: postgres:13
+    container_name: forgejo-db
+    environment:
+      POSTGRES_DB: forgejo
+      POSTGRES_USER: forgejo_user
+      POSTGRES_PASSWORD: forgejo_password
+      POSTGRES_HOST: db # this is the default and should match the service name
+    volumes:
+      - ./db:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  worker:
+    image: forgejo/forgejo-worker:latest
+    container_name: forgejo-worker
+    environment:
+      WORKER_QUEUES: "default" # specify your queues here
+      WORKER_MODE: worker # or set it to 'daemon' if you prefer daemon mode
+      FORGEJO_ENVIRONMENT: production
+      JWT_SECRET: your_jwt_secret
+    depends_on:
+      - db
+      - app
+    volumes:
+      - ./app:/var/app
+    restart: unless-stopped
+
+networks:
+  forgejo_net:
+    driver: bridge

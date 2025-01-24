@@ -1,0 +1,32 @@
+version: '3.8'
+services:
+  ganymede-frontend:
+    image: ganymede/ganymede-frontend:latest
+    ports:
+      - "8081:80"
+    depends_on:
+      - ganymede-backend
+
+  ganymede-backend:
+    image: ganymede/ganymede-backend:latest
+    environment:
+      - DATABASE_HOST=db
+      - DATABASE_USER=root
+      - DATABASE_PASSWORD=secret
+      - DATABASE_NAME=ganymede
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+
+  ganymede-db:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=ganymede
+      - POSTGRES_USER=root
+      - POSTGES_PASSWORD=secret
+    volumes:
+      - ganymede-db-data:/var/lib/postgresql/data
+
+volumes:
+  ganymede-db-data:

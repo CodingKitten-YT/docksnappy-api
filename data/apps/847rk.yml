@@ -1,0 +1,32 @@
+version: '3.8'
+services:
+  app:
+    image: glitchtip/glitchtip:latest
+    ports:
+      - "5000:5000"
+    environment:
+      - GLITCHTIP_DB_URI=postgres://db:5432/db
+      - GLITCHTIP_JWT_SECRET=change_this_for_production
+    depends_on:
+      - db
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5000/health"]
+      interval: 10s
+      timeout: 30s
+      retries: 12
+
+  db:
+    image: postgres:latest
+    volumes:
+      - glitchtip-db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: glitchtip
+      POSTGRES_USER: db
+      POSTGRES_PASSWORD: change_this_for_production
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U db"]
+      timeout: 5s
+      retries: 30
+
+volumes:
+  glitchtip-db:

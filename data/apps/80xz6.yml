@@ -1,0 +1,42 @@
+version: '3.8'
+services:
+  jarr-api:
+    image: "jarr/jarr-api:latest" # Use the official JARR API Docker image from Docker Hub
+    ports:
+      - "5001:5000" # Expose port 5000 where JARR API is hosted
+    environment:
+      TZ: "Europe/London" # Set timezone, change as necessary
+      POSTGRES_DB: "jarr" # Database name for PostgreSQL
+      POSTGRES_USER: "jarr" # Username for PostgreSQL
+      POSTGRES_PASSWORD: "jarrpassword" # Password for PostgreSQL
+    volumes:
+      - "./data:/var/lib/postgresql" # Persist database data to a host directory
+      - "./conf:/app/conf" # Persist configuration files to a host directory
+    depends_on:
+      - postgres
+
+  postgres:
+    image: "postgres:13" # Use PostgreSQL version 13 for the database
+    environment:
+      POSTGRES_DB: "jarr" # Database name for JARR
+      POSTGRES_USER: "jarr" # Username for JARR's database access
+      POSTGRES_PASSWORD: "jarrpassword" # Password for JARR's database access
+    volumes:
+      - "./data:/var/lib/postgresql" # Persist database data to a host directory
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jarr"]
+      timeout: 5s
+      retries: 10
+
+  # Uncomment and configure the following services if you need Redis, Elasticsearch, or Logstash
+  # redis:
+  #   image: "redis:6-alpine"
+  #   command: redis-server --appendonly yes
+  # elasticsearch:
+  #   image: "docker.elastic.co/elasticsearch/elasticsearch:7.15.2"
+  # logstash:
+  #   image: "docker.elastic.co/logstash/logstash:7.15.2"
+
+networks:
+  default:
+    driver: bridge

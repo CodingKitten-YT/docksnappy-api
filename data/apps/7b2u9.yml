@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  neonlink-api:
+    image: "neonlink/neonlink-api:latest"
+    ports:
+      - "4001:4001" # Default port for NeonLink API
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4001/health"]
+      timeout: 5s
+      interval: 30s
+    environment:
+      - PGPASSWORD=${POSTGRES_PASSWORD} PGUSER=neonlink neonlink-db=neonlink neonlink__postgis=true
+    depends_on:
+      - postgres
+
+  neonlink-pg:
+    image: "postgres:13"
+    environment:
+      - POSTGRES_DB=neonlink
+      - POSTGRES_USER=neonlink
+      - POSTGRES_PASSWORD=change_this_password
+    volumes:
+      - neonlink-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U neonlink"]
+      timeout: 5s
+      interval: 30s
+
+  redis:
+    image: "redis:6.2"
+    command: "redis-server --appendonly yes"
+
+volumes:
+  neonlink-pg-data:
+    driver: "postgres"

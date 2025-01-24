@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  databag_api:
+    image: databag/databag:latest
+    container_name: databag_api
+    ports:
+      - "9000:9000" # HTTP API endpoint
+    environment:
+      DBAG_SECRET_STORE: 'file://./secrets' # Path to a secrets file or set as an environment variable if using in Docker Swarm
+      JWT_SECRET: "change_me_please" # Secret key for JWT tokens
+    volumes:
+      - ./databag:/data/databag
+      - ./secrets:/run/secrets
+    networks:
+      - databag_network
+
+  databag_etcd:
+    image: etcd:latest
+    container_name: databag_etcd
+    command: --advertise-client-urls=http://0.0.0.0:2379 --initial-advertise-client-urls=http://0.0.0.0:2380
+    networks:
+      - databag_network
+    volumes:
+      - etcd_data:/etcd/data
+
+  databag_redis:
+    image: redis:latest
+    container_name: databag_redis
+    networks:
+      - databag_network
+
+  databag_db:
+    image: postgres:latest
+    container_name: databag_db
+    environment:
+      POSTGRES_DB: databag
+      POSTGRES_USER: databag
+      POSTGRES_PASSWORD: "change_me_please" # Change this to a secure password in production
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  etcd_data:
+  db_data:
+
+networks:
+  databag_network:
+    driver: bridge

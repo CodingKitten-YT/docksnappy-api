@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  middleware_backend:
+    image: "middleware/backend:latest" # Replace with the specific tag or custom image if needed
+    ports:
+      - "8081:8080" # Map backend port as needed, e.g., for a REST API
+    environment:
+      - DATABASE_URL=postgres://middleware_db:5432/mydatabase # Database URL or any env vars your app requires
+    depends_on:
+      - middleware_db
+    volumes:
+      - "./backend:/app" # Mount your backend code for updates and changes, if necessary
+
+  middleware_frontend:
+    image: "middleware/frontend:latest" # Replace with the specific tag or custom image if needed
+    ports:
+      - "8082:3000" # Map frontend port as needed, e.g., for a web app
+    depends_on:
+      - middleware_backend
+
+  middleware_db:
+    image: "postgres:latest"
+    volumes:
+      - "./db:/var/lib/postgresql/data" # Mount your db data for persistence and backups, if necessary
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=mydatabase
+
+  redis:
+    image: "redis:latest"
+    volumes:
+      - "./redis/data:/data" # Mount for persistence of Redis data (optional)
+
+networks:
+  default:
+    name: "middleware_network"
+
+# Optionally, you can define networks, but in this case, we're relying on the default network created by Docker Compose.

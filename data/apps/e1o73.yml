@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  fenrus:
+    image: 'fenrus/fenrus:latest' # Use the official or specific tag as needed
+    container_name: fenrus
+    environment:
+      - CLOUDFLARE_EMAIL=your_email # Set your Cloudflare API email
+      - CLOUDFLARE_API_KEY=your_api_key # Set your Cloudflare API key
+    ports:
+      - '8080:8080' # Fenrus server port (default is 8080)
+    volumes:
+      - './config/fenrus.yaml:/etc/fenrus/fenrus.yaml' # Configuration file
+      - fenrus-data:/var/lib/fenrus # Data volume for Fenrus
+
+volumes:
+  fenrus-data:

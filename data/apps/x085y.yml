@@ -1,0 +1,41 @@
+version: '3.8'
+services:
+  webapp:
+    image: meremedical/webapp:latest
+    ports:
+      - "5000:5000"
+    environment:
+      - NAME=MereMedicalWebApp
+      - DATABASE_HOST=db
+      - DATABASE_USER=mereuser
+      - DATABASE_PASSWORD=merepassword
+      - DATABASE_NAME=medicaldb
+    depends_on:
+      - db
+    volumes:
+      - ./webapp:/usr/src/app
+    command: gunicorn -b 0.0.0.0:5000 app:app
+
+  db:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=mereuser
+      - POSTGRES_PASSWORD=merepassword
+      - POSTGRES_DB=medicaldb
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mereuser"]
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:6-alpine
+    command: redis-server --appendonly yes
+
+volumes:
+  db-data:
+
+networks:
+  default:
+    name: meremedical_net

@@ -1,0 +1,49 @@
+version: '3.8'
+services:
+  bar_assistant_api:
+    image: "bar_assistant_api:latest"
+    build:
+      context: .
+      dockerfile: Dockerfile-api
+    ports:
+      - "5001:5000" # Expose API on host port 5001
+    environment:
+      - DB_HOST=db
+      - DB_USER=baruser
+      - DB_PASSWORD=barpass
+      - DB_NAME=barassistant
+    depends_on:
+      - db
+    volumes:
+      - ./api:/usr/src/app
+
+  bar_assistant_worker:
+    image: "bar_assistant_worker:latest"
+    build:
+      context: .
+      dockerfile: Dockerfile-worker
+    environment:
+      - QUEUE_URL=http://queue_service:5002 # Replace with actual queue service URL and port
+    depends_on:
+      - db
+      - queue_service
+
+  db:
+    image: "postgres:13"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=baruser
+      - POSTGRES_PASSWORD=barpass
+      - POSTGRES_DB=barassistant
+
+  queue_service: # This service assumes you're using RabbitMQ as the message broker
+    image: "rabbitmq:3.8-management"
+    ports:
+      - "5002:5672" # Expose RabbitMQ on host port 5002
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+volumes:
+  postgres_data:
+  rabbitmq_data:

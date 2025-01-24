@@ -1,0 +1,43 @@
+version: '3.7'
+
+services:
+  kasm-hub:
+    image: kasm/kasm-hub:latest
+    command: -config=/etc/kasm/hub/hub-config.yml -storage=mongodb://kasm-db:27017/kasmHub?replicaSet=rs0
+    ports:
+      - "8000:80"
+    depends_on:
+      - kasm-mongo
+    environment:
+      KASM_HUB_ENABLE_WATCHDOG: "true"
+      KASM_HUB_SECRET: "<hub_secret>" # Replace with your actual secret
+    volumes:
+      - ./kasm/hub/hub-config.yml:/etc/kasm/hub/hub-config.yml
+      - kasm-hub-data:/var/lib/kasm/hub
+
+  kasm-mongo:
+    image: mongo:latest
+    command: --replSet rs0
+    volumes:
+      - db-data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "kasm"
+      MONGO_INITDB_ROOT_PASSWORD: "<mongo_root_password>" # Replace with your actual password
+    ports:
+      - "27017:27017"
+
+  kasm-agent:
+    image: kasm/kasm-agent:latest
+    command: -hub=http://kasm-hub:80/api/v1/hub
+    depends_on:
+      - kasm-hub
+    environment:
+      KASM_AGENT_SECRET: "<agent_secret>" # Replace with your actual secret
+      KASM_AGENT_HOSTNAME: "kasm-agent"
+    volumes:
+      - kasm-agent-data:/var/lib/kasm/agent
+
+volumes:
+  kasm-hub-data:
+  db-data:
+  kasm-agent-data:

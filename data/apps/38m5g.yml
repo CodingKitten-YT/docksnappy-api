@@ -1,0 +1,66 @@
+version: '3.7'
+
+services:
+  cryptpad-config:
+    image: 'cortexapio/cryptpad:latest' # Use a specific tag if needed
+    command: /bin/init --srv --user=cryptpad:$(id -u)
+    environment:
+      - HOSTNAME=cryptpad
+      - LOGLEVEL=debug
+      - LOCAL_PADS=1
+      - AUTHENTICATION=ldap,local
+      - LDAP_ENABLED=true
+      - LDAP_URL=ldap://ldap.example.com:389
+      - LDAP_BASEDN=ou=users,dc=example,dc=com
+      - LDAP_USERDN=cn=readonly,dc=example,dc=com
+      - LDAP_PASSWORD=secret
+    ports:
+      - "17000-17010:17000-17010" # Expose the necessary ports
+    volumes:
+      - './config/letsencrypt/:/etc/letsencrypt/'
+      - './config/cryptpad_data:/var/lib/cortex/cryptpad'
+    depends_on:
+      - ldap
+      - postgres
+
+  cryptpad-postgres:
+    image: 'postgres:12' # Use a specific tag if needed
+    command: /bin/init --srv --user=cryptpad:$(id -u)
+    environment:
+      - POSTGRES_DB=cryptpad
+      - POSTGES_USER=cryptpad
+      - POSTGRES_PASSWORD=secret
+    volumes:
+      - './config/postgres/:/var/lib/postgresql/data'
+
+  cryptpad-ldap:
+    image: 'glinet/openldap:latest' # Use a specific tag if needed
+    command: /bin/init --srv --user=ldap:$(id -u)
+    volumes:
+      - './config/ldap/:/var/ldap/'
+
+  cryptpad-postfix:
+    image: 'cortexapio/postfix:latest' # Use a specific tag if needed
+    command: /bin/init --srv --user=mail:$(id -u)
+
+networks:
+  default:
+    name: "cryptpad_default"
+
+# Optional: Define the LDAP service if you are using it separately
+ldap:
+  image: 'glinet/openldap:latest' # Use a specific tag if needed
+  command: /bin/init --srv --user=ldap:$(id -u)
+  volumes:
+    - './config/ldap/:/var/ldap/'
+
+# Optional: Define the PostgreSQL service if you are using it separately
+postgres:
+  image: 'postgres:12' # Use a specific tag if needed
+  command: /bin/init --srv --user=cryptpad:$(id -u)
+  environment:
+    - POSTGRES_DB=cryptpad
+    - POSTGRES_USER=cryptpad
+    - POSTGRES_PASSWORD=secret
+  volumes:
+    - './config/postgres/:/var/lib/postgresql/data'

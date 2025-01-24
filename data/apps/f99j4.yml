@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  lstu:
+    image: 'lstu/lstu:latest' # Use the official or tagged image from LSTU's Docker Hub repository
+    container_name: lstu
+    ports:
+      - "8001:80" # Map port 80 on the host to port 80 in the container if LSTU runs on HTTP (default for web apps)
+      - "5432:5432" # Map postgresql port to allow database connection from outside the container
+    volumes:
+      - lstu-data:/var/lib/postgresql/data:ro # Use a read-only volume for PostgreSQL data (for security)
+      - ./lstu.conf.py:/app/conf.py # Map your local lstu.conf.py to the container for custom configurations
+    environment:
+      POSTGRES_DB: 'lstu'
+      POSTGRES_USER: 'lstu'
+      POSTGRES_PASSWORD: 'yourpassword' # Replace with a secure password
+      LSTU_SECRET_KEY: 'verysecretkey' # Replace with a secret key for security (you can generate one with 'python -c "import random; print(''.join(random.choice('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789')) for n in range(50))"'
+      LSTU_ALLOWED_HOSTS: '*' # Allows all hosts, you might want to restrict this to your domain or IP address
+    depends_on:
+      - postgresql
+
+  postgresql:
+    image: 'postgres:latest' # Use the official PostgreSQL image
+    volumes:
+      - postgres-data:/var/lib/postgresql/data:ro # Use a read-only volume for PostgreSQL data (for security)
+    environment:
+      POSTGRES_DB: 'lstu'
+      POSTGRES_USER: 'lstu'
+      POSTGRES_PASSWORD: 'yourpassword' # Replace with the same password you set for LSTU
+
+volumes:
+  lstu-data:
+    driver: local
+  postgres-data:
+    driver: local

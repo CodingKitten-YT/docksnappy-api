@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # Web Server (e.g., Nginx or Apache)
+  webserver:
+    image: nginx:latest
+    ports:
+      - "80:80" # Map HTTP port 80 on the host to port 80 in the container
+      - "443:443": # Map HTTPS port 443 on the host to port 443 in the container if using SSL
+    volumes:
+      - ./webserver/conf.d:/etc/nginx/conf.d # Configuration files for Nginx
+      - ./webserver/html:/usr/share/nginx/html # HTML content served by Nginx
+    depends_on:
+      - appserver
+
+  # Application Server (e.g., Node.js, Python Flask/Django, Java Spring Boot)
+  appserver:
+    image: lesma-appserver:latest # Replace with your application server image
+    environment:
+      - DATABASE_URL=postgres://db:5432/lesma # Database connection string
+      # Other necessary environment variables for your application
+    volumes:
+      - ./app:/app # Source code for your application
+      - ./app/node_modules:/app/node_modules # Node.js dependencies (if applicable)
+    expose:
+      - "3000" # Port that the application server listens on, if not exposed to host
+
+  # Database (e.g., PostgreSQL)
+  database:
+    image: postgres:latest
+    environment:
+      - POSTGRES_DB=lesma
+      - POSTGRES_USER=db
+      - POSTGRES_PASSWORD=secret
+    volumes:
+      - db_data:/var/lib/postgresql/data # Persistent storage for the database
+
+volumes:
+  db_data:
+
+networks:
+  default:
+    driver: bridge

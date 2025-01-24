@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  ledgersmb_postgresql:
+    image: postgres:13.2
+    command: 'postgres -c "config_file = /etc/postgresql/main/pg_hba.conf"'
+    volumes:
+      - ./data/postgresql:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d
+    env_file: .env
+    environment:
+      POSTGRES_DB: ledgersmb
+      POSTGRES_USER: ledgersmb
+      POSTGRES_PASSWORD: ledgersmb_pwd
+    ports:
+      - "5432:5432"
+    networks:
+      - ledger-network
+
+  ledgersmb_webapp:
+    image: ledgersmb/ledgersmb-webapp:latest
+    container_name: ledgersmb
+    depends_on:
+      - ledgersmb_postgresql
+    environment:
+      PGHOST: postgresql
+      PGUSER: ledgersmb
+      PGPASSWORD: ledgersmb_pwd
+      PGDATABASE: ledgersmb
+      SERVICE_DOMAIN: ${SERVICE_NAME}.local
+    volumes:
+      - ./data/ledgersmb:/var/lib/ledgersmb
+      - ./logs/ledgersmb:/var/log/ledgersmb
+      - ./srv/ledgersmb:/etc/ledgersmb
+    ports:
+      - "5000:5000"
+    networks:
+      - ledger-network
+    restart: unless-stopped
+
+  ledgersmb_queue:
+    image: ledgersmb/ledgersmb-queue:latest
+    container_name: ledgersmb_queue
+    depends_on:
+      - ledgersmb_postgresql
+    environment:
+      PGHOST: postgresql
+      PGUSER: ledgersmb
+      PGPASSWORD: ledgersmb_pwd
+      PGDATABASE: ledgersmb
+    volumes:
+      - ./data/ledgersmb_queue:/var/lib/ledgersmb_queue
+    networks:
+      - ledger-network
+
+networks:
+  ledger-network:
+    driver: bridge

@@ -1,0 +1,62 @@
+version: '3.7'
+
+services:
+  asciinema:
+    image: asciny/asciinema:latest
+    command: /bin/sh -c "trap exit TERM; while :; do sleep infinity & wait $${!}; done && /usr/local/bin/asciinema server"
+    volumes:
+      - ./recordings:/data
+      - ./ascicast-receiver.service:/etc/systemd/system/ascicast-receiver.service
+      - ./ascicast-server.conf:/etc/asciinema/asciicast-server.conf
+    ports:
+      - "8080:80"
+    user: "1000"  # Replace with the appropriate user ID on your host system
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep asciny/asciinema || true"]
+      interval: 30s
+      timeout: 5s
+      retries: 120
+
+  asciicast-receiver:
+    image: asciny/asciicast-receiver:latest
+    command: /usr/local/bin/asciicast-receiver --config-file /etc/asciinema/asciicast-server.conf
+    volumes:
+      - ./recordings:/data
+      - ./ascicast-receiver.service:/etc/systemd/system/ascicast-receiver.service
+    ports:
+      - "5000:5000"
+    user: "1000"  # Replace with the appropriate user ID on your host system
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep asciny/asciicast-receiver || true"]
+      interval: 30s
+      timeout: 5s
+      retries: 120
+
+  nginx:
+    image: nginx:latest
+    command: /usr/local/bin/nginx
+    volumes:
+      - ./ascicast-server.conf:/etc/asciinema/asciicast-server.conf
+      - ./public_html:/usr/share/nginx/html
+    ports:
+      - "80:80"
+      - "443:443"  # If you want to use HTTPS, you'll need to provide an SSL certificates
+    depends_on:
+      - asciinema
+    healthcheck:
+      test: ["TCP", "0.0.0.0:80"]
+      interval: 10s
+      timeout: 2s
+      retries: 60
+
+# If you want to enable HTTPS, you can use a Let's Encrypt certificate with the following service:
+# letencrypt-certbot:
+#   image: certbot/certbot:latest
+#   command: certonly --standalone -f /etc/letsencrypt/renewal/mydomain.com.conf --agree-tos --email your-email@example.com
+#   volumes:
+#     - ./letencrypt:/etc/letsencrypt
+#     - ./ascicast-server.conf:/etc/asciinema/asciicast-server.conf
+#   ports:
+#     - "80:80"
+#     - "443:443"
+#   entrypoint: /bin/sh -c "trap exit TERM; while :; do sleep infinity & wait $${!}; done && /usr/local/bin/certbot certonly --standalone -f /etc/letsencrypt/renewal/mydomain.com.conf --agree-tos --email your-email@example.com;"

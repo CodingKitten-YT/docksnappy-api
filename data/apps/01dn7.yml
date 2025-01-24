@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  openbudgeteer_web:
+    image: openbudgeteer/openbudgeteer:latest
+    container_name: openbudgeteer-web
+    ports:
+      - "8000:8000"
+    environment:
+      SECRET_KEY: 'your_secret_key' # Replace with a secret key for your project
+      DATABASE_URL: 'postgres://user:password@db:5432/dbname' # Replace with your database connection string
+      ALLOWED_HOSTS: 'localhost,127.0.0.1,[::1]'
+    depends_on:
+      - openbudgeteer_db
+    volumes:
+      - ./data:/code/data
+      - ./openbudgeteer.conf:/etc/openbudgeteer/openbudgeteer.conf
+
+  openbudgeteer_db:
+    image: postgres:13
+    container_name: openbudgeteer-db
+    environment:
+      POSTGRES_DB: 'openbudgeteer'
+      POSTGRES_USER: 'user'
+      POSTGRES_PASSWORD: 'password' # Replace with a strong password for your database
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+
+  redis:
+    image: redis:6-alpine
+    container_name: openbudgeteer-redis
+    ports:
+      - "6379:6379"
+
+  celery_worker:
+    image: openbudgeteer/openbudgeteer:latest
+    container_name: openbudgeteer-celery-worker
+    environment:
+      SECRET_KEY: 'your_secret_key' # Replace with the same secret key as the web service
+      DATABASE_URL: 'postgres://user:password@db:5432/dbname' # Replace with your database connection string
+      REDIS_URL: 'redis://localhost:6379/0'
+    depends_on:
+      - openbudgeteer_db
+      - openbudgeteer_redis
+    command: celery -A openbudgeteer worker --loglevel=info
+
+  hstroot:
+    image: openbudgeteer/openbudgeteer-hstroot:latest
+    container_name: openbudgeteer-hstroot
+    environment:
+      SECRET_KEY: 'your_secret_key' # Replace with the same secret key as the web service
+      DATABASE_URL: 'postgres://user:password@db:5432/dbname' # Replace with your database connection string
+    depends_on:
+      - openbudgeteer_db
+
+  admin_user:
+    image: openbudgeteer/openbudgeteer-adminuser:latest
+    container_name: openbudgeteer-adminuser
+    environment:
+      SECRET_KEY: 'your_secret_key' # Replace with the same secret key as the web service
+      DATABASE_URL: 'postgres://user:password@db:5432/dbname' # Replace with your database connection string
+    depends_on:
+      - openbudgeteer_db
+    command: python manage.py createsuperuser --username admin --email admin@example.com
+
+volumes:
+  data:

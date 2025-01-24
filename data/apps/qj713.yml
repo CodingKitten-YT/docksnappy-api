@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  offen-core:
+    image: 'offen/offen-core'
+    container_name: offen-core
+    environment:
+      JWT_SECRET: your_jwt_secret
+      DB_HOST: db
+      DB_USERNAME: offen
+      DB_PASSWORD: offen_password
+      DB_NAME: offendb
+      OFFEN_ADMIN_EMAIL: admin@example.com
+      OFFEN_ADMIN_PASSWORD: admin_password
+    ports:
+      - "8082:8080" # Offen Core HTTP API
+    depends_on:
+      - db
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  offen-web:
+    image: 'offen/offen-web'
+    container_name: offen-web
+    environment:
+      REACT_APP_API_ENDPOINT: http://offen-core:8080
+      OFFEN_ADMIN_EMAIL: admin@example.com
+      OFFEN_ADMIN_PASSWORD: admin_password
+    ports:
+      - "3001:3000" # Offen Web app
+    depends_on:
+      - offen-core
+
+  db:
+    image: 'postgres:13'
+    container_name: postgres
+    environment:
+      POSTGRES_USER: offen
+      POSTGRES_PASSWORD: offen_password
+      POSTGRES_DB: offendb
+    volumes:
+      - offen-db-data:/var/lib/postgresql/data
+
+volumes:
+  offen-db-data:
+
+networks:
+  default:
+    driver: bridge

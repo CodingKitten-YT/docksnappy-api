@@ -1,0 +1,54 @@
+version: '3.8'
+services:
+  maloja_webapp:
+    image: "maloja/webapp:latest"
+    ports:
+      - "8000:8000" # Assuming the webapp runs on port 8000, adjust if necessary
+    environment:
+      - DB_HOST=maloja_db
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - DB_NAME=maloja
+    depends_on:
+      - maloja_db
+    volumes:
+      - ./app:/app
+
+  maloja_db:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=maloja
+    volumes:
+      - ./db_data:/var/lib/postgresql/data
+
+  maloja_worker:
+    image: "maloja/worker:latest"
+    depends_on:
+      - maloja_webapp
+    environment:
+      - QUEUES=*
+      # Define any specific worker options here
+    volumes:
+      - ./workers_code:/code
+
+  redis:
+    image: "redis:6-alpine"
+    command: redis-server --save /data  # Persist data with save operation
+    volumes:
+      - ./redis_data:/data
+
+# Uncomment the following if you need to use a specific RabbitMQ version or configuration
+# maloja_rabbitmq:
+#   image: rabbitmq:3.8-management
+#   ports:
+#     - "5672:5672"  # RabbitMQ default port for amqp
+#     - "15672:15672" # Management UI port
+#   environment:
+#     - RABBITMQ_DEFAULT_USER=user
+#     - RABBITMQ_DEFAULT_PASS=password
+#     - HA_MODE=true  # For clustering if needed
+
+# Note: Replace the image names with the specific versions or custom images you are using,
+# and adjust the environment variables to match your application's requirements.

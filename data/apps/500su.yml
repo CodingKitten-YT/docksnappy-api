@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  clearlinux_registry:
+    image: clearlinux/clearcontainer-registry:latest
+    container_name: clearflask_registry
+    command: 'start --listen=0.0.0.0:5000'
+    ports:
+      - "5000:5000"
+    volumes:
+      - type: bind
+        source: /path/to/local/registry
+        target: /data
+    restart: unless-stopped
+
+  cleardb:
+    image: clearlinux/cleardb:latest
+    container_name: clearflask_db
+    command: 'start --mode=server --listen=0.0.0.0:5432'
+    volumes:
+      - type: bind
+        source: /path/to/local/postgresql_data
+        target: /var/lib/postgresql
+    environment:
+      POSTGRESQL_DB: 'clearflask_dbname'
+      POSTGRESQL_USER: 'clearflask_user'
+      POSTGRESQL_PASSWORD: 'clearflask_password'
+    restart: unless-stopped
+
+  clearapp:
+    image: your_clearflask_image:latest
+    container_name: clearflask_app
+    environment:
+      SERVICE_CLEARDB__DATABASE_URL: postgresql://clearflask_user:clearflask_password@cleardb:5432/clearflask_dbname
+      CLEARLINUX_REGISTRY_HOST: clearlinux_registry:5000
+    depends_on:
+      - cleardb
+      - clearlinux_registry
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+networks:
+  default:
+    driver: bridge

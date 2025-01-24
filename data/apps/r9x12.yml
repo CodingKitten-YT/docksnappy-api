@@ -1,0 +1,35 @@
+version: '3.8'
+services:
+  eda_notebook:
+    image: puckel/dask-gateway
+    depends_on:
+      - eda_postgres
+    environment:
+      - ENABLE_DASK_GATEWAY=True
+      - DASK_ Gateway_WORKER_CLASS=process-default.dask.cloudproxy.LocalProfilerServer
+      - JUPYTERHUB_CONFIG=jhub_config.py
+      - JUPYTERHUB_API_PASSWORD=change_it_now
+    ports:
+      - "8888:8888"
+    volumes:
+      - .jupyter:/home/jovyan/.local/share/jupyter/hub
+      - ./dask-gateway.json:/etc/dask-gatework.json
+
+  eda_postgres:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: eda_db
+      POSTGRES_USER: eda_user
+      POSTGRES_PASSWORD: eda_password
+
+  eda_redis:
+    image: redis:6-alpine
+
+volumes:
+  postgres_data:
+
+networks:
+  default:
+    driver: bridge

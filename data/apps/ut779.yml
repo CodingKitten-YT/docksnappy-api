@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  novu:
+    image: novu/novu:latest  # Use the official Novu image
+    container_name: novu
+    command: /entrypoint.sh -c /app/config/local.env  # Ensure Novu uses local environment variables for configuration
+    ports:
+      - "8000:80"  # Expose the Novu web interface on port 8000 of the host
+    volumes:
+      - ./app:/var/www/packages  # Map your project directory to the Novu packages directory for code and uploads
+      - ./app/config:/app/config  # Map your project's config directory to the Novu config directory
+      - novu_logs:/var/log/novu  # Create a volume for logging
+
+  mysql:
+    image: mysql:latest
+    container_name: novu_mysql
+    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - db_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword  # Replace 'rootpassword' with your desired password
+      MYSQL_DATABASE: novu  # The database name for Novu
+      MYSQL_USER: novu
+      MYSQL_PASSWORD: novupassword  # Replace 'novupassword' with your desired password
+
+  redis:
+    image: redis:latest
+    container_name: novu_redis
+
+volumes:
+  novu_logs:
+  db_data:
+
+networks:
+  default:
+    driver: bridge

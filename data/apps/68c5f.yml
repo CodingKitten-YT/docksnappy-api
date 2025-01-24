@@ -1,0 +1,83 @@
+version: '3.7'
+
+services:
+  dittofeed:
+    image: dittofeed/dittofeed:latest  # Use the official Dittofeed image from Docker Hub
+    container_name: dittofeed
+    command: /run.sh
+    restart: unless-stopped
+    ports:
+      - "8000:8000"  # Expose Dittofeed UI on port 8000 of the host
+    volumes:
+      - ./dittofeed/data:/var/lib/dittofeed
+      - ./dittofeed/media:/var/www/html/user_upload/media
+      - ./dittofeed/logs:/var/log/dittofeed
+    environment:
+      - TIMEZONE=Europe/London  # Set the timezone for Dittofeed (change to your desired timezone)
+      - DB_ENGINE=postgres  # Database engine to use
+      - DB_HOST=db
+      - DB_USER=dittofeed  # Database user for Dittofeed
+      - DB_PASSWORD=your_password  # Database password for Dittofeed (set your own strong password)
+      - DB_NAME=dittofeed
+      - SECRET_KEY=your_secret_key  # Django secret key (generate a secure key using e.g., 'python -m secrets generate')
+      - ALLOWED_HOSTS=0.0.0.0,localhost  # Allowed hosts for the web server
+      - EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend  # Email backend configuration
+      - EMAIL_HOST=smtp.example.com
+      - EMAIL_PORT=587
+      - EMAIL_USE_TLS=True
+      - EMAIL_HOST_USER=your_email@example.com
+      - EMAIL_HOST_PASSWORD=your_email_password  # SMTP credentials (replace with your own)
+    depends_on:
+      - db
+
+  db:
+    image: postgres:latest
+    container_name: dittofeed_db
+    restart: unless-stopped
+    volumes:
+      - ./dittofeed/data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=dittofeed
+      - POSTGRES_USER=dittofeed
+      - POSTGRES_PASSWORD=your_password  # Use the same password as defined for Dittofeed
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dittofeed"]
+      timeout: 10s
+      retries: 5
+
+  redis:
+    image: redis:latest
+    container_name: dittofeed_redis
+    restart: unless-stopped
+
+  # Uncomment the following services if you need them
+  # celery_worker:
+  #   image: dittofeed/dittofeed-celery-worker:latest
+  #   command: /run.sh --worker
+  #   environment:
+  #     - CELERY_BEAT_SCHEDULE=...  # Set your Celery Beat schedule here if needed
+  #   depends_on:
+  #     - db
+  #     - celery_backend
+  #   volumes:
+  #     - ./dittofeed/data/celery:/var/lib/dittofeed/celery
+
+  # celery_backend:
+  #   image: dittofeed/dittofeed-celery-backend:latest
+  #   command: /run.sh --backend
+  #   depends_on:
+  #     - db
+  #     - redis
+
+# Uncomment the following if you need a reverse proxy or additional services like nginx or letsencrypt
+# services:
+#   webproxy:
+#     image: jwilder/nginx-proxy
+#     ports:
+#       - "80:80"
+#       - "443:443"
+#     volumes:
+#       - ./letencrypt:/etc/letsencrypt
+#       - ./dittofeed/data/nginx:/etc/nginx/conf.d
+#     depends_on:
+#       - dittofeed

@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:12
+    environment:
+      POSTGRES_DB: docspell
+      POSTGRES_USER: docspell
+      POSTGRES_PASSWORD: change_this_password
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    command: >
+      postgres \
+      --max_connections=200 \
+      --shared_buffers='12MB' \
+      --work_mem='4MB' \
+      --wal_buffers=8MB \
+      --synchronous_commit=off \
+      --full_page_writes=off
+    networks:
+      - docspell-network
+
+  documentstore:
+    image: docspell/docspell:latest
+    environment:
+      DOCSPLL_DB__HOST: db
+      DOCSPELL_DB__NAME: docspell
+      DOCSPELL_DB__USER: docspell
+      DOCSPELL_DB__PASSWORD: change_this_password
+      JAVA_TOOL_OPTIONS:-Xms512M -Xmx512M
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+    volumes:
+      - docspell-data:/data
+    networks:
+      - docspell-network
+
+  # Optionally, you can run search with elasticsearch or opensearch.
+  # Here's an example for OpenSearch (formerly Elasticsearch) service.
+  # Uncomment and modify as needed.
+  # search:
+  #   image: opensearch:2.4.1
+  #   environment:
+  #     OPENSEARCH_JAVA_OPTS: "-Xms512m -Xmx512m"
+  #   ports:
+  #     - "9200:9200"
+  #   volumes:
+  #     - search-data:/usr/share/opensearch/data
+  #   networks:
+  #     - docspell-network
+
+volumes:
+  db-data:
+    driver: "local"
+  docspell-data:
+    driver: "local"
+  # search-data:
+  #   driver: "local"
+
+networks:
+  docspell-network:

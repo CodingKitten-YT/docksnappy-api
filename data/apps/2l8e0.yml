@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  solr:
+    image: apache/solr:latest # Use a specific version if needed, e.g., 'apache/solr:8.5.0'
+    container_name: solr
+    ports:
+      - "8983:8983" # Solr's default HTTP port
+      - "8984:8984" # Solr's default HTTPS port (uncomment if you want to enable SSL)
+    environment:
+      JETTY_OPTS: "-Xms1g -Xmx1g" # Initial and max memory allocation for Solr
+      SOLR_RESOURCESTORE_DIRS: '/tmp' # Set data directory to a volume or tmp for temporary storage
+    volumes:
+      - "${HOME}/.solr/data:/tmp" # Optional: Persist solr data to a host path
+    command: solr start -force
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8983/solr"]
+      timeout: 10
+      retries: 5
+    restart: on-failure

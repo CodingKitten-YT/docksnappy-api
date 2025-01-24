@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  homelabos-api:
+    image: homelabos/homelabos-api:latest
+    container_name: homelabos-api
+    ports:
+      - "8081:80" # HTTP API
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      SECRET_KEY: 'your_secret_key' # Replace with a real secret key
+    volumes:
+      - ./homelabos.db.sql:/docker-entrypoint-initdb.d/01_initial_setup.sql
+      - homelabos-api-data:/var/lib/postgresql
+      - homelabos-api-config:/etc/homelabos
+
+  homelabos-frontend:
+    image: homelabos/homelabos-frontend:latest
+    container_name: homelabos-frontend
+    ports:
+      - "8080:3000" # Web UI
+    depends_on:
+      - homelabos-api
+    volumes:
+      - homelabos-frontend-data:/var/lib/homelabos-frontend
+      - homelabos-frontend-public:/var/www/html
+
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    environment:
+      POSTGRES_DB: homelabos
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+
+volumes:
+  homelabos-api-data:
+  homelabos-api-config:
+  postgres-data:
+  homelabos-frontend-data:
+  homelabos-frontend-public:
+
+networks:
+  default:
+    driver: bridge

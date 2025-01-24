@@ -1,0 +1,36 @@
+version: '3'
+services:
+  # BifrÃ¶st service - Management plane for Kubernetes clusters
+  bifrÃ¶st-controlplane:
+    image: engity/bifrÃ¶st:v2.10.0-k3s4 # Use the appropriate tag for your version
+    container_name: bifrÃ¶st
+    environment:
+      K3S_URL: "https://your-k3s-cluster-ip"
+      BIFROST_NAMESPACE: "bifrÃ¶st"
+      BIFROST_DOMAIN: "example.local"
+      SERVICE_IPV4: "10.42.0.1(eth0)" # Replace with the appropriate interface IP if different
+    ports:
+      - "8080:8080" # HTTP API
+      - "6443:6443" # Kubernetes dashboard (if installed)
+      - "9099:9099" # Service Cathedral UI (if enabled and port forwarded from inside the container)
+    volumes:
+      - "./bifrÃ¶st-data:/var/lib/rancher"
+    networks:
+      - bifrÃ¶st_network
+
+  # PostgreSQL service for BifrÃ¶st's database if you choose to use it
+  postgresql:
+    image: postgres:13.1-alpine
+    container_name: postgres
+    volumes:
+      - "./bifrÃ¶st-data/postgresql:/var/lib/postgresql"
+    environment:
+      POSTGRES_DB: bifrÃ¶st
+      POSTGRES_USER: bifrÃ¶st
+      POSTGRES_PASSWORD: change_this_password
+    networks:
+      - bifrÃ¶st_network
+
+networks:
+  bifrÃ¶st_network:
+    driver: bridge

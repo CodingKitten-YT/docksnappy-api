@@ -1,0 +1,42 @@
+version: '3.8'
+services:
+  livebook:
+    image: livebook/livebook:latest # Use the official Livebook image from Docker Hub
+    container_name: livebook
+    ports:
+      - "4000:4000" # HTTP port for Livebook dashboard and livebooks
+      - "8080:8080" # WebSocket port for running livebooks in a JVM
+    environment:
+      LIVEBOOK_HOST: 0.0.0.0 # Bind to all network interfaces
+      JAVA_OPTS: "-Xms512m -Xmx512m" # Set initial and max Java heap size
+      HZN_LIVEBOOK_STORAGE_TYPE: "datastax-dse" # Storage backend (e.g., datastax-dse, h2)
+      HZN_LIVEBOOK_STORAGE_DATASTAX_SEEDS: "host1:9042,host2:9042" # Seeds for DataStax OSS/DSE (if using)
+    depends_on:
+      - datastax-dse
+    networks:
+      default:
+        version: "2.4"
+        name: livebook_network
+    volumes:
+      - type: bind
+        source: ./livebooks
+        target: /opt/livebook/app
+        mode: cached # Cache local changes to livebooks for performance
+
+  datastax-dse:
+    image: docker.getdocker.com/datastax/dse:6.8.2 # Use the official DataStax Enterprise image
+    container_name: datastax-dse
+    environment:
+      DTSTORE_PASSWORD: randompassword # Set your own password for DSE security
+      DTSTORE_SEEDS: "host1:9042,host2:9042" # Seeds for DataStax OSS/DSE (if using)
+      JVM_OPTS: "-Xms512m -Xmx512m" # Set initial and max Java heap size
+    networks:
+      default:
+        version: "2.4"
+        name: livebook_network
+    volumes:
+      - datastax-dse-data:/data
+
+volumes:
+  livebooks:
+  datastax-dse-data:

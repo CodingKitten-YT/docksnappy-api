@@ -1,0 +1,40 @@
+version: '3'
+
+services:
+  fusio_api_gateway:
+    image: 'fusio/fusio-apigateway:latest'
+    depends_on:
+      - fusio_postgres
+      - fusio_redis
+    ports:
+      - "8080:8080" # Expose Fusio API Gateway on host port 8080
+    environment:
+      FUSIO__POSTGRES__URI: 'fusio_postgres://fusio_postgres'
+      FUSIO__REDIS__URI: 'redis://fusio_redis'
+      JWT_SECRET: 'your-jwt-secret' # Set your own JWT secret for security purposes
+    commandReview:
+      - '-X'
+      - '--strictProperties'
+      - 'true'
+      - 'api-gateway'
+
+  fusio_postgres:
+    image: 'postgres:latest'
+    environment:
+      POSTGRES_DB: 'fusio'
+      POSTGRES_USER: 'fusio'
+      POSTGRES_PASSWORD: 'fusio-password' # Set your own PostgreSQL password
+      PGDATA: '/var/lib/postgresql/data/fusio'
+    volumes:
+      - 'fusio_postgres_data:/var/lib/postgresql/data'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U fusio']
+      timeout: 10s
+      retries: 30
+
+  fusio_redis:
+    image: 'redis:latest'
+    command: 'RedisStart'
+
+volumes:
+  fusio_postgres_data:

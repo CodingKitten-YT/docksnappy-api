@@ -1,0 +1,67 @@
+version: '3.8'
+services:
+  # PostgreSQL
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: linkstack_db
+      POSTGRES_USER: linkstack
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - ./init-db.sql:/docker-entrypoint-initialized/dump.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U linkstack"]
+      timeout: 10s
+      retries: 5
+
+  # Redis
+  redis:
+    image: redis:6-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a /dev/null ping"]
+      timeout: 10s
+      retries: 5
+
+  # Linkstack Core Service (API)
+  linkstack:
+    image: linkstack/core:latest
+    depends_on:
+      - db
+      - redis
+    ports:
+      - "8081:80"
+    environment:
+      DB_HOST: db
+      REDIS_HOST: redis
+      API_SECRET: secret
+    healthcheck:
+      test: ["TCP", ":80/tcp"]
+      timeout: 10s
+      retries: 5
+
+  # Linkstack Web Service (Frontend)
+  web:
+    image: linkstack/web:latest
+    depends_on:
+      - db
+      - redis
+    ports:
+      - "8082:3000"
+    environment:
+      DB_HOST: db
+      REDIS_HOST: redis
+      API_SECRET: secret
+    healthcheck:
+      test: ["TCP", ":3000/tcp"]
+      timeout: 10s
+      retries: 5
+
+volumes:
+  redis-data:
+
+networks:
+  linkstack_default:
+    driver: bridge

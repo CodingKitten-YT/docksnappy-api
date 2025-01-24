@@ -1,0 +1,44 @@
+version: '3.8'
+services:
+  accent-db:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: accent_db
+      POSTGRES_USER: accent_user
+      POSTGRES_PASSWORD: accent_password
+    volumes:
+      - accent-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U accent_user"]
+      timeout: 10s
+      retries: 5
+
+  accent-api:
+    build: .
+    ports:
+      - "3001:3000"
+    environment:
+      DB_HOST: accent-db
+      DB_NAME: accent_db
+      DB_USER: accent_user
+      DB_PASSWORD: accent_password
+    depends_on:
+      - accent-db
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/health"]
+      timeout: 10s
+      retries: 5
+
+  accent-frontend:
+    image: accent_frontend:latest
+    ports:
+      - "3000:3000"
+    depends_on:
+      - accent-api
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/health"]
+      timeout: 10s
+      retries: 5
+
+volumes:
+  accent-db-data:

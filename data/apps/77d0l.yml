@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  lubelogger_api:
+    image: lubelogger/lubelogger-api:latest
+    ports:
+      - "5000:5000"
+    environment:
+      API_CONFIG_HOST: lubelogger_database
+      DATABASE_HOST: lubelogger_database
+      DATABASE_USERNAME: root
+      DATABASE_PASSWORD: your_secure_password
+      DATABASE_NAME: lubelogger
+    depends_on:
+      - lubelogger_database
+    networks:
+      - lubenetwork
+
+  lubelogger_database:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: your_secure_password
+      POSTGRES_DB: lubelogger
+    volumes:
+      - lubelogger-db-data:/var/lib/postgresql/data
+    networks:
+      - lubenetwork
+
+  lubelogger_frontend:
+    image: lubelogger/lubelogger-frontend:latest
+    ports:
+      - "8000:8000"
+    environment:
+      REACT_APP_API_URL: http://lubelogger_api:5000
+    depends_on:
+      - lubelogger_api
+    networks:
+      - lubenetwork
+
+volumes:
+  lubelogger-db-data:
+
+networks:
+  lubenetwork:

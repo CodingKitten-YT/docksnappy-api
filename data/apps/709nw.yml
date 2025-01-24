@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  mainsail:
+    image: 'mainsailapp/mainsail:latest' # Use the latest tag or a specific release version like '1.40.5'
+    container_name: mainsail
+    ports:
+      - "3000:3000" # Expose Mainsail's default web interface port (host:container)
+    volumes:
+      - './data:/data' # Mount a local directory for persistent data
+      - './config:/config' # Mount a local directory for configuration files (optional, but recommended for backups and customization)
+      - './letters:/ihrdp/letsencrypt' # Mount a local directory for Let's Encrypt storage (optional, if you want to use it for SSL)
+    networks:
+      - mainsail_network
+    environment:
+      - TZ=Europe/London  # Set the timezone as an example; adjust to your desired timezone
+      - MNS_WEB_SERVER_PORT=3000 # Set the web server port (if different from the default)
+      - MNS_SECRET_KEY=your_secret_key # Set a secret key for security purposes
+    restart: unless-stopped
+
+networks:
+  mainsail_network:
+    driver: bridge

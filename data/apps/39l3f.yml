@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  keila_api:
+    image: keila/keila-api:latest
+    container_name: keila_api
+    ports:
+      - "8081:8080" # Expose Keila API on port 8081 of the host
+    environment:
+      - POSTGRES_DB=keiladb
+      - POSTGRES_USER=keilauser
+      - POSTGRES_PASSWORD=keilapass
+      - DJANGO_SETTINGS_MODULE=keila.settings.production
+      - SECRET_KEY=your_secret_key # Replace with your Django secret key
+    volumes:
+      - ./data:/data
+      - ./logs:/logs
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    environment:
+      - POSTGRES_DB=keiladb
+      - POSTGRES_USER=keilauser
+      - POSTGRES_PASSWORD=keilapass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

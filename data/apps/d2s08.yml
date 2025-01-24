@@ -1,0 +1,59 @@
+version: '3.8'
+services:
+  filegator_postgres:
+    image: postgres:12
+    command: 'postgres -c "fsync=off"'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: filegator
+      POSTGRES_USER: filegator
+      POSTGRES_PASSWORD: yourpassword
+    ports:
+      - "5432:5432"
+
+  filegator_redis:
+    image: redis:6-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redistore:/data
+
+  filegator_rabbitmq:
+    image: rabbitmq:3.8-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
+
+  filegator_backend:
+    build: .
+    container_name: filegator_backend
+    volumes:
+      - .:/app
+    environment:
+      DB_HOST: filegator_postgres
+      REDIS_HOST: filegator_redis
+      RABBITMQ_SERVER: filegator_rabbitmq
+      JWT_SECRET: yourjwtsecret
+      FILEGATOR_DEBUG: "true" # Set to 'false' in production
+    ports:
+      - "8000:8000"
+    depends_on:
+      - filegator_postgres
+      - filegator_redis
+      - filegator_rabbitmq
+
+  filegator_frontend:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./frontend:/usr/src/app
+    depends_on:
+      - filegator_backend
+
+volumes:
+  pgdata:
+  redistore:

@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  leantime-app:
+    image: leantime/leantime-community-edition:latest
+    ports:
+      - "3000:3000" # HTTP on host (optional, only if you want to access LeanTime via browser)
+    environment:
+      LEANTME_ENABLE_HTTPS: "false"
+      SECRET_KEY: "${RANDOM_SECRET_KEY}"
+      DATABASE_URL: "postgres://leantime-db:5432"
+      REDIS_URL: "redis://leantime-redis:6379/0"
+    volumes:
+      - leantime-app-data:/var/task/data
+      - ./leantime.toml:/config/lean-time.toml # Optional, if you want to override default settings
+
+  leantime-db:
+    image: postgres:13
+    volumes:
+      - leantime-db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: leantime
+      POSTGRES_USER: leantime
+      POSTGRES_PASSWORD: "${LEANTME_DB_PASSWORD}" # You need to set this with an environment variable or a secret
+
+  redis:
+    image: redis:6-alpine
+
+volumes:
+  leantime-app-data:
+  leantime-db-data:
+
+secrets:
+  RANDOMS_SECRET_KEY:
+  LEANTME_DB_PASSWORD:
+
+networks:
+  leantime_network:
+    driver: bridge

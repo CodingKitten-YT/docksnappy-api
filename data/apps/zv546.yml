@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  # OpenEventServer database service
+  db:
+    image: postgres:12
+    environment:
+      POSTGRES_DB: openevent
+      POSTGRES_USER: openevent
+      POSTGRES_PASSWORD: changeit
+    volumes:
+      - ./db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U openevent"]
+      timeout: 10s
+      retries: 5
+
+  # OpenEventServer application service
+  web:
+    image: openevent/open-event-server:latest
+    depends_on:
+      - db
+    ports:
+      - "8000:8000" # http
+      - "8001:8001" # https (if you have a tls configuration)
+    environment:
+      DB_HOST: db
+      DB_DATABASE: openevent
+      DB_USERNAME: openevent
+      DB_PASSWORD: changeit
+      SERVER_SECRET: changeit
+      # Optionally, set the JUPYTER_NOTEBOOK_DIR if you want to use the Jupyter extension
+      JUPYTER_NOTEBOOK_DIR: /srv/user/jupyter
+    volumes:
+      - ./web_data:/srv/open-event
+      - jupyter_volumes:/srv/user/jupyter
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/health"]
+      timeout: 10s
+      retries: 5
+
+  # Optional Redis service for caching (if needed)
+  redis:
+    image: redis:6-alpine
+    healthcheck:
+      test: ["CMD", "REDIS-CLI", "PING"]
+      timeout: 10s
+      retries: 5
+
+  # Optional Nginx reverse proxy (for production use)
+  nginx:
+    image: nginx:stable-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./web_data:/srv/open-event
+    depends_on:
+      - web
+    networks:
+      - frontend
+
+  # Optional Let's Encrypt Certbot service for obtaining SSL certificates (if you set up nginx)
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - ./letsencrypt:/workspace/letsencrypt
+    entrypoint: /bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'
+
+networks:
+  default:
+    external: true
+  frontend:
+
+volumes:
+  db_data:
+  jupyter_volumes:
+  letsencrypt:

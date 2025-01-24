@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  firezone:
+    image: 'firezone/firezone:latest'
+    container_name: firezone
+    environment:
+      FIREZONE_SECRET_KEY: ${RANDOM} # Use a random secret key for production environments
+      FIREZONE_DEBUG: False
+      FIREZONE_ALLOWED_HOSTS: '*'
+      FIREZONE_DATABASE_ENGINE: 'django.db.backends.mysql'
+      FIREZONE_DATABASE_NAME: 'firezone'
+      FIREZONE_DATABASE_USER: 'firezoneuser'
+      FIREZONE_DATABASE_PASSWORD: 'firezonepassword'
+      FIREZONE_DATABASE_HOST: 'db'
+      FIREZONE_DATABASE_PORT: '3306'
+      FIREZONE_CELERY_BROKER_URL: 'redis://redis:6379/0'
+      FIREZONE_CELERY_RESULT_BACKEND: 'redis://redis:6379/0'
+    ports:
+      - '8000:8000' # Firezone default port
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./data:/var/task
+      - ./logs:/var/log/firezone
+    restart: unless-stopped
+
+  db:
+    image: 'mysql:5.7'
+    container_name: db
+    environment:
+      MYSQL_DATABASE: 'firezone'
+      MYSQL_USER: 'firezoneuser'
+      MYSQL_PASSWORD: 'firezonepassword'
+      MYSQL_ROOT_PASSWORD: 'rootpassword'
+    volumes:
+      - ./data/db:/var/lib/mysql
+    restart: unless-stopped
+
+  redis:
+    image: 'redis:6-alpine'
+    container_name: redis
+    ports:
+      - '6379:6379' # Redis default port
+    volumes:
+      - ./data/redis:/data
+    restart: unless-stopped

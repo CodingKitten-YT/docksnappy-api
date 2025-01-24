@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  fluidd:
+    image: fluidd/fluidd:latest
+    container_name: fluidd
+    ports:
+      - "6666:6666" # Fluidd's default RPC port (host:guest)
+    volumes:
+      - "${HOME}/.fluidd:/data"
+      - "/var/run/docker.sock:/var/run/docker.sock" # Required for Docker API client
+    environment:
+      - FLUIDD_ALLOW_NONE=true # Allow connections without authentication (not recommended for production)
+      - TZ="Europe/London" # Set your timezone, e.g., America/New_York for US Eastern Time
+    restart: unless-stopped
+    command: --rpc.address 0.0.0.0 --rpc.http.addr 127.0.0.1 --log.level DEBUG
+
+  redis:
+    image: redis:6-alpine
+    volumes:
+      - "redis-data:/data"
+    environment:
+      - REDIS_PORT=6379
+    command: --appendonly yes
+
+  postgres:
+    image: postgres:13
+    volumes:
+      - "postgres-data:/var/lib/postgresql/data"
+    environment:
+      - POSTGRES_DB=fluiddb
+      - POSTGRES_USER=fluidd
+      - POSTGRES_PASSWORD=fluiddpass
+
+volumes:
+  redis-data:
+  postgres-data:
+
+networks:
+  fluidd_overseer_net:
+    driver: bridge

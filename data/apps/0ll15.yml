@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  neko_api:
+    image: neko/api:latest # Assuming a Docker image exists as 'neko/api'
+    ports:
+      - "5000:5000"
+    environment:
+      - API_SECRET_KEY=your_secret_key # Set your secret key here for Flask app
+      - DB_HOST=db
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - DB_NAME=nekodb
+    depends_on:
+      - db
+    command: python api.py
+
+  neko_db:
+    image: postgres:13 # You can use a different version of PostgreSQL if needed
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: nekodb
+    volumes:
+      - neko_db_data:/var/lib/postgresql/data
+
+volumes:
+  neko_db_data:

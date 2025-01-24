@@ -1,0 +1,70 @@
+version: '3'
+
+services:
+  mailcow:
+    image: mailcow/mailcow:latest
+    container_name: mailcow
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Berlin
+      - MYSQL_PASSWORD=your_secure_password
+      - MAILCOW_LANGS=en
+      - MAILCOW_ADMINS=admin@example.com,info@example.com
+      - MAILCOW_DOMAIN=example.com
+      - MAILCOW_PROXY_ENABLE=true
+      - MAILCOW_LETSENCRYPT_EMAIL=youremail@example.com
+    volumes:
+      - '{{ .Dir "data" }}/mailcow/:/etc/mailcow/'
+      - '{{ .Dir "config" }}/mailcow/:/etc/mailcow/config/'
+      - '{{ .Dir "certificates" }}/ certs/letsencrypt:/etc/letsencrypt'
+    ports:
+      - "5871:5870" # SMTP out/submission
+      - "4651:4650" # SMTP in/IMAPS
+      - "9931:9930" # IMAP/s
+      - "9951:9950" # POP3/s
+    restart: unless-stopped
+    networks:
+      - mailcow_network
+
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb
+    environment:
+      - MYSQL_ROOT_PASSWORD=your_secure_password
+      - MYSQL_DATA_DIR=/databases
+    volumes:
+      - '{{ .Dir "data" }}/mailcow/db/:/databases/'
+    restart: unless-stopped
+    networks:
+      - mailcow_network
+
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy:latest
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock'
+      - '{{ .Dir "data" }}/nginx-proxy/:/data'
+    depends_on:
+      - mailcow
+    networks:
+      - mailcow_network
+
+  letsencrypt:
+    image: leandersteiner/letsencrypt-nginx-helper:latest
+    container_name: letsencrypt
+    environment:
+      - EMAIL=youremail@example.com
+      - DOMAIN=example.com
+      - AGREE_TERMS=true
+    volumes:
+      - '{{ .Dir "data" }}/certs/:/etc/letsencrypt'
+      - '/var/run/docker.sock:/var/run/docker.sock'
+    networks:
+      - mailcow_network
+
+networks:
+  mailcow_network:

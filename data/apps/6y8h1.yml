@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  bunkerweb:
+    image: 'bunker/bunkerweb:latest' # Use the latest BunkerWeb image or a specific tag
+    container_name: bunkerweb
+    ports:
+      - "80:80" # Map HTTP port 80 on the host to port 80 in the container
+    volumes:
+      - ./bunkerweb.env:/usr/src/app/bunkerweb.env # Mount your `.env` file for environment variables
+      - bunkerdata:/usr/src/app/data # Mount a volume for data persistence
+    environment:
+      - SECRET_KEY=${SECRET_KEY} # Set the Secret Key from an environment variable if not in .env
+      # ... other necessary environment variables
+    networks:
+      - webnet
+
+  postgres:
+    image: 'postgres:13' # Use a specific version of PostgreSQL if needed
+    container_name: postgres
+    volumes:
+      - postgresdata:/var/lib/postgresql/data # Mount a volume for database data persistence
+    environment:
+      POSTGRES_DB: bunker # Set the default database name
+      POSTGRES_USER: bunkeruser # Set the default PostgreSQL user
+      POSTGRES_PASSWORD: bunkerpassword # Set the default PostgreSQL password
+    networks:
+      - webnet
+
+volumes:
+  bunkerdata:
+  postgresdata:
+
+networks:
+  webnet:

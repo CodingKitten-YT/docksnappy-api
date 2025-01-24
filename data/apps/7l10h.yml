@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:12
+    volumes:
+      - db_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: invoiceninja
+      POSTGRE_USER: invoiceninja
+      POSTGRES_PASSWORD: your_password
+    command: 'postgres -c "listen_addresses = '*'"'
+
+  php:
+    image: php:7.4-fpm
+    volumes:
+      - ./app:/var/www/html
+    environment:
+      VIRTUAL_HOST: invoiceninja.localhost
+      APP_ENV: prod
+      APP_DEBUG: false
+      APP_KEY: your_application_key
+      DATABASE_URL: 'pgsql://invoiceninja:your_password@db:5432/invoiceninja'
+      REDIS_URL: 'redis://localhost:6379' # Uncomment and configure if you need Redis
+      SUPERVISOR_PATH: /var/www/html/supervisord.conf
+    depends_on:
+      - db
+      - redis # Uncomment if you want to use Redis
+    user: '1000'
+    expose:
+      - 9000
+
+  webserver:
+    image: nginx:latest
+    volumes:
+      - ./app/public:/var/www/html/public
+      - ./app/.env:/var/www/html/.env
+    ports:
+      - '8080:80'
+    environment:
+      VIRTUAL_HOST: invoiceninja.localhost
+      PROJECT_PATH: /var/www/html
+    depends_on:
+      - php
+
+  redis:
+    image: redis:6
+    volumes:
+      - redis_data:/data
+    command: 'redis-server --appendonly yes' # Enable append only mode for persistence
+
+volumes:
+  db_data:
+    driver: local
+  redis_data:
+    driver: local

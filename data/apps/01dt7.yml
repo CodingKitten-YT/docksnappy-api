@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  lowdefy-api:
+    image: lowdefy/lowdefy-api:latest
+    container_name: lowdefy-api
+    ports:
+      - "8081:8080" # default port for Lowdefy API, adjust if needed
+    command: /run.sh api
+    depends_on:
+      - postgres
+    environment:
+      LOWDEFY_LICENSE_KEY: your_license_key_here
+      JWT_SECRET: a_very_secret_string
+      POSTGRES_DB: lowdefy
+      POSTGRES_USER: lowdefy
+      POSTGRES_PASSWORD: your_database_password_here
+    volumes:
+      - ./lowdefy-api.env:/opt/lowdefy/conf/env/api.env # optional, for environment variables overrides
+    networks:
+      - lowdefy-network
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      POSTGRES_DB: lowdefy
+      POSTGRES_USER: lowdefy
+      POSTGRES_PASSWORD: your_database_password_here
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - lowdefy-network
+
+  nginx-proxy:
+    image: jwilder/nginx-proxy:stable
+    container_name: nginx-proxy
+    ports:
+      - "80:80" # NGINX Proxy HTTP port
+      - "443:443" # NGINX Proxy HTTPS port (requires Let's Encrypt or similar)
+    depends_on:
+      - cert-manager
+      - lowdefy-api
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d:ro # optional, for custom NGINX configuration
+      - letscertificates:/etc/letsencrypt
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - lowdefy-network
+
+  cert-manager:
+    image: jetstack/cert-manager-ca:v1.7.1
+    container_name: cert-manager
+    volumes:
+      - letscertificates:
+        driver: local
+
+volumes:
+  db-data:
+  letscertificates:
+
+networks:
+  lowdefy-network:
+    driver: bridge
+
+# Note: This docker-compose.yml assumes you want to set up Lowdefy with a PostgreSQL database and NGINX Proxy for routing and SSL termination.
+# You need to replace `your_license_key_here` and `your_database_password_here` with your actual license key and a secure password.
+# Additionally, for Let's Encrypt to work, you need to have DNS records set up for your domain and use cert-manager to issue certificates.

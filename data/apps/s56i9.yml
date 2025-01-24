@@ -1,0 +1,65 @@
+version: '3'
+
+services:
+  globaleaks:
+    image: 'globaleaks/globaleaks'
+    container_name: globaleaks
+    ports:
+      - "8080:8080" # web admin interface (HTTP)
+      - "5000:5000" # API
+      - "6000:6000" # admin secure interface
+    volumes:
+      - "./data/globaleaks:/var/lib/globaleaks"
+      - "./submission-form-templates/globaleaks:/etc/globaleaks/forms"
+      - "./public-uploads/globaleaks:/var/www/html/uploads" # Shared storage for files uploaded by submitters. Make sure to create these directories with the correct permissions.
+    environment:
+      - "ADMIN_KEY=<your-admin-key>" # Set your admin key, it's needed to access the admin interface and API
+      - "SERVER_URL=http://localhost:8080" # Server URL (should be the URL of the web service)
+      - "SUBMISSIONS_EXPORT_PATH=/path/to/export/directory" # Path where submissions will be stored after being processed, if you want to enable this feature.
+    restart: unless-stopped
+    networks:
+      - globaleaks_network
+
+  postgres:
+    image: 'postgres:12'
+    container_name: globaleaks_postgres
+    volumes:
+      - "./data/globaleaks_postgres:/var/lib/postgresql"
+    environment:
+      POSTGRES_DB: globaleaks
+      POSTGRES_USER: globaleaks
+      POSTGRES_PASSWORD: globaleaks
+    restart: unless-stopped
+    networks:
+      - globaleaks_network
+
+  redis:
+    image: 'redis:6'
+    container_name: globaleaks_redis
+    volumes:
+      - "./data/globaleaks_redis:/var/lib/redis"
+    restart: unless-stopped
+    networks:
+      - globaleaks_network
+
+  nginx-reverse-proxy:
+    image: 'JrCs/docker-nginx-proxy-companion'
+    container_name: globaleaks_nginx
+    ports:
+      - "80:80" # HTTP (optional)
+      - "443:443" # HTTPS (optional)
+    volumes:
+      - "./globaleaks-certs/letsencrypt:/etc/letsencrypt" # Directory where you'll store certbot certificates.
+      - "./nginx-data/globaleaks:/etc/nginx"
+    environment:
+      - "DOMAIN=yourdomain.com" # Set your domain name here if using HTTPS.
+      - "EMAIL=youremail@example.com" # Email to receive certbot notifications and letters.
+      - "GLBOALEAKS_HOSTNAME=globaleaks.yourdomain.com" # Hostname for the GlobaLeaks instance inside the container.
+    depends_on:
+      - globaleaks
+    networks:
+      - globaleaks_network
+
+networks:
+  globaleaks_network:
+    driver: bridge

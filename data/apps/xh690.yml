@@ -1,0 +1,74 @@
+version: '3.7'
+
+services:
+  homeassistant:
+    image: homeassistant/home-assistant:stable
+    container_name: homeassistant
+    ports:
+      - "8123:8123" # HTTP API is available on port 8123
+      - "32394:32394" # Long Polling frontend port (if in use)
+      - "5000:5000"  # Home Assistant API for automation and scripting
+    volumes:
+      - "./config:/config" # Mount your local configuration directory to the container
+      - "./addons:/addons"   # Optional, for add-on integration (if you use them)
+      - "/tmp/homeassistant.db:/config/db.json" # Ensures persistent storage of the Home Assistant state
+    environment:
+      TZ: "Europe/London" # Set your timezone to avoid issues with time-dependent automations
+    restart: unless-stopped
+    networks:
+      - homeassistant_network
+
+  postgres:
+    image: postgres:13
+    container_name: homeassistant_postgres
+    volumes:
+      - "./db:/var/lib/postgresql/data" # Persist your database data (optional, use if you want persistence)
+    environment:
+      POSTGRES_USER: homeassistant
+      POSTGRES_PASSWORD: homeassistant
+    networks:
+      - homeassistant_network
+
+  mongodb:
+    image: mongo:4.4
+    container_name: homeassistant_mongodb
+    volumes:
+      - "./mongo:/data/db" # Persist your MongoDB data (optional, use if you want persistence)
+    networks:
+      - homeassistant_network
+
+  homeassistant.addon.:
+    image: homeassistant/conjure:latest
+    depends_on:
+      - homeassistant
+    ports:
+      - "8081:80"
+    volumes:
+      - "./addons/conjure:/config/addons/conjure"
+      # Set the environment variables for the add-on as needed (e.g., API keys, configuration settings)
+
+networks:
+  homeassistant_network:
+    driver: bridge
+
+# Optionally, you can enable SSL to secure your Home Assistant instance
+services:
+  homeassistant_nginx:
+    image: linuxserver/letsencrypt-nginx:latest
+    container_name: homeassistant_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "./letsencrypt:/etc/letsencrypt"
+      - "./config:/config"
+      - "./addons:/addons"
+    environment:
+      DOMAIN: example.com # Set your domain or subdomain here
+      EMAIL: you@example.com # Your email address for Let's Encrypt
+    depends_on:
+      - homeassistant
+    networks:
+      - homeassistant_network
+
+# Add any additional services or configurations as needed.

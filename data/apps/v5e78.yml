@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:12
+    command: 'postgres -c "listen_addresses = '*'"'
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: discountbandit_db
+      POSTGRES_USER: discountbandit_user
+      POSTGRES_PASSWORD: discountbandit_password
+    ports:
+      - "5432:5432"
+
+  celery_worker:
+    image: python:3.9-slim
+    volumes:
+      - ./code:/code
+    environment:
+      - DISCOUNT_BANDIT_DB_HOST=db
+      - DISCOUNT_BANDIT_DB_NAME=discountbandit_db
+      - DISCOUNT_BANDIT_DB_USER=discountbandit_user
+      - DISCOUNT_BANDIT_DB_PASSWORD=discountbandit_password
+      - DISCOUNT_BANDIT_DB_PORT=5432
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+
+  redis:
+    image: redis:6-alpine
+    ports:
+      - "6379:6379"
+
+  web:
+    build: ./code
+    volumes:
+      - ./code:/code
+    environment:
+      - DISCOUNT_BANDIT_DB_HOST=db
+      - DISCOUNT_BANDIT_DB_NAME=discountbandit_db
+      - DISCOUNT_BANDIT_DB_USER=discountbandit_user
+      - DISCOUNT_BANDIT_DB_PASSWORD=discountbandit_password
+      - DISCOUNT_BANDIT_DB_PORT=5432
+      - REDIS_URL=redis://redis:6379/0
+      - DEBUG=True
+    depends_on:
+      - db
+      - celery_worker
+      - redis
+
+  adminer:
+    image: adminer:4.5.1
+    ports:
+      - "8080:8080"
+
+volumes:
+  db-data:

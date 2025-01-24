@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  flashpaper-app:
+    image: "flashpaper/flashpaper:latest" # Use the official FlashPaper image from Docker Hub
+    ports:
+      - "80:8080" # Map HTTP port 80 on the host to port 8080 in the container for public access
+    environment:
+      - FLASHPAPER_SECRET_KEY=secretkey # Set a secret key for Django, make sure to replace with a secure key
+      - FLASHPAPER_DEBUG=true # Enable debug mode (for development purposes only)
+      - FLASHPAPER_ALLOWED_HOSTS=0.0.0.0,localhost # Allow access from any host for development
+    volumes:
+      - ./data:/code/flashpaper/data # Mapping local data directory to the container's data directory for file storage
+      - ./flashpaper/media:/code/flashpaper/media # Mapping local media directory to the container's media directory if needed
+      - ./flashpaper/static:/code/flashpaper/static # Mapping local static directory to the container's static directory if needed
+    depends_on:
+      - db
+
+  db:
+    image: "postgres:13" # Use PostgreSQL image version 13
+    volumes:
+      - flashpaper-db-data:/var/lib/postgresql/data # Persist database data using a named volume
+
+volumes:
+  flashpaper-db-data:

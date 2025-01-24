@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  klaus_web:
+    image: klausapp/klaus-web:latest
+    ports:
+      - "8000:80"
+    environment:
+      - KLAUS_SECRET_KEY=secret_key_goes_here
+      - KLAUS_POSTGRES_HOST=klaus_db
+      - KLAUS_POSTGRES_DB=klaus
+      - KLAUS_POSTGRES_USER=klaus
+      - KLAUS_POSTGRES_PASSWORD=klaus_password
+    depends_on:
+      - klaus_db
+    volumes:
+      - ./klaus.conf.yml:/etc/klaus/klaus.conf.yml
+      - klaus_media:/home/klaus/.local/share/klaus/files
+
+  klaus_celery_beat:
+    image: klausapp/klaus-worker:latest
+    command: celery --loglevel=info beat
+    environment:
+      - KLAUS_SECRET_KEY=secret_key_goes_here
+      - KLAUS_CELERY_RESULT_BACKEND=rpc+amqp://klaus_worker:5672//
+      - KLAUS_POSTGRES_HOST=klaus_db
+      - KLAUS_POSTGRES_DB=klaus
+      - KLAUS_POSTGRES_USER=klaus
+      - KLAUS_POSTGRES_PASSWORD=klaus_password
+    depends_on:
+      - klaus_db
+      - klaus_worker
+    volumes:
+      - ./klaus.conf.yml:/etc/klaus/klaus.conf.yml
+
+  klaus_celery_worker:
+    image: klausapp/klaus-worker:latest
+    command: celery --loglevel=info worker
+    environment:
+      - KLAUS_SECRET_KEY=secret_key_goes_here
+      - KLAUS_CELERY_RESULT_BACKEND=rpc+amqp://klaus_worker:5672//
+      - KLAUS_POSTGRES_HOST=klaus_db
+      - KLAUS_POSTGRES_DB=klaus
+      - KLAUS_POSTGRES_USER=klaus
+      - KLAUS_POSTGRES_PASSWORD=klaus_password
+    depends_on:
+      - klaus_db
+      - klaus_worker
+    volumes:
+      - ./klaus.conf.yml:/etc/klaus/klaus.conf.yml
+
+  klaus_db:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=klaus
+      - POSTGRES_USER=klaus
+      - POSTGRES_PASSWORD=klaus_password
+    volumes:
+      - klaus_db_data:/var/lib/postgresql/data
+
+volumes:
+  klaus_media:
+  klaus_db_data:

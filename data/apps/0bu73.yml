@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  booklogr_api:
+    image: booklogr/booklogr-api:latest
+    container_name: booklogr_api
+    ports:
+      - "5000:5000"
+    environment:
+      - DB_HOST=db
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - DB_NAME=booklogr
+      - JWT_SECRET=secret_key
+      - MAIL_HOST=mailhog
+      - MAIL_PORT=1025
+    depends_on:
+      - db
+    networks:
+      - booklogr_network
+
+  db:
+    image: postgres:13
+    container_name: booklogr_db
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=booklogr
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - booklogr_network
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mailhog
+    ports:
+      - "8025:8025"
+    networks:
+      - booklogr_network
+
+volumes:
+  db_data:
+
+networks:
+  booklogr_network:
+    driver: bridge

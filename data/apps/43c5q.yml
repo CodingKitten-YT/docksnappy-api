@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  coral:
+    image: 'coralproject/coral:2.0.7' # Use the official Coral image with the desired tag
+    container_name: "coral"
+    ports:
+      - "8000:8000" # Expose the Coral dashboard UI on host port 8000 (default)
+    volumes:
+      - ./data:/data
+      - ./models:/models
+      - ./coral-config.yaml:/coral-config.yaml
+    environment:
+      - ALLOW_ANONYMOUS_ACCESS=true # Set to true if you want unauthenticated access to the UI
+    restart: unless-stopped
+
+  postgres:
+    image: 'postgres:13'
+    container_name: "coral-postgres"
+    volumes:
+      - postgres_data:/var/lib/postgresql2
+    environment:
+      POSTGRES_USER: coraluser
+      POSTGRES_PASSWORD: coralpassword
+      POSTGRES_DB: coraldb
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  lms:
+    image: 'openlms/openlms-core:latest' # or use a specific version like openlms/openlms-core:20210517.0.0
+    container_name: openlms
+    ports:
+      - "8000:80" # Moodle port for web interface, adjust the host port as needed
+    volumes:
+      - ./lmsdata:/var/www/html
+      - type: bind
+        source: ./local-settings-example.php
+        target: /var/www/html/config-dist/config.php
+        mode: ro
+    depends_on:
+      - db
+    environment:
+      LMS_DATABASE_HOST: db
+      LMS_DATABASE_NAME: lmsdb
+      LMS_DATABASE_USER: lmsuser
+      LMS_DATABASE_PASSWORD: lmsdbpassword
+      LMS_ADMIN_USERNAME: admin
+      LMS_ADMIN_PASSWORD: adminpass
+      LMS_LANGUAGE_ID: 'en'
+    environment:
+      TZ: 'Europe/London' # Set the timezone as appropriate
+
+  db:
+    image: 'postgres:latest' # or use a specific version like postgres:13-alpine
+    volumes:
+      - openlms_db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: lmsdb
+      POSTGES_USER: lmsuser
+      POSTGRES_PASSWORD: lmsdbpassword
+
+  redis:
+    image: 'redis:latest' # or use a specific version like redis:6-alpine
+    command: 'redis-server --appendonly yes'
+
+volumes:
+  openlms_db:
+
+networks:
+  default:
+    driver: bridge

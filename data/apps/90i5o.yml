@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  karaoke_backend:
+    image: karaoke_eternal_backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    networks:
+      - karaoke-net
+    environment:
+      - DB_HOST=db
+      - DB_NAME=karaoke
+      - DB_USER=root
+      - DB_PASSWORD=secret
+    depends_on:
+      - db
+
+  karaoke_frontend:
+    image: karaoke_eternal_frontend:latest
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    networks:
+      - karaoke-net
+
+  db:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=karaoke
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=secret
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - karaoke-net
+
+volumes:
+  postgres_data:
+
+networks:
+  karaoke-net:

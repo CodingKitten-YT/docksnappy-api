@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  webhook:
+    image: natsumac/ntfy:latest
+    ports:
+      - "80:80" # Expose the webhook service on port 80
+    volumes:
+      - ./webhook-config.json:/etc/ntfy/conf.d/webhook-config.json
+    environment:
+      - ESB_URL=<Your_WebSubscribe_Endpoint> # The WebSubscribe endpoint URL to send notifications to
+      - ESB_USERNAME=<Your_User_Name>          # Your WebSubscribe username
+      - ESB_PASSWORD=<Your_User_Password>     # Your WebSubscribe password or token
+    entrypoint: "/bin/ntfy receiver add github --endpoint https://webhook.github.com/:ref-changed"
+
+  postgres:
+    image: postgres:13
+    volumes:
+      - ./db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ntfy
+      POSTGRES_USER: ntfy
+      POSTGRES_PASSWORD: ntfy
+
+  redis:
+    image: redis:6-alpine
+
+networks:
+  default:
+    external:
+      name: ntfy_net

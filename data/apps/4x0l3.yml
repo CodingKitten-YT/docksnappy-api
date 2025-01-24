@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  iguanadb:
+    image: 'iguana/db:latest' # Use the official IguanaDB Docker image
+    environment:
+      - IGUANA_LICENSE_ACCEPTED=true
+      - IGUANA_LICENSE_KEY=${IGUANA_LICENSE_KEY} # Set your license key as an environment variable or directly in the file (not recommended for security reasons)
+    ports:
+      - "5432:5432" # Map the postgres port from the container to the host
+    volumes:
+      - iguanadb_data:/var/lib/postgresql/data:Z # Bind the database data to a named volume (persists data across container restarts)
+      - iguanadb_conf:/etc/iguana/conf.d:RO # Bind the configuration directory to read-only host
+      - iguanadb_log:/var/log/iguana:WO # Bind the log directory to write-only host for logging purposes
+    restart: unless-stopped # Ensure the container does not stop unless manually commanded to do so
+
+  webui:
+    image: 'iguana/webui:latest' # Use the official Iguana WebUI Docker image
+    ports:
+      - "8080:3000" # Map the webui port from the container to the host (you can change the port as needed)
+    environment:
+      - WEBUI_DBHOST=iguanadb # Define the database hostname or IP
+      - WEBUI_DBNAME=${DB_NAME} # Define the database name
+      - WEBUI_DBUSER=${DB_USER} # Define the database user
+      - WEBUI_DBPASSWORD=${DB_PASSWORD} # Define the database password
+    depends_on:
+      - iguanadb
+    restart: unless-stopped
+
+volumes:
+  iguanadb_data:
+  iguanadb_conf:
+  iguanadb_log:
+
+networks:
+  default:
+    driver: bridge

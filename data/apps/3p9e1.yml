@@ -1,0 +1,26 @@
+version: '3'
+services:
+  jina:
+    image: jinacloud/jina:latest
+    ports:
+      - "5000:5000" # Expose the default port of Jina on host
+    volumes:
+      - ./data:/data # Mount a local data directory to store flows and artifacts
+      - ./config.yaml:/app/config.yaml # Optional: mount your own configuration file
+    environment:
+      JINA_HOST: "0.0.0.0" # Allow access from the host
+    command: jina start --default-flow=your_flow_name # Start Jina with a specific flow
+  postgres:
+    image: postgres:latest
+    volumes:
+      - ./dbdata:/var/lib/postgresql # Persist database data to a local directory
+    environment:
+      POSTGRES_DB: jinadb # Database name
+      POSTGRES_USER: jinauser # Database user
+      POSTGRES_PASSWORD: jinapass # Database password
+  redis:
+    image: redis:latest
+
+networks:
+  default:
+    driver: bridge

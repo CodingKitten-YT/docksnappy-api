@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  jellyfin:
+    image: jellyfin/jellyfin-docker-regular:latest  # or use jellyfin/jellyfin-docker if you want the full set of plugins and addons
+    container_name: jellyfin
+    ports:
+      - "8090:8090"  # Web interface
+      - "8091:8091"  # Server (for remote access)
+      - "8092:8092"  # Transcoder (optional, if you want to enable transcoding on the host)
+    environment:
+      TZ: "Europe/London"  # Set your timezone, e.g., "America/New_York"
+      JULLYFIN_WEB_UI_CORS: "*"  # Allows CORS for web UI, remove asterisk to restrict sources
+    volumes:
+      - jellyfin-data:/data  # User data like media files, configurations, etc.
+      - jellyfin-config:/config  # Configuration files and plugins, if any
+    restart: unless-stopped
+    networks:
+      - jellyfin_network
+
+  jellyfin-sqlite:
+    image: jellyfin/jellyfin-docker-regular:latest
+    container_name: jellyfin_sqlite
+    volumes:
+      - jellyfin-data:/data  # Use this service if you want to use SQLite instead of a persistent database
+    environment:
+      JULLYFIN_DEFAULT_DATABASE: "SQLite"
+      TZ: "Europe/London"
+    restart: unless-stopped
+    networks:
+      - jellyfin_network
+
+  database:
+    image: postgres:13
+    container_name: jellyfin_database
+    volumes:
+      - jellyfin-dbdata:/var/lib/postgresql/data:rw  # Persistent database storage
+    environment:
+      POSTGRES_USER: "jellyfin"
+      POSTGRES_PASSWORD: "jellyfinc0mplexyz"  # You should change this to a strong password
+      POSTGRES_DB: "jellyfin"
+    restart: unless-stopped
+    networks:
+      - jellyfin_network
+
+# Optional services (you can add more as needed, like Nginx reverse proxy, etc.)
+  nginx-proxy:
+    image: jpillora/nginx-proxy:alpine
+    container_name: nginx_proxy
+    ports:
+      - "80:80"  # Expose HTTP port to route external traffic
+      - "443:443"  # Expose HTTPS port (requires Let's Encrypt, Certbot, etc.)
+    volumes:
+      - ./letsencrypt:/etc/letsencrypt  # Optional Let's Encrypt data directory
+      - nginx-proxy_data:/data  # Data for Nginx Proxy Controller
+    networks:
+      - jellyfin_network
+    depends_on:
+      - jellyfin
+
+  letsencrypt:
+    image: certbot/certbot:latest
+    container_name: letsencrypt
+    volumes:
+      - ./letsencrypt:/etc/letsencrypt
+    networks:
+      - jellyfin_network
+
+networks:
+  jellyfin_network:
+    driver: bridge
+
+volumes:
+  jellyfin-data:
+  jellyfin-config:
+  jellyfin-dbdata:
+  nginx-proxy_data:

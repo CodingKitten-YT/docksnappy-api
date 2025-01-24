@@ -1,0 +1,25 @@
+version: '3.8'
+services:
+  livedvr:
+    image: livedvr/livedvr:latest
+    container_name: livedvr
+    ports:
+      - "8080:8080" # HTTP API
+      - "5432:5432"   # PostgreSQL (optional, if you want to access it from the host)
+      - "8123:8123"  # Web interface (optional)
+    volumes:
+      - "./data:/var/lib/postgresql/data"
+      - "./livedvr.conf:/etc/livedvr/livedvr.conf" # Optional, for configuration file
+      - "./liveTV:/var/lib/livedvr/liveTV"         # Optional, for storing live TV files
+    environment:
+      POSTGRES_DB: livedvr
+      POSTGRES_USER: livedvr
+      POSTGRES_PASSWORD: changeit
+      LIVEDVR_PIDFILE: /var/run/livedvr.pid # Optional, if you want to manage the process manually
+    restart: unless-stopped
+    networks:
+      - liveStreamDVR_network
+
+networks:
+  liveStreamDVR_network:
+    driver: bridge

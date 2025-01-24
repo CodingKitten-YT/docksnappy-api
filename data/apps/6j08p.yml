@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  frigate:
+    image: frigate/frigate:latest
+    container_name: frigate
+    ports:
+      - "8081:80" # HTTP UI
+      - "8181:5060" # WebSocket (optional, required if using motion detection)
+    environment:
+      - TZ=Your/Timezone # Replace with your timezone (e.g., Europe/London)
+      - PUID=1000     # Set Process User ID
+      - PGID=1000     # Set Process Group ID
+      - WEBUI_USERNAME=user # Change the default username for the web UI
+      - WEBUI_PASSWORD=password # Change the default password for the web UI
+      - LOGLEVEL=info  # Set logging level (debug, info, warning, error)
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200 # Only set if you have an external elasticsearch service
+      - INFLUXDB_HOSTS=http://influxdb:8086  # Only set if you have an external influxdb service
+    volumes:
+      - "./config:/config" # Mount your config directory to the container
+      - "./media:/media"     # Mount your media directory to the container (if needed)
+      - "./cache:/cache"      # Mount your cache directory to the container (optional)
+    networks:
+      - homeassistant_network # Replace with your network name
+    restart: unless-stopped
+
+  elasticsearch:
+    image: frigate/elasticsearch:latest
+    container_name: elasticsearch
+    environment:
+      - DISABLE_XPACK=true # Optional, disables X-Pack features for free usage
+    volumes:
+      - "./data:/usr/share/elasticsearch/data" # Mount your data directory to the container
+    networks:
+      - homeassistant_network
+    restart: unless-stopped
+
+  influxdb:
+    image: frigate/influxdb:latest
+    container_name: influxdb
+    volumes:
+      - "./data-influxdb:/usr/share/influxdb/data" # Mount your data directory to the container
+    networks:
+      - homeassistant_network
+    restart: unless-stopped
+
+networks:
+  homeassistant_network:
+    driver: bridge

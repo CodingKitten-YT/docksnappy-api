@@ -1,0 +1,47 @@
+version: '3.7'
+services:
+  fess:
+    image: 'fess/fess:latest' # Use the official Fess image from Docker Hub
+    container_name: fess
+    environment:
+      JVM_OPTIONS: '-Xms256m -Xmx512m' # Set Java heap size
+      FESS_SEARCHER_DEFAULT_CONFIG_FILES: /config/default.yml # Default configuration file for Fess
+    ports:
+      - "9080:9080" # Expose the default Fess port (Tomcat) to the host
+    volumes:
+      - ./data:/data # Mount a volume to persist data and indexes
+      - ./config:/config # Mount a volume for configuration files
+      - ./logs:/logs # Mount a volume to store logs
+    logging:
+      level:
+        fess: debug
+    depends_on:
+      - elasticsearch
+      - kibana
+
+  elasticsearch:
+    image: 'docker.elastic.co/elasticsearch/elasticsearch:7.10.2' # Use the official Elasticsearch image with a tag suitable for your version of Fess
+    container_name: elasticsearch
+    environment:
+      ELASTIC_JAVA_OPTIONS: '-Xms512m -Xmx512m' # Set Java heap size
+      discovery.type: single-node # For testing purposes, use a single-node configuration
+      xpack.security.enabled: false # Disable X-Pack security features for simplicity in this example
+    volumes:
+      - ./data/elasticsearch:/usr/share/elasticsearch/data # Mount a volume to persist Elasticsearch data
+    logging:
+      level:
+        elasticsearch: debug
+
+  kibana:
+    image: 'docker.elastic.co/kibana/kibana:7.10.2' # Use the official Kibana image with a tag suitable for your version of Fess
+    container_name: kibana
+    environment:
+      ELASTIC_JAVA_OPTIONS: '-Xms512m -Xmx512m' # Set Java heap size
+    ports:
+      - "5601:5601" # Expose the default Kibana port to the host for the web interface
+    volumes:
+      - ./config/kibana:/usr/share/kibana/config # Mount a volume for Kibana configuration files
+      - ./data/kibana:/usr/share/kibana/data # Mount a volume to persist Kibana data
+    logging:
+      level:
+        kibana: debug

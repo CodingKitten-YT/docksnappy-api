@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:12
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: chirpy
+      POSTGRES_USER: chirpy
+      POSTGRES_PASSWORD: change_this_password
+    ports:
+      - "5432:5432"
+
+  chirpy:
+    image: chrislott.github.io/chirpy/chirpy-celery:latest
+    environment:
+      CHIRPY_DB_URL: postgres://chirpy:change_this_password@db:5432/chirpy
+      CHIRPY_SECRET_KEY: 'CHANGE_THIS'
+      CHIRPY_EMAIL_BACKEND: 'django.core.mail.backends.smtp.EmailBackend'
+      CHIRPY_EMAIL_HOST: 'localhost'
+      CHIRPY_EMAIL_PORT: 1025
+      CHIRPY_EMAIL_USE_TLS: true
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      # - worker
+    volumes:
+      - chirpy_media:/code/chirpy/media
+
+  worker:
+    image: chrislott.github.io/chirpy/chirpy-celery:latest
+    command: celery -A chirpy.celery_app worker --loglevel=info
+    depends_on:
+      - chirpy
+    environment:
+      CHIRPY_DB_URL: postgres://chirpy:change_this_password@db:5432/chirpy
+      CHIRPY_SECRET_KEY: 'CHANGE_THIS'
+    volumes:
+      - chirpy_media:/code/chirpy/media
+
+volumes:
+  db_data:
+  chirpy_media:

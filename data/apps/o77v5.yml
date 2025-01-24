@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  blocky_web:
+    image: blocky/blocky-web:latest
+    ports:
+      - "5000:5000"
+    environment:
+      - SERVICE_BINDINGS=["service://blocky_api"]
+    depends_on:
+      - blocky_api
+    networks:
+      - blocky_network
+
+  blocky_api:
+    image: blocky/blocky-api:latest
+    environment:
+      - SERVICE_BINDINGS=["service://postgres"]
+    depends_on:
+      - postgres
+    networks:
+      - blocky_network
+
+  postgres:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=blocky
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    networks:
+      - blocky_network
+
+volumes:
+  postgres_data:
+
+networks:
+  blocky_network:

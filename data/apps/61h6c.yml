@@ -1,0 +1,40 @@
+version: '3.8'
+services:
+  marsserver:
+    image: marsserver/marsserver:latest # Use the official MarsServer image from Docker Hub
+    container_name: marsserver
+    ports:
+      - "5060:5060" # Expose Mars Server web interface on host port 5060
+    environment:
+      MARS_ADMIN_USERNAME: admin
+      MARS_ADMIN_PASSWORD: password
+      JAVA_TOOL_OPTIONS:-Xms2g -Xmx4g # Set initial and max Java heap size to 2GB and 4GB respectively
+    volumes:
+      - marsserver-data:/opt/mars/data
+      - marsserver-conf:/opt/mars/conf
+    networks:
+      - mars_network
+    depends_on:
+      - mariadb
+
+  mariadb:
+    image: mysql:5.7
+    container_name: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_USER: marsuser
+      MYSQL_PASSWORD: marspassword
+      MYSQL_DATABASE: marsdb
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    networks:
+      - mars_network
+
+volumes:
+  marsserver-data:
+  marsserver-conf:
+  mariadb-data:
+
+networks:
+  mars_network:
+    driver: bridge

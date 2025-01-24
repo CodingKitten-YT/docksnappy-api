@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  fasten_health_gateway:
+    image: fastenit/fasten-health-gateway:latest
+    ports:
+      - "8081:80"
+    environment:
+      - FASTEN_HEALTH_APIKEY=your_api_key_here
+      - JWT_SECRET=your_jwt_secret_here
+    depends_on:
+      - fasten_health_data_api
+
+  fasten_health_data_api:
+    image: fastenit/fasten-health-data-api:latest
+    environment:
+      - FASTEN_HEALTH_APIKEY=your_api_key_here
+      - POSTGRES_DB=fasten_health
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/database/data
+
+  postgres:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=fasten_health
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/database/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

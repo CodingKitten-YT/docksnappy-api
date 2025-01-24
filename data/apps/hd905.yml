@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  foodsoft:
+    image: 'foodsoft/foodsoft:latest' # Use the official FoodSoft image
+    container_name: 'foodsoft'
+    ports:
+      - "80:80" # Maps port 80 on the host to port 80 in the container for web traffic
+      - "443:443" # Maps port 443 on the host to port 443 in the container for secure traffic
+    volumes:
+      - 'foodsoft-data:/var/www/html' # Persistent storage for FoodSoft data
+      - '/etc/localtime:/etc/localtime' # Ensure correct timezone configuration (optional, depending on your setup)
+      - './letsencrypt:/etc/letsencrypt' # For Let's Encrypt certificates if you want to use SSL (optional)
+    depends_on:
+      - 'mysql'
+    environment:
+      MYSQL_DATABASE: 'foodsoft'
+      MYSQL_USER: 'foodsoft'
+      MYQL_PASSWORD: 'changeit'
+      MYSQL_ROOT_PASSWORD: 'changeit'
+      FOODSOFT_SITEURL: 'https://yourdomain.tld' # Set your domain or subdomain
+      FOODSOFT_ADMIN_EMAIL: 'admin@example.com' # Set an admin email for FoodSoft
+    networks:
+      - foodsoft-net
+
+  mysql:
+    image: 'mysql:5.7' # Use the official MySQL image
+    environment:
+      MYSQL_DATABASE: 'foodsoft'
+      MYSQL_USER: 'foodsoft'
+      MYSQL_PASSWORD: 'changeit'
+      MYSQL_ROOT_PASSWORD: 'changeit'
+    volumes:
+      - 'mysql-data:/var/lib/mysql' # Persistent storage for MySQL data
+    networks:
+      - foodsoft-net
+
+  phpmyadmin:
+    image: 'phpmyadmin/phpmyadmin'
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: 'mysql'
+      MYSQL_ROOT_PASSWORD: 'changeit' # This should match the MySQL root password
+    depends_on:
+      - 'mysql'
+    networks:
+      - foodsoft-net
+
+volumes:
+  foodsoft-data:
+  mysql-data:
+
+networks:
+  foodsoft-net:
+    driver: bridge

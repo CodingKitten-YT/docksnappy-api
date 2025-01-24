@@ -1,0 +1,53 @@
+version: '3'
+services:
+  homarr:
+    image: homarr/homarr:latest
+    container_name: homarr
+    ports:
+      - "8080:8080" # Homarr web UI
+    environment:
+      - HOOMARR__POSTGRES_DB=homarr
+      - HOOMARR__POSTGRES_USER=homarr
+      - HOOMARR__POSTGRES_PASSWORD=secret
+      - HOOMARR__SECRET=thisisthesecrettouseforeverything
+    volumes:
+      - "./homarr_config:/code/homarr_config"
+      - "./homarr_logs:/code/homarr_logs"
+      - "./homarr_data:/var/lib/postgresql"
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    volumes:
+      - "./homarr_data:/var/lib/postgresql"
+    environment:
+      - POSTGRES_DB=homarr
+      - POSTGRES_USER=homarr
+      - POSTGRES_PASSWORD=secret
+
+  nginx-proxy:
+    image: nginx:latest
+    container_name: nginx_proxy
+    ports:
+      - "80:80" # NGINX server
+      - "443:443" # NGINX server (HTTPS if you set up SSL)
+    volumes:
+      - "./nginx/conf.d:/etc/nginx/conf.d"
+      - "./nginx/certs:/etc/nginx/certs"
+    depends_on:
+      - homarr
+
+  letsencrypt:
+    image: certbot/dns-python:latest
+    container_name: letsencrypt
+    volumes:
+      - "./nginx/certs:/etc/letsencrypt"
+    depends_on:
+      - nginx-proxy
+
+# If you want to use Let's Encrypt for SSL, uncomment the "letsencrypt" service and configure it accordingly.
+# You can also add a volume for Homarr logs if you want to persist them across container restarts:
+#   homarr_logs:
+#     driver: local

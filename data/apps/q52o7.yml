@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  misago:
+    image: misago/misago:latest
+    container_name: misago
+    ports:
+      - "8000:8000" # HTTP port, customize as needed
+      - "4430:443"   # HTTPS port, if configured with SSL, customize as needed
+    environment:
+      - SECRET_KEY=`cat /path/to/secret_key.txt` # Set your own secret key
+      - ALLOWED_HOSTS=localhost,127.0.0.1,[::1]
+      - DEBUG=False
+      - EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+      - EMAIL_HOST=smtp.example.com # Replace with your SMTP server
+      - EMAIL_PORT=587
+      - EMAIL_USE_TLS=True
+      - EMAIL_HOST_USER=your_email@example.com # Replace with your email address
+      - EMAIL_HOST_PASSWORD=`cat /path/to/email_password.txt` # Set your email password securely
+    volumes:
+      - ./misago:/opt/misago
+      - misago-media:/opt/misago/user_upload
+      - misago-static:/opt/misago/staticfiles
+      - misago-logs:/var/log/misago
+    depends_on:
+      - db
+      # Uncomment the next line if you need to use Redis (optional)
+      # - redis
+    restart: unless-stopped
+
+  db:
+    image: postgres:12
+    container_name: misago_db
+    volumes:
+      - misago-db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=misago
+      - POSTGRES_USER=misago
+      - POSTGRES_PASSWORD=`cat /path/to/db_password.txt` # Set your database password securely
+    restart: unless-stopped
+
+  redis: # Uncomment this section if you need to use Redis (optional)
+    image: redis:6-alpine
+    container_name: misago_redis
+    volumes:
+      - misago-redis:/data
+    restart: unless-stopped
+
+volumes:
+  misago-db:
+  misago-media:
+  misago-static:
+  misago-logs:
+  misago-redis: # Uncomment this line if you are using Redis
+
+# If you're setting up a production environment, consider enabling these options:
+# - Readiness and Liveness probes for better monitoring of the application
+# - Resource constraints (CPU/Memory limits and requests)
+# - Network settings (like publishing the correct ports)

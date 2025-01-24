@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  datasette:
+    image: datasette/datasette:latest  # Use a specific tag if needed
+    container_name: datasette
+    user: "${USERR}"
+    ports:
+      - "8008:8000"  # Expose Datasette's web UI on port 8000 within the container on port 8008 on the host
+    volumes:
+      - .datasets:/data
+      - ./config.yaml:/app/config.yaml  # Mount a local config file if you have one
+      - ./environment.py:/app/environment.py  # Optional custom environment.py
+      - gevent-eventlet:/usr/local/lib/python3.8/site-packages/  # For Windows to enable eventlet with Gevent
+    depends_on:
+      - postgres
+    environment:
+      - DATASETTE_PG_HOST=postgres
+      - DATASETTE_PG_USER=datasette
+      - DATASETTE_PG_PASSWORD=secret
+      #- DATASETTE_PG_DBNAME=mydb  # Uncomment if your database has a specific name
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/ping"]
+      interval: 15s
+      timeout: 30s
+      retries: 60
+
+  postgres:
+    image: postgres:latest  # Use a specific tag if needed
+    container_name: postgres
+    environment:
+      - POSTGRES_DB=datasette
+      - POSTGRES_USER=datasette
+      - POSTGRES_PASSWORD=secret
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 20s
+      retries: 30
+
+volumes:
+  postgres-data:
+  gevent-eventlet:
+
+networks:
+  default:
+    driver: bridge

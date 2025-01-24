@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  laravel-app:
+    image: laravolt/lancache:latest
+    ports:
+      - "80:80" # Expose Lancache to host, default web port
+    volumes:
+      - ./public:/var/www/html # Path to your project's public directory
+      - ./docker/cache:/var/cache # Path for cache data (optional)
+    environment:
+      TZ: "Europe/London" # Set the timezone (change as needed)
+      APP_KEY: "${APP_KEY}" # Use an environment variable or a generated app key
+      BROADCAST_DOMAIN: "localhost:6001" # If using Pusher for broadcasting
+      LANCAKE_HOST: "php-fpm" # If running PHP-FPM separately
+      LANCAKE_PORT: "9000" # If running PHP-FPS with a custom port
+      LANCAKE_DEBUG: "true" # Set to true for debugging (false in production)
+    depends_on:
+      - php-fpm
+
+  php-fpm:
+    image: php:8.1-fpm
+    volumes:
+      - ./public/storage:/var/www/html/storage # Storage for uploaded files (optional)
+      - ./docker/php:/var/www/html # Path for your project's PHP code
+    environment:
+      APP_KEY: "${APP_KEY}"
+      APP_DEBUG: "true" # Set to true for debugging (false in production)
+      APP_URL: "http://localhost" # The application URL (change as needed)
+    networks:
+      - laravel
+
+  nginx-proxy:
+    image: jwilder/nginx-proxy:stable
+    ports:
+      - "80:80" # NGINX Proxy to host, default web port
+      - "443:443" # If using SSL (HTTPS)
+    volumes:
+      - ./docker/nginx:/etc/nginx # Path for Nginx configuration files
+    depends_on:
+      - certbot
+
+  certbot:
+    image: certbot/certbot-dns-nginx
+    volumes:
+      - ./docker/certbot:/workspace
+    entrypoint: '/bin/sh -c "trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;"'
+
+networks:
+  laravel:

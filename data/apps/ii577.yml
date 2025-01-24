@@ -1,0 +1,41 @@
+version: '3'
+
+services:
+  mirortc-miroserver:
+    image: mirotc/miroserver:latest # or specify a tag if needed
+    command: -f /conf/mirortc.yml --web-statistic=true --redis-uri=redis://redis:6379/0
+    ports:
+      - "8080:8080" # HTTP API
+      - "5223:5223"  # WebRTC signaling (default STUN server port)
+      - "443:443"     # HTTPS (if using Nginx as a reverse proxy)
+    volumes:
+      - ./data:/data
+      - ./conf:/conf
+      - miroserver_log:/var/log/miroserver
+    environment:
+      MIROSERVER_LOGLEVEL: "info" # Set log level (debug, info, warning, error)
+      MIROSERVER_ENABLE_WEBSOCKET_STATS: "true" # Enable web stats UI
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:6-alpine
+    command: "--save-memory-on-flush no"
+    volumes:
+      - redis_data:/data
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80" # HTTP (optional, if you want to use Nginx as a frontend)
+      - "443:443" # HTTPS (optional, if you want to use Nginx with SSL)
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - nginx_log:/var/log/nginx
+    depends_on:
+      - mirortc-miroserver
+
+volumes:
+  miroserver_log:
+  redis_data:
+  nginx_log:

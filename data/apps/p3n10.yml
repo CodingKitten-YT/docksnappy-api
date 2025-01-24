@@ -1,0 +1,56 @@
+version: '3.8'
+services:
+  webapp:
+    image: 'elabel-webapp:latest' # Replace with your specific web app image tag
+    build:
+      context: .
+      dockerfile: Dockerfile.webapp
+    ports:
+      - "8000:8000" # Expose the port your web app runs on (e.g., 8000 for gunicorn)
+    depends_on:
+      - db
+
+  worker:
+    image: 'elabel-worker:latest' # Replace with your specific worker image tag
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      QUEUE_URL: 'http://rabbitmq:5672/api/exchanges'
+      BROKER_USERNAME: 'user'
+      BROKER_PASSWORD: 'password'
+    depends_on:
+      - rabbitmq
+
+  db:
+    image: 'postgres:13' # Use the desired PostgreSQL image version
+    environment:
+      POSTGRES_DB: 'elabel_db'
+      POSTGRES_USER: 'user'
+      POSTGRES_PASSWORD: 'password'
+    volumes:
+      - 'elabel-db-data:/var/lib/postgresql/data' # Use a named volume for persistence
+
+  rabbitmq:
+    image: 'rabbitmq:3.8-management' # Use the desired RabbitMQ image version with management plugin
+    ports:
+      - "5672:5672" # RabbitMQ default port
+      - "15672:15672" # Management UI port
+    volumes:
+      - 'elabel-rabbitmq-data:/var/lib/rabbitmq' # Use a named volume for persistence
+
+  redis:
+    image: 'redis:6' # Use the desired Redis image version
+    ports:
+      - "6379:6379"
+    volumes:
+      - 'elabel-redis-data:/data' # Use a named volume for persistence
+
+volumes:
+  elabel-db-data:
+  elabel-rabbitmq-data:
+  elabel-redis-data:
+
+networks:
+  default:
+    driver: bridge

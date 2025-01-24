@@ -1,0 +1,42 @@
+version: '3.7'
+services:
+  # Hoppscotch UI Service
+  hoppscotch-ui:
+    image: hoppscotch/hoppscotch:community_edition
+    container_name: hoppscotch-ce
+    ports:
+      - "8080:8080" # Hoppscotch default port for the UI
+    environment:
+      HOPPSCOTCH_DATABASE__TYPE: sqlite  # Database type (default)
+      HOPPSCOTCH_DATABASE__HOST: db       # Database host (named link to 'hoppscotch-db')
+      HOPPSCOTCH_DATABASE__DBNAME: hoppscotch    # Database name (optional, will be auto-generated if not set)
+      HOPPSCOTCH_DATABASE__USER: hoppscotch   # Database user (optional)
+      HOPPSCOTCH_DATABASE__PASSWORD: hoppscotch  # Database password (optional)
+    volumes:
+      - hoppscotch-ce-data:/data/db     # Persistent storage for DB
+      - ./hoppscotch:/data/upload   # Custom API, UI or other custom data
+    depends_on:
+      - hoppscotch-db
+    networks:
+      - hoppscotch_network
+
+  # Hoppscotch Database Service (SQLite)
+  hoppscotch-db:
+    image: postgres:13
+    container_name: hoppscotch-db
+    volumes:
+      - hoppscotch-db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: hoppscotch     # Database name (optional, will be auto-generated if not set)
+      POSTGRES_USER: hoppscotch   # Database user (optional)
+      POSTGRES_PASSWORD: hoppscotch  # Database password (optional)
+    networks:
+      - hoppscotch_network
+
+volumes:
+  hoppscotch-ce-data:
+  hoppscotch-db-data:
+
+networks:
+  hoppscotch_network:
+    driver: bridge

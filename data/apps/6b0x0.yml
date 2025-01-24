@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:12
+    command: 'postgres -c "listen_addresses = '*'"'
+    volumes:
+      - ./db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: baserow
+      POSTGRES_USER: baserow
+      POSTGRES_PASSWORD: change_this_password_123
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U baserow"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    image: baserow/server:latest
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgres://baserow:change_this_password_123@db:5432/baserow
+      GRAPHENE_ALLOWED_HOSTS: '*'
+      DEBUG: true
+      SECRET_KEY: change_it_as_insecure_Randomextraordinarylongkeyforthedevmode
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/graphql"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  frontend:
+    image: baserow/frontend:latest
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    environment:
+      BASEROW_GRAPHENE_URL: http://backend:8000/graphql
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  db-data:
+
+networks:
+  default:
+    driver: bridge

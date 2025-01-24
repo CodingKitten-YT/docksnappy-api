@@ -1,0 +1,37 @@
+version: '3.7'
+
+services:
+  gophish:
+    image: gophish/gophish:latest
+    ports:
+      - "9090:90" # HTTP Server
+      - "8443:8443" # HTTPS Server (Useful if you generate a self-signed certificate)
+    depends_on:
+      - db
+    environment:
+      DJANGO_SETTINGS_MODULE: gophish.settings
+      SECRET_KEY: "${SECRET_KEY}"
+      POSTGRES_DB: "${DB_NAME}"
+      POSTGRES_USER: "${DB_USER}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+      USE_SSL: "false" # Set to 'true' if you have SSL setup
+    volumes:
+      - "./data:/data"
+      - "./ssl:/etc/ssl" # Mount this volume if using SSL
+    networks:
+      - gophish_network
+
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: "${DB_NAME}"
+      POSTGRES_USER: "${DB_USER}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+    volumes:
+      - "./db:/var/lib/postgresql/data"
+    networks:
+      - gophish_network
+
+networks:
+  gophish_network:
+    driver: bridge

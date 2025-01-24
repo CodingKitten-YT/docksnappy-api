@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  postfix:
+    image: mailcow/mailcow-dockerized:latest
+    container_name: mailserver
+    environment:
+      - MC_DOMAIN=example.com
+      - MC_EMAILS_TLS=true
+      - TZ=Europe/Rome
+      - SERVICE_NAME=mailserver
+      - SERVICE_ENVIRONMENT=production
+      - MC_ADMIN_USERNAME=admin
+      - MC_ADMIN_PASSWORD=your_very_secure_password
+    ports:
+      - "10000-10010:10000-10010"
+      - "80:80" # HTTP proxy
+      - "443:443" # HTTPS proxy
+    volumes:
+      - "./data:/var/mailcow"
+      - "./certs:/etc/letsencrypt"
+      - "./log:/var/log/mailcow"
+    networks:
+      - mailnetwork
+
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb
+    command: --transaction-isolation=RC
+    volumes:
+      - "./dbdata:/var/lib/mysql"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATA_DIR: /var/lib/mysql
+      MYSQL_USER: mailcow
+      MYSQL_PASSWORD: mailcowpassword
+      MYSQL_DB: mailcow
+    networks:
+      - mailnetwork
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    command: --save-mode no-swap-data pagefinder
+
+  nginxproxy:
+    image: nginxproxy/nginx-proxy:latest
+    container_name: nginxproxy
+    ports:
+      - "8080:80" # Admin UI
+      - "3000:3000" # Websocket Admin UI
+    volumes:
+      - "./nginx/data:/data"
+      - "./nginx/certs/letsencrypt.yaml:/etc/nginx_proxy/conf.d/letsencrypt.yaml"
+    depends_on:
+      - mailserver
+    networks:
+      - mailnetwork
+
+  letsencrypt:
+    image: quay.io/jrcassius/letsencrypt:latest
+    container_name: letsencrypt
+    environment:
+      LE_EMAIL=your_email@example.com
+      LE_DOMAIN=example.com
+      LE_AGREE_TERMS=true
+    volumes:
+      - "./dbdata:/etc/letsencrypt"
+      - "./nginx/certs:/etc/letsencrypt"
+    depends_on:
+      - mariadb
+      - nginxproxy
+    networks:
+      - mailnetwork
+
+networks:
+  mailnetwork:
+    driver: bridge

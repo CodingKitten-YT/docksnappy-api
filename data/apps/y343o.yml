@@ -1,0 +1,32 @@
+version: '3'
+
+services:
+  ocular-test-generator:
+    image: "mcr.microsoft.com/oss/overops/ocular-test-generator:latest"
+    environment:
+      - SAUCE_USERNAME=your_username
+      - SAUCE_ACCESS_KEY=your_access_key
+    volumes:
+      - "./tests:/app/src/main/kotlin/com/overops/example/tests"
+    ports:
+      - "8080:8080"
+
+  ocular-test-runner:
+    image: "mcr.microsoft.com/oss/overops/ocular-test-runner:latest"
+    environment:
+      - SAUCE_USERNAME=your_username
+      - SAUCE_ACCESS_KEY=your_access_key
+    depends_on:
+      - ocular-test-generator
+    volumes:
+      - "./tests:/app/src/main/kotlin/com/overops/example/tests"
+    ports:
+      - "8081:8081"
+
+networks:
+  default:
+    driver: bridge
+
+volumes:
+  ocular_data:
+    driver: local

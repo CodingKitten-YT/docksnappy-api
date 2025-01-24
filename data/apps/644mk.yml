@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  huly-app:
+    image: huly/huly:latest  # Replace with the official or custom image for Huly
+    ports:
+      - "8080:80"  # Map the application port to the host, if necessary
+    environment:
+      - DATABASE_URL=postgres://huly-db:5432/huly  # Database connection string
+      # Add other environment variables required by Huly here
+    depends_on:
+      - huly-db
+    restart: unless-stopped
+
+  huly-db:
+    image: postgres:13  # PostgreSQL image version
+    command: 'postgres -c "listen_addresses = '0.0.0.0'"'  # Listen on all interfaces
+    volumes:
+      - huly-db-data:/var/lib/postgresql/data  # Persistent storage for the database
+    environment:
+      - POSTGRES_USER=huly
+      - POSTGRES_PASSWORD=yourpassword  # Replace with a secure password
+      - POSTGRES_DB=huly
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"  # Map HTTP port to the host
+      - "443:443"  # Map HTTPS port to the host, if using SSL
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d  # Directory containing your Nginx configuration files
+      - huly-app:/var/www/html  # Mount the Huly app container as a volume for serving files directly
+    depends_on:
+      - huly-app
+    restart: unless-stopped
+
+volumes:
+  huly-db-data:

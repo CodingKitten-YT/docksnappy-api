@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  app:
+    image: foodcoopshop/foodcoopshop:latest
+    container_name: foodcoopshop
+    restart: unless-stopped
+    ports:
+      - "8000:8000" # Adjust the host port as needed
+    environment:
+      - DJANGO_SETTINGS_MODULE=foodcoopshop.settings.production
+      - SECRET_KEY=change_this
+      - DEBUG=False
+      - ALLOWED_HOSTS=127.0.0.1,localhost,yourdomain.com
+      # Add other environment variables as needed (e.g., database credentials)
+    volumes:
+      - ./app/static:/code/foodcoopshop/static
+      - ./app/foodcoopshop/:/code/foodcoopshop
+      - /code/foodcoopshop/static/media:/code/foodcoopshop/media  # Assuming you store media in the 'media' directory
+    command: gunicorn foodcoopshop.wsgi -b 0.0.0.0:8000
+
+  db:
+    image: postgres:13
+    container_name: foodcoopshop_db
+    environment:
+      - POSTGRES_DB=foodcoopshop_db
+      - POSTGRES_USER=foodcoopshop_user
+      - POSTGRES_PASSWORD=change_this
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  celery_worker:
+    image: foodcoopshop/foodcoopshop:latest
+    container_name: foodcoopshop_celery_worker
+    restart: unless-stopped
+    environment:
+      - DJANGO_SETTINGS_MODULE=foodcoopshop.settings.production
+      - SECRET_KEY=change_this
+      - DEBUG=False
+      - ALLOWED_HOSTS=127.0.0.1,localhost,yourdomain.com
+      # Add other environment variables as needed (e.g., database credentials)
+    command: celery -A foodcoopshop worker --loglevel=info
+
+  redis:
+    image: redis:6-alpine
+    container_name: foodcoopshop_redis
+
+volumes:
+  db_data:
+
+networks:
+  default:
+    driver: bridge

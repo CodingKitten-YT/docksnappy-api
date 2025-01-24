@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  mistborn:
+    image: mistborn/mistborn:latest # Assuming the Docker image is available as 'mistborn/mistborn' on a registry
+    ports:
+      - "8080:8080" # Expose Mistborn service on host port 8080
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DB_HOST=db
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    env_file:
+      - .env # Load environment variables from a .env file if needed
+    restart: unless-stopped # Ensure the service restarts unless it's explicitly stopped
+
+  db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=mistborn
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=mistborn
+    volumes:
+      - postgres-data:/var/lib/postgresql # Persist database data
+    env_file: .env
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379" # Expose Redis on host port 6379 for client access
+    volumes:
+      - redis-data:/data # Persist Redis data
+    env_file: .env
+
+  traefik:
+    image: traefik:latest
+    ports:
+      - "80:80" # HTTP port
+      - "443:443" # HTTPS port (requires SSL certificates)
+    command:
+      - "--api.insecure=true" # Run Traefik with the API accessible without authentication for ease of use
+    volumes:
+      - traefik-data:/traefik/data # Persist Traefik configuration and acme certificates if needed
+    depends_on:
+      - mistborn
+
+volumes:
+  postgres-data:
+  redis-data:
+  traefik-data:

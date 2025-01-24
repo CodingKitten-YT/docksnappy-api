@@ -1,13 +1,47 @@
 version: '3.8'
 
 services:
-  algernon:
-    image: algernon:latest
-    container_name: algernon
-    restart: unless-stopped
+  algernon-web:
+    image: algernon/algernon-web:latest
     ports:
-      - "8080:8080" # Maps Algernon's port 8080 to the host
-    volumes:
-      - ./algernon/data:/data # Persistent data storage
+      - "80:80" # Expose the web app on port 80 of the host
+    depends_on:
+      - algernon-db
+      - algernon-redis
     environment:
-      - TZ=Etc/UTC # Replace with your timezone
+      DATABASE_URL: "postgres://algernon-db:5432"
+      REDIS_URL: "redis://algernon-redis:6379"
+      SECRET_KEY: 'your_secret_key' # Replace with your actual secret key
+    volumes:
+      - .:/code # Bind the current directory to the container for code changes
+      - algernon-web-data:/data/db # Persistent storage for the web app data
+      - algernon-web-redis:/data/redis # Persistent storage for Redis data (if needed)
+
+  algernon-db:
+    image: postgres:13
+    volumes:
+      - algernon-db-data:/var/lib/postgresql/data # Persistent storage for the database data
+    environment:
+      POSTGRES_DB: algernon # Database name
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password # Replace with your actual password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  algernon-redis:
+    image: redis:6
+    volumes:
+      - algernon-redis-data:/data # Persistent storage for Redis data (if needed)
+
+volumes:
+  algernon-web-data:
+  algernon-db-data:
+  algernon-web-redis:
+  algernon-redis-data:
+
+networks:
+  default:
+    driver: bridge

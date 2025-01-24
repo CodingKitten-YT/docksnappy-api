@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  node-red:
+    image: node-red/node-red:latest
+    container_name: node-red
+    ports:
+      - "8080:8080": # Node-RED runs on port 8080 by default
+        mode: "host"   # Map the container's port to the host, making the app accessible via browser on that port.
+    volumes:
+      - ./flow:/data/flows  # Load your local flow into Node-Red on container startup
+      - node-red/config:/data/config  # Save the configuration to the host
+      - node-red/log:/data/log  # Save logs to the host
+    memory: "4g"             # Set the memory limit for Node-RED
+    restart: unless-stopped  # Restart if it stops, but not if it's being manually stopped
+    environment:
+      - TZ=Europe/London  # Set the timezone (replace with your own)
+    networks:
+      - node-red_network  # Define a network for this service (optional, can be omitted)
+
+# Optional network definition
+networks:
+  node-red_network:
+    driver: bridge

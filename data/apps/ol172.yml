@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  database:
+    image: postgres:12
+    environment:
+      POSTGRES_DB: firefly_iii
+      POSTGRES_USER: firefly_iii
+      POSTGRES_PASSWORD: change_this_unless_you_hate_yourself
+    volumes:
+      - firefly-iii-db:/var/lib/postgresql2
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U firefly_iii"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  web:
+    image: fireflyii/firefly-iii:latest
+    environment:
+      FIREFLY_SECRET: change_this_please
+      FIREFLY_DB_HOST: database
+      FIREFLY_DB_NAME: firefly_iii
+      FIREFLY_DB_USER: firefly_iii
+      FIREFLY_DB_PASSWORD: change_this_unless_you_hate_yourself
+      FIREFLY_SCHEME: https
+      FIREFLY_HOST: my.fireflyiii.app.xip.io  # Optional, for setting a hostname via xip.io
+    ports:
+      - "8080:80"
+    depends_on:
+      - database
+    healthcheck:
+      test: ["TCP", "0.0.0.0:80"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:6-alpine
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -h 127.0.0.1 ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  worker:
+    image: fireflyii/firefly-iii-worker:latest
+    environment:
+      FIREFLY_SECRET: change_this_please
+      FIREFLY_DB_HOST: database
+      FIREFLY_DB_NAME: firefly_iii
+      FIREFLY_DB_USER: firefly_iii
+      FIREFLY_DB_PASSWORD: change_this_unless_you_hate_yourself
+    depends_on:
+      - database
+      - web
+
+  queue:
+    image: fireflyii/firefly-iii-queue:latest
+    environment:
+      FIREFLY_SECRET: change_this_please
+      FIREFLY_DB_HOST: database
+      FIREFLY_DB_NAME: firefly_iii
+      FIREFLY_DB_USER: firefly_iii
+      FIREFLY_DB_PASSWORD: change_this_unless_you_hate_yourself
+    depends_on:
+      - database
+      - redis
+
+volumes:
+  firefly-iii-db:

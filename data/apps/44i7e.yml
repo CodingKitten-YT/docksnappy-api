@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  web:
+    image: garagehq/web:latest
+    ports:
+      - "8000:80" # Expose the web application on port 8000 of the host
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/dbname
+    depends_on:
+      - db
+    volumes:
+      - ./web/static:/code/static
+      - ./web/templates:/code/templates
+
+  worker:
+    image: garagehq/worker:latest
+    environment:
+      - WORKER_QUEUE=default
+    depends_on:
+      - rabbitmq
+
+  redis:
+    image: redis:latest
+    command: redis-server --requirepass changeme
+
+  db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=dbname
+    volumes:
+      - garagehq-db-data:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq:latest
+    command: rabbitmq-server --acceptor_heartbeat_limit=60 --handlers_heartbeat_limit=60
+
+volumes:
+  garagehq-db-data:

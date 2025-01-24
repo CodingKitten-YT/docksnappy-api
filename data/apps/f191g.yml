@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  wordpress:
+    image: wordpress:latest
+    container_name: wordpress
+    ports:
+      - "80:80" # HTTP
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: root
+      WORDPRESS_DB_PASSWORD: yourpassword
+      WORDPRESS_DB_NAME: wordpressdb
+    volumes:
+      - ./wordpress:/var/www/html
+      - ./wordpress/db:/docker-entrypoint-initdb.d/db.sql
+    depends_on:
+      - db
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: phpmyadmin
+    environment:
+      PMA_ARBITRARY: yes
+      MYSQL_ROOT_PASSWORD: yourpassword
+      MYSQL_DATABASE: wordpressdb
+    ports:
+      - "8080:80" # PhpMyAdmin
+    depends_on:
+      - db
+
+  db:
+    image: mysql:5.7
+    container_name: db
+    volumes:
+      - ./db:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: yourpassword
+      MYSQL_DATABASE: wordpressdb
+      MYSQL_USER: wpuser
+      MYSQL_PASSWORD: anotherpassword
+    ports:
+      - "3306:3306" # MySQL
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  feedpushr-worker:
+    image: your-feedpushr-image:latest # Replace with the specific image for FeedPushr worker if available
+    container_name: feedpushr_worker
+    environment:
+      FEEDPUSHR_API_KEY: yourapikey # Set your API key for FeedPushr service
+      FEEDPUSHR_QUEUE_URL: your-queue-url # Set your queue URL for FeedPushr service
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./feedpushr:/var/task/
+
+# Uncomment the following if you need to persist logs or data from the FeedPushr worker container
+# volumes:
+#   - "./feedpushr-logs:/var/log/feedpushr"
+
+networks:
+  default:
+    external:
+      name: appnet
+      soft: true
+
+# If you need to use a specific network for your services, define it here
+# networks:
+#   appnet:
+#     driver: bridge

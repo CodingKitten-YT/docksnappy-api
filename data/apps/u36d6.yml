@@ -1,0 +1,39 @@
+version: '3.7'
+
+services:
+  appsmith:
+    image: appsmith/appsmith
+    container_name: appsmith
+    ports:
+      - "90:3000" # Expose Appsmith UI on host port 90
+    environment:
+      - AS_METRICS_COLLECTOR=false
+      - AS_LOGS_COLLECTOR=true
+      - AS_LOGS_GCP_PROJECT=your-gcp-project-id # Set to your GCP project ID if you want logs to be sent to Google Cloud Logging
+      - AS_LOGS_AWS_BUCKET=your-s3-bucket-name # Set to your S3 bucket name if you want logs to be stored in AWS S3
+    volumes:
+      - ./appsmith-data:/data/appsmith
+      - ./appsmith-logs:/data/appsmith/logs  # Optional: For storing logs locally
+    command: >
+      /entrypoint.sh register \
+      --email your@email.com \ # Set with a valid email for receiving alerts and notifications
+      --password appsmith_password \ # Set your own password
+      appsmith
+    networks:
+      - appsmith-network
+
+  postgres:
+    image: postgres:12
+    container_name: postgres
+    volumes:
+      - ./appsmith-data/postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=appsmith
+      - POSTGRES_PASSWORD=appsmith_password # Must match the password used for Appsmith registration
+      - POSTGRES_DB=appsmith
+    networks:
+      - appsmith-network
+
+networks:
+  appsmith-network:
+    driver: bridge

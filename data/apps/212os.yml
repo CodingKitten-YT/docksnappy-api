@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  kestra_cli:
+    image: kestra/kestra-cli:latest
+    command: tail -f /dev/null
+    volumes:
+      - ./kestra:/opt/jupyter/notebooks
+    read_only: true
+
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: kestra
+      POSTGRES_PASSWORD: kestra
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    command: 'postgres -c "listener = off"' # Disable the default PostgreSQL listener process (tcpsocket)
+
+  redis:
+    image: redis:6.2-alpine
+
+  rabbitmq:
+    image: rabbitmq:3.8-management
+    environment:
+      RABBITMQ_DEFAULT_USER: kestra
+      RABBITMQ_DEFAULT_PASS: kestra123
+
+  kestra_backend:
+    image: kestra/kestra-backend:latest
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      KESTRA__POSTGRES__HOST: postgres
+      KESTRA__REDIS__HOST: redis
+      KESTRA__RABBITMQ__HOST: rabbitmq
+      KESTRA__RABBITMQ__USERNAME: kestra
+      KESTRA__RABBITMQ__PASSWORD: kestra123
+      JVM_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "8081:8080" # HTTP server
+      - "8181:8180" # HTTP API for logs and metrics
+    volumes:
+      - ./kestra/config:/opt/jupyter/scores/kestra/config
+      - ./kestra/data:/opt/jupyter/scores/kestra/data
+      - ./kestra/logs:/opt/jupyter/scores/kestra/logs
+
+  kestra_frontend:
+    image: kestra/kestra-frontend:latest
+    depends_on:
+      - kestra_backend
+    ports:
+      - "3000:3000" # Web interface
+
+  kestra_worker:
+    image: kestra/kestra-worker:latest
+    depends_on:
+      - postgres
+      - redis
+      - kestra_backend
+    environment:
+      KESTRA__POSTGRES__HOST: postgres
+      KESTRA__REDIS__HOST: redis
+      KESTRA__RABBITMQ__HOST: rabbitmq
+      KESTRA__RABBITMQ__USERNAME: kestra
+      KESTRA__RABBITMQ__PASSWORD: kestra123
+      WORKER_NUMBER: 4
+      JVM_OPTS=-Xms512m -Xmx512m
+    volumes:
+      - ./kestra/data:/opt/jupyter/scores/kestra/data
+
+volumes:
+  postgres_data:
+
+networks:
+  default:
+    driver: bridge

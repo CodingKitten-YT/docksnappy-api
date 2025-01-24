@@ -1,0 +1,44 @@
+version: '3.8'
+services:
+  chibisafe_web:
+    image: chibisafe/chibisafe-web:latest
+    ports:
+      - "8000:80"
+    environment:
+      CHIBISAFE_SECRET_KEY: "${CHIBISAFE_SECRET_KEY}"
+      CHIBISAFE_DB_HOST: db
+      CHIBISAFE_DB_NAME: chibisafe
+      CHIBISAFE_DB_USER: chibisafe_user
+      CHIBISAFE_DB_PASSWORD: chibisafe_password
+      CHIBISAFE_EMAIL_HOST: email-service
+      CHIBISAFE_EMAIL_PORT: 1025
+      CHIBISAFE_EMAIL_USER: chibisafe@example.com
+      CHIBISAFE_EMAIL_PASSWORD: chibisafe_email_password
+    depends_on:
+      - db
+      - email-service
+    volumes:
+      - ./chibisafe/staticfiles:/code/staticfiles
+      - ./chibisafe/media:/code/media
+    command: gunicorn --workers=2 chibisafe.wsgi:application
+  chibisafe_db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: chibisafe
+      POSTGRES_USER: chibisafe_user
+      POSTGRES_PASSWORD: chibisafe_password
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chibisafe_user"]
+      timeout: 10s
+      retry: 5
+
+  chibisafe_email_service:
+    image: mailhog/mailhog:latest
+    ports:
+      - "8025:8025"
+    volumes:
+      - ./mailhog:/app
+  db_data:
+    driver: local

@@ -1,0 +1,33 @@
+version: '3'
+
+services:
+  mylar:
+    image: linuxserver/mylar:latest
+    container_name: mylar
+    environment:
+      TZ: "Europe/London" # Set your timezone
+      POSTGRES_DB: "mylar"
+      POSTGRES_USER: "mylar"
+      POSTGES_PASSWORD: "mylarpw"
+    volumes:
+      - "./config:/config"
+      - "./downloads:/downloads" # Set the local path to your downloads
+      - mylar:/data
+    ports:
+      - "8081:8080" # Web interface
+      - "9091:9090"  # Sonarr (if you're using it with Mylar)
+    restart: unless-stopped
+
+  database:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: "mylar"
+      POSTGRES_USER: "mylar"
+      POSTGRES_PASSWORD: "mylarpw"
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  mylar:
+  postgres:

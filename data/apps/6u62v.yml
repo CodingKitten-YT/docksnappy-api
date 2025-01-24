@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  emqx:
+    image: emqx/emqx:latest # or specify a specific version like emqx/emqx:4.2-bitcask
+    container_name: emqx
+    ports:
+      - "1883:1883" # MQTT Broker port
+      - "9001:9001" # Web UI Management Interface (Dashboard)
+    volumes:
+      - ./emqx.conf:/etc/emqx/emqx.conf
+      - ./data:/var/lib/emqx
+      - ./logs:/var/log/emqx
+    environment:
+      EMQX_ALLOW_ANONYMOUS_CLIENTS: "true" # Set to 'false' if you want client authentication
+      EMQX_SETUP_EAGER: "true" # Automatically create initial admin user on startup
+      TZ: "Europe/London" # Set your timezone
+    networks:
+      - emqx_net
+    command: start --config /etc/emqx/emqx.conf & tail -f /var/log/emqx/emqx.log
+    restart: unless-stopped
+
+networks:
+  emqx_net:
+    driver: bridge

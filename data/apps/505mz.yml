@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:latest
+    command: 'postgres -c "fsync=OFF"'
+    volumes:
+      - type: bind
+        source: ${HOME}/.local/share/listmonk/db:/var/lib/postgresql/data
+        target: /var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: listmonk
+      POSTGES_USER: listmonk
+      POSTGRES_PASSWORD: listmonk_passwd
+    ports:
+      - "5432:5432"
+
+  listmonk:
+    image: listmonk/listmonk:latest
+    depends_on:
+      postgres:
+        version: '2.14.0'
+        protocol: 'tcp'
+    environment:
+      LISTMONK_DATABASE_URL: postgresql://listmonk:listmonk_passwd@postgres:5432/listmonk
+      LISTMONK_SECRET_KEY: 'very-secret'
+      LISTMONK_ALLOWED_HOSTS: '*'
+      LISTMONK_ADMIN_EMAIL: 'admin@example.com'
+      LISTMONK_ADMIN_USERNAME: 'admin'
+      LISTMONK_ADMIN_PASSWORD: 'admin_passwd'
+      LISTMONK_EMAIL_BACKEND: 'django.core.mail.backends.smtp.EmailBackend'
+      LISTMONK_EMAIL_HOST: 'smtp.example.com'
+      LISTMONK_EMAIL_PORT: 587
+      LISTMONK_EMAIL_USE_TLS: 'true'
+      LISTMONK_EMAIL_USER: 'user@example.com'
+      LISTMONK_EMAIL_PASSWORD: 'email_passwd'
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "python listmonk/manage.py check"]
+      timeout: 10s
+      retries: 5
+
+  redis:
+    image: redis:latest
+    command: 'redis-server --appendonly yes'
+
+  celery_worker:
+    image: listmonk/listmonk:latest
+    command: celery -A listmonk worker --loglevel=info
+    depends_on:
+      - listmonk
+      - redis
+    environment:
+      LISTMONK_DATABASE_URL: postgresql://listmonk:listmonk_passwd@postgres:5432/listmonk
+      LISTMONK_CELERY_RESULT_BACKEND: 'redis://redis:6379/0'
+    volumes:
+      - type: bind
+        source: ${HOME}/.local/share/listmonk/celery:/var/spool/celery
+    environment:
+      - name: LISTMONK_CELERY_BEAT_SCHEDULE
+      - value: '{"send_welcome": {"task": "send_welcome_email", "schedule": 30.0}}'
+    depends_on:
+      - redis
+
+  celery_beat:
+    image: listmonk/listmonk:latest
+    command: celery -A listmonk beat --loglevel=info
+    depends_on:
+      - redis
+    volumes:
+      - type: bind
+        source: ${HOME}/.local/share/listmonk/celery_beat:/var/spool/celery_beat
+    depends_on:
+      - redis
+
+volumes:
+  listmonk_data:
+  drive:
+    external: false

@@ -1,0 +1,31 @@
+version: '3.7'
+
+services:
+  lidarr:
+    image: 'lidarr/docker:latest'
+    container_name: lidarr
+    ports:
+      - "8686:8080" # Web interface
+      - "5000:5000"  # RPC
+      - "9092:9092"  # WebSocket (optional, for coverage if used)
+      - "54320:54320" # Torrent client downloads (optional, for coverage if used)
+    volumes:
+      - "${HOME}/.config/lidarr:/config`" # Configuration files and media directory layouts
+      - "/path/to/downloads:/downloads`" # Location to store all downloaded media
+      - "/path/to/media:/media`" # Location of your media library (optional)
+    environment:
+      TZ: "Europe/London" # Set the timezone for Lidarr
+      SERVICE_NAME: lidarr
+      DEFAULT_CENSORED_EXTENSIONS: "avi,bmb,rm,rmvb" # Optional: set default censored file extensions (default is just avi)
+      DEFAULT_LANGUAGE: "English" # Set default language for media (optional)
+      DEFAULT_RESOLUTIONS: "1080p,720p" # Set default resolutions to download (optional)
+      EMBED_LOGO: "true" # Embed logo in covers (optional)
+      ALLOW_INCOMING_VNC: "false" # Allow VNC into the container (optional, defaults to false)
+      RUN_SPOTLIGHT: "false" # Run Spotlight scan on startup (optional, defaults to false)
+    restart: unless-stopped
+    networks:
+      - lidarr_network
+
+networks:
+  lidarr_network:
+    driver: bridge

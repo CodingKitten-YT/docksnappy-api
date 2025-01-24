@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  eqivo_gateway:
+    image: eqivote/eqivo:latest
+    container_name: eqivo_gateway
+    ports:
+      - "443:443" # HTTPS traffic to the Eqivo Gateway
+      - "8081:8081" # Admin interface (optional)
+    environment:
+      - EQIVO_LICENSE=your_license_key
+      - TIMEZONE=Europe/Berlin
+    volumes:
+      - ./eqivo_data:/var/lib/eqivo
+      - ./eqivo_conf:/etc/eqivo
+    restart: unless-stopped
+
+  eqivo_database:
+    image: postgres:13
+    container_name: eqivo_database
+    volumes:
+      - ./eqivo_dbdata:/var/lib/postgresql
+    environment:
+      - POSTGRES_DB=eqivote
+      - POSTGRES_USER=eqivote
+      - POSTGRES_PASSWORD=your_secure_password
+    restart: unless-stopped
+
+  eqivo_webapi:
+    image: eqivote/eqivo-webapi:latest
+    container_name: eqivo_webapi
+    ports:
+      - "8082:8082" # WebAPI (optional)
+    environment:
+      - EQIVO_LICENSE=your_license_key
+      - EQIVO_GATEWAY_HOST=eqivo_gateway
+      - EQIVO_DB_HOST=eqivo_database
+      - EQIVO_DB_USER=eqivote
+      - EQIVO_DB_PASSWORD=your_secure_password
+      - EQIVO_DB_NAME=eqivote
+    depends_on:
+      - eqivo_gateway
+      - eqivo_database
+    restart: unless-stopped
+
+  # Additional services like reds and mongodb can be added here if needed
+  # eqivo_redis:
+  #   image: redis:6.0
+  #   container_name: eqivo_redis
+  #   volumes:
+  #     - ./eqivo_redisdata:/data
+  # restart: unless-stopped
+
+networks:
+  default:
+    name: eqivo_network
+
+# Optional configurations like extra mounts, resource limits, etc.
+# For example, to limit the memory usage of each container to 2GB and CPU to 400m:
+# eqivo_gateway, eqivo_database, eqivo_webapi:
+#   resources:
+#     limits:
+#       memory: 2g
+#       cpus: '0.4'

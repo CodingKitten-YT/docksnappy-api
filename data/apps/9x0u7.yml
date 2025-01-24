@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  bytebase:
+    image: bytebase/bytebase:latest # Use the official Bytebase image from Docker Hub
+    container_name: bytebase
+    command: /app/run-server --host=0.0.0.0
+    ports:
+      - "8080:8080" # Expose the Bytebase web UI on port 8080 of the host
+    environment:
+      DB_TYPE: postgres # Replace with the database type you are using (default is PostgreSQL)
+      JWT_SECRET: your_jwt_secret # A secret key for JWT authentication, use `openssl rand-bytes 32` to generate one
+    volumes:
+      - bytebase-data:/app/data
+      - bytebase-conf:/app/config
+      - bytebase-logs:/app/logs
+    depends_on:
+      - postgres # Bytebase depends on a PostgreSQL database
+
+  postgres:
+    image: postgres:latest # Use the official PostgreSQL image from Docker Hub
+    container_name: postgres
+    environment:
+      POSTGRES_DB: bytebase # The default database name for Bytebase
+      POSTGRES_USER: bytebase # The default user for Bytebase
+      POSTGRES_PASSWORD: your_db_password # Set a strong password for the PostgreSQL database
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:latest # Use the official Redis image from Docker Hub
+    container_name: redis
+    command: Redis-server /redis.conf --appendonly yes
+
+volumes:
+  bytebase-data:
+  bytebase-conf:
+  bytebase-logs:
+  postgres-data:
+
+networks:
+  default:
+    driver: bridge
+
+# Optional: If you want to use a persistent volume for PostgreSQL data instead of an ephemeral container storage,
+# uncomment the following lines and set the desired driver and volume options.
+# postgres:
+#   volumes:
+#     - pg_data:/var/lib/postgresql/data
+#
+# volumes:
+#   pg_data:
+#     driver: local
+#     driver_opts:
+#       type: none
+#       o: bind
+#       device: /path/to/your/persistent-storage

@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  etherpad:
+    image: ether/etherpad-lite:latest
+    container_name: etherpad
+    ports:
+      - "9000:9000" # Web UI port
+      - "6123:6123"  # OTS (On The Same) port for collaborative editing
+      - "443:443"     # HTTPS port (if you want to enable it, see notes below)
+    volumes:
+      - etherpad-data:/etc/etherpad-lite
+      - ./config:/config
+    environment:
+      ETHERPAD_USER_EMails: "user@example.com"
+      ETHERPAD_USER_PASSWORDS: "password"
+      ETHERPAD_HOSTNAME: "localhost" # Use the container name or host IP if different
+      ETHERPAD_URL: "https://your-etherpad-domain.tld" # Set your domain here for HTTPS
+    networks:
+      - etherpadnet
+    restart: unless-stopped
+
+volumes:
+  etherpad-data:
+    driver: local
+
+networks:
+  etherpadnet:
+
+# If you want to enable SSL (recommended for production use), you'll need to:
+# 1. Generate a certificate and key using Let's Encrypt or similar.
+# 2. Mount the generated certificate and key into the container, updating the volume mount for port 443 accordingly.
+# 3. Set ETHERPAD_SECRETKEY if not already set (important for HTTPS).
+# 4. Update ETHERPAD_URL to use https:// instead of http://.

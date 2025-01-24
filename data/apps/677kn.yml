@@ -1,0 +1,41 @@
+version: '3'
+
+services:
+  linkace:
+    image: 'linkaceteam/linkace:latest' # Use the official LinkAce image from Docker Hub
+    container_name: linkace
+    ports:
+      - "8081:80" # Expose LinkAce (HTTP) on port 8081 of the host
+    environment:
+      - DBHOST=db
+      - LINKACE_KEY='your-secret-key' # Set your secret key for encryption
+    volumes:
+      - './data:/var/www/html/app/storage/framework/cache' # For cache and sessions (optional, depending on your needs)
+      - './linkace.db:/var/www/html/app/storage/logs/linkace.log' # For logs (optional)
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: 'mysql:5.7' # Use the official MySQL image with version 5.7
+    container_name: linkace_db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword # Set your MySQL root password
+      MYSQL_DATABASE: linkace # Name of the database to create
+      MYSQL_USER: linkaceuser
+      MYSQL_PASSWORD: dbpassword # Set your MySQL user password
+    volumes:
+      - './dbdata:/var/lib/mysql' # For persistent storage of MySQL data
+    restart: unless-stopped
+
+  cron:
+    image: 'perl:latest' # Use Perl to run cron jobs
+    container_name: linkace_cron
+    command: '/opt/cron.sh' # Path to the script that contains your cron jobs
+    volumes:
+      - './cronjobs:/opt' # For persistent storage of your cron jobs script
+    restart: unless-stopped
+
+# Optional: Define a custom script for cron jobs inside the 'cronjobs' directory on your host.
+# Create a file named 'cron.sh' with your desired cron entries, for example:
+# */5 * * * /usr/local/bin/php /var/www/html/artisan schedule:run --hourly > /dev/null &> /dev/null

@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  immich:
+    image: 'immich/immich:latest'
+    ports:
+      - '5000:5000' # HTTP port, necessary for UI access
+      - '5101:5101' # Authentication service port (optional, if enabled)
+    command: --debug
+    environment:
+      - VIRTUAL_HOST=immich.yourdomain.com  # Set your domain or subdomain
+      - VIRTUAL_PORT=5000
+      - VIRTUAL_PROTOCOL=http  # Change to https if you are using SSL
+      - VIRTUAL_SSL_EMAIL=admin@immich.yourdomain.com  # Email for SSL certificate (optional)
+      - VIRTUAL_SSL_DOMAIN=immich.yourdomain.com  # Domain for SSL certificate (optional)
+      # Optionally, set these for a PostgreSQL database if you want to use it instead of SQLite
+      - POSTGRES_DB=immich
+      - POSTGRES_USER=immich
+      - POSTGRES_PASSWORD=yourpassword
+    volumes:
+      - 'immich-data:/opt/immich/data'  # Persistent storage for Immich data
+      - 'immich-media:/opt/immich/media'  # Persistent storage for media files (optional)
+    restart: unless-stopped
+
+  nginx-proxy:
+    image: 'nginxproxy/nginx-proxy:stable'
+    ports:
+      - '80:80'
+      - '443:443'
+    depends_on:
+      - immich
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock'
+      - './nginx.conf:/etc/nginx/nginx.conf'  # Optional, custom nginx configuration file (if you have one)
+    command: >
+       sh -c "trap 'kill0' SIGTERM; while :; do sleep 1; done;"
+
+  postgres:
+    image: 'postgres:latest'
+    environment:
+      POSTGRES_DB: immich
+      POSTGRES_USER: immich
+      POSTGRES_PASSWORD: yourpassword
+    volumes:
+      - 'immich-db:/var/lib/postgresql/data'  # Persistent storage for PostgreSQL database
+    restart: unless-stopped
+
+volumes:
+  immich-data:
+  immich-media:
+  immich-db:
+
+networks:
+  default:
+    external:
+      name: wtfpl_net  # Replace with your own custom network if you have one already configured

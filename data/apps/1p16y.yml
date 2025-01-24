@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  app:
+    image: opentrimail/opentrimashmail:latest
+    container_name: opentrimashmail
+    restart: unless-stopped
+    environment:
+      - OPENTRASHMAIL_DB_URI=postgres://db:5432/opentrimashmail
+      - OPENTRASHMAIL_SECRET_KEY=your_secret_key
+      - OPENTRASHMAIL_ALLOWED_HOSTS=localhost,127.0.0.1,.trashmail.local
+      - OPENTRASHMAIL_EMAIL_BACKEND=email_backend
+      - OPENTRASHMAIL_ADMINS=("admin@example.com")
+      - OPENTRASHMAIL_FROM_EMAIL=noreply@opentrimashmail.com
+      # Add other necessary environment variables as needed
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/code
+      - ./app/static:/code/static
+      - ./app/opentrimashmail/:/code/opentrimashmail/conf.d
+      - ./app/opentrimashmail/:/code/opentrimashmail/logs
+    depends_on:
+      - db
+
+  db:
+    image: postgres:13-alpine
+    container_name: opentrimashmail_db
+    environment:
+      - POSTGRES_USER=dbuser
+      - POSTGRES_PASSWORD=dbpassword
+      - POSTGRES_DB=opentrimashmail
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: opentrimashmail_mailhog
+    ports:
+      - "8025:8025" # SMTP port
+      - "8001:8001" # Admin UI port
+    environment:
+      - HOSTNAME=opentrimashmail.localhost
+    volumes:
+      - ./app/mailhog:/data
+
+volumes:
+  postgres_data:

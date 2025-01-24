@@ -1,0 +1,54 @@
+version: '3.7'
+
+services:
+  azuracast:
+    image: azuracast/azuracast:latest
+    container_name: azuracast
+    ports:
+      - "80:80" # HTTP
+      - "443:443" # HTTPS (if you have SSL set up)
+      - "9090:9090" # Web Admin Interface
+    volumes:
+      - azuracast-config:/etc/azuracast
+      - azuracast-data:/var/lib/azuracast
+      - azuracast-media:/srv/radio
+    environment:
+      AZURACAST_DB_HOST: "db" # Assuming you will set up a DB service
+      AZURACST_DB_NAME: "azuracast"
+      AZURACAST_DB_USER: "azuracast"
+      AZURACAST_DB_PASSWORD: "yourdbpassword"
+      AZURACAST_ADMIN_EMAIL: "admin@example.com"
+      AZURACAST_ADMIN_PASSWORD: "youradminpassword"
+      # Uncomment the following line if you want to use a reverse proxy like Nginx or Traefik
+      # AZURACAST_FORCE_HTTPS: "true"
+    networks:
+      - azuracast_network
+
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: azuracast
+      POSTGRES_USER: azuracast
+      POSTGRES_PASSWORD: yourdbpassword
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    networks:
+      - azuracast_network
+
+volumes:
+  azuracast-config:
+  azuracast-data:
+  azuracast-media:
+  postgres-data:
+
+networks:
+  azuracast_network:
+    driver: bridge
+
+# Optional: If you need a redis server for caching, you can add it like this:
+# redis:
+#   image: redis:latest
+#   networks:
+#     - azuracast_network
+
+# Note: If you are using SSL/TLS for HTTPS, make sure to also configure your ingress or reverse proxy accordingly.

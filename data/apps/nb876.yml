@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  bitmagnet-core:
+    image: bmag/bitmagnet-core
+    container_name: bitmagnet-core
+    restart: always
+    ports:
+      - "8333:8333" # Bitcoin Core default RPC port (adjust if needed)
+      - "9999:9999" # Bitcoin Core default port for incoming connections (adjust if needed)
+    command:
+      - 'bitmagnet-core'
+      - 'safe'
+      - 'true'
+      - 'txindex'
+      - 'true'
+    environment:
+      - BITMAGNET_CORES=2 # Adjust the number of core instances as needed
+      - RUST_LOG=debug
+      - LOG_LEVEL=info
+    volumes:
+      - './data:/data'
+
+  electrs:
+    image: bmag/bitmagnet-electrs
+    container_name: bitmagnet-electrs
+    restart: always
+    ports:
+      - "18621:18621" # Electrs default port (adjust if needed)
+    environment:
+      - BITMAGNET_CORE_HOST=bitmagnet-core
+      - RUST_LOG=debug
+      - LOG_LEVEL=info
+    depends_on:
+      - bitmagnet-core
+    volumes:
+      - './data/electrs:/data/electrs'
+
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: bitmagnet
+      POSTGES_USER: bitmagnet
+      POSTGRES_PASSWORD: change_this_password
+    volumes:
+      - './data/postgres:/var/lib/postgresql/data'
+
+  electrs-wallet:
+    image: bmag/bitmagnet-electrs-wallet
+    container_name: bitmagnet-electrs-wallet
+    restart: always
+    ports:
+      - "18622:18622" # Electrs Wallet default port (adjust if needed)
+    environment:
+      - BITMAGNET_CORE_HOST=bitmagnet-core
+      - ELECTRS_HOST=bitmagnet-electrs
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=bitmagnet
+      - POSTGRES_USER=bitmagnet
+      - POSTGRES_PASSWORD=change_this_password
+      - RUST_LOG=debug
+      - LOG_LEVEL=info
+    depends_on:
+      - bitmagnet-core
+      - postgres
+    volumes:
+      - './data/electrs-wallet:/data/electrs-wallet'
+
+networks:
+  default:
+    driver: bridge

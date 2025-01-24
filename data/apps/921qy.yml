@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  grocy-api:
+    image: grocy/grocy-docker:latest
+    container_name: grocy-api
+    ports:
+      - "8080:80"
+    environment:
+      GROCY_INSTALLATION_TYPE: 'standalone'
+      MYSQL_DATABASE_HOST: mysql
+      MYSQL_USER: grocy
+      MYSQL_PASSWORD: your_very_secure_password
+      MYSQL_DB: grocy
+    volumes:
+      - "./config:/etc/grocy"
+      - "./data:/var/lib/mysql"
+      - "./ssl:/etc/ssl"
+    depends_on:
+      - mysql
+    networks:
+      - backend
+
+  mysql:
+    image: mysql:latest
+    container_name: mysql
+    environment:
+      MYSQL_DATABASE: grocy
+      MYSQL_USER: grocy
+      MYSQL_PASSWORD: your_very_secure_password
+      MYSQL_ROOT_PASSWORD: another_very_secure_password
+    volumes:
+      - "./data:/var/lib/mysql"
+    networks:
+      - backend
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      MYSQL_ROOT_PASSWORD: another_very_secure_password
+      MYSQL_USER: grocy
+      MYSQL_PASSWORD: your_very_secure_password
+    ports:
+      - "8081:80"
+    depends_on:
+      - mysql
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge

@@ -1,0 +1,27 @@
+version: '3.7'
+
+services:
+  freshrss:
+    image: freshrss/freshrss:latest
+    container_name: freshrss
+    ports:
+      - "80:80" # Map HTTP traffic from port 80 on the host to port 80 on the container
+    volumes:
+      - ./data/config:/config
+      - ./data/data:/data
+      - ./letscert:/etc/letsencrypt
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Paris
+      # Let's Encrypt setup
+      - LE_EMAIL=your@email.com
+      - LE_DOMAIN=example.com
+      - LE_AGREE=true
+    networks:
+      - freshrss_network
+
+networks:
+  freshrss_network:
+    driver: bridge

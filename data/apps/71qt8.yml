@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  fdroidserver:
+    image: fdroidserver/fdroidserver:latest
+    container_name: fdroidserver
+    environment:
+      TZ: "Europe/Berlin" # Set your timezone, e.g., "America/New_York"
+      SERVER_HOSTNAME: "fdroid.example.com" # Set your domain or subdomain
+      FDROID_WEB_ENABLED: "true"
+    ports:
+      - "8080:8080" # HTTP, configure your web server to proxy requests to this port
+      - "8443:8443" # HTTPS, ensure you have a valid SSL certificate for this domain
+    volumes:
+      - "${HOME}/.local/share/F-Droid/fdroidserver:/data" # Persist local data
+      - "./config:/config" # Mount configuration directory for custom config files
+      - "./ssl:/etc/ssl" # Mount SSL certificates if you have them or use Let's Encrypt automatically
+    restart: unless-stopped # Ensure the server starts on boot and can be stopped manually
+
+  fdroidrepo:
+    image: fdroidserver/fdroiddatastore:latest
+    container_name: fdroidrepo
+    volumes:
+      - "${HOME}/.local/share/F-Droid/fdroiddata:/data" # Persist local data
+      - "./reposync:/data" # Mount directory for repository data, if you want to sync manually
+    restart: unless-stopped # Ensure the repository server starts on boot and can be stopped manually
+
+  fdroidclient:
+    image: fdroidserver/fdroidclient:latest
+    container_name: fdroidclient
+    environment:
+      TZ: "Europe/Berlin" # Set your timezone, e.g., "America/New_York"
+      FDROID_SERVER: "fdroidserver:8080" # Configure the server address and port
+    ports:
+      - "80:80" # Configure your web server to proxy requests to this port
+    volumes:
+      - "${HOME}/.local/share/F-Droid/clientdata:/data" # Persist local data
+      - "./downloads:/downloads" # Mount for client downloads (optional)
+    depends_on:
+      - fdroidserver
+    restart: unless-stopped # Ensure the client starts on boot and can be stopped manually
+
+# Optional: If you want to use a database (e.g., PostgreSQL), uncomment the following services:
+# postgres:
+#   image: postgres:13
+#   volumes:
+#     - postgres_data:/var/lib/postgresql/data
+#   environment:
+#     POSTGRES_DB: fdroid
+#     POSTGRES_USER: fdroid
+#     POSTGRES_PASSWORD: change_this_password
+#   restart: unless-stopped
+#   healthcheck:
+#     test: ["CMD-SHELL", "pg_isready -U fdroid"]
+#     interval: 10s
+#     timeout: 5s
+#     retries: 10
+
+# Uncomment the following and adjust to use the database instead of the in-memory storage:
+# services:
+#   fdroidserver:
+#     environment:
+#       SERVER_DATABASE_URL: postgres://fdroid:change_this_password@postgres:5432/fdroid
+
+# volumes:
+#   postgres_data:

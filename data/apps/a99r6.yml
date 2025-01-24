@@ -1,50 +1,40 @@
-version: "3.7"
-
+version: '3.8'
 services:
-  db:
-    image: akkoma-db:latest
-    build: ./docker-resources/database
-    shm_size: 4gb
-    restart: unless-stopped
-    hostname: akkoma-db
-    user: ${DOCKER_USER}
-    env_file:
-      - .env 
-    volumes:
-      - type: bind
-        source: ./pgdata
-        target: /var/lib/postgresql/data
-
-  akkoma:
-    image: akkoma:latest
-    build: .
-    restart: unless-stopped
-    env_file:
-      - .env
-    links:
+  akkoma_app:
+    image: akkoma/akkoma-app:latest
+    ports:
+      - "8080:8080" # HTTP API port
+    environment:
+      - AKKOMA__POSTRHUB_API_KEY=your_api_key # Posthub API key
+      - AKKOMA__DB_HOST=db  # Database service name
+      - AKKOMA__DB_USERNAME=db_user  # Database username
+      - AKKOMA__DB_PASSWORD=db_password  # Database password
+      - AKKOMA__DB_NAME=akkoma_db  # Database name
+      - AKKOMA__RABBITMQ_HOST=rabbitmq  # RabbitMQ service name
+      - AKKOMA__RABBITMQ_USERNAME=user  # RabbitMQ username
+      - AKKOMA__RABBITMQ_PASSWORD=password  # RabbitMQ password
+    depends_on:
       - db
-    ports: [
-      # Uncomment/Change port mappings below as needed.
-      # The left side is your host machine, the right one is the akkoma container.
-      # You can prefix the left side with an ip.
+      - rabbitmq
+    command: --dbhost={DB_HOST} start
 
-      # Webserver (for reverse-proxies outside of docker)
-      # If you use a dockerized proxy, you can leave this commented
-      # and use a container link instead.
-      "127.0.0.1:4000:4000",
-    ]
+  akkoma_db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: db_user
+      POSTGRES_PASSWORD: db_password
+      POSTGRES_DB: akkoma_db
+    volumes:
+      - akkoma-db-data:/var/lib/postgresql/data
 
-  # Copy this into docker-compose.override.yml and uncomment there if you want to use a reverse proxy
-  #proxy:
-  #  image: caddy:2-alpine
-  #  restart: unless-stopped
-  #  links:
-  #    - akkoma
-  #  ports: [
-  #     "443:443",
-  #     "80:80"
-  #  ]
-  #  volumes:
-  #    - ./docker-resources/Caddyfile:/etc/caddy/Caddyfile
-  #    - ./caddy-data:/data
-  #    - ./caddy-config:/config
+  rabbitmq:
+    image: rabbitmq:3.8-management
+    environment:
+      RABBITMQ_USER: user
+      RABBITMQ_PASSWORD: password
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
+volumes:
+  akkoma-db-data:
+  rabbitmq-data:

@@ -1,0 +1,46 @@
+version: '3.8'
+services:
+  scrobbler1:
+    image: scrobbler:latest
+    networks:
+      - music_network
+    environment:
+      - MUSIC_API_KEY=api-key-for-scrobbler1
+      - MUSIC_API_SECRET=secret-for-scrobbler1
+    volumes:
+      - scrobbler1-config:/etc/scrobbler
+    depends_on:
+      - music_service
+
+  scrobbler2:
+    image: scrobbler:latest
+    networks:
+      - music_network
+    environment:
+      - MUSIC_API_KEY=api-key-for-scrobbler2
+      - MUSIC_API_SECRET=secret-for-scrobbler2
+    volumes:
+      - scrobbler2-config:/etc/scrobbler
+    depends_on:
+      - music_service
+
+  music_service:
+    image: music-service:latest
+    networks:
+      - music_network
+    ports:
+      - "8080:8080"
+    environment:
+      - MUSIC_API_KEY=universal-api-key
+      - MUSIC_API_SECRET=universal-secret
+    volumes:
+      - music-service-data:/etc/music-service
+
+volumes:
+  scrobbler1-config:
+  scrobbler2-config:
+  music-service-data:
+
+networks:
+  music_network:
+    driver: bridge

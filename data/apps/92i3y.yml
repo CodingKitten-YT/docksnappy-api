@@ -1,0 +1,26 @@
+version: '3.8'
+services:
+  hoarder-app:
+    image: hoarder/hoarder-app:latest
+    ports:
+      - "5000:5000" # Expose the port where Hoarder App runs (default is 5000)
+    environment:
+      - HOARDER_SECRET=your_secret_key # Set a secret key as an environment variable for security
+    volumes:
+      - ./data:/var/lib/hoarder-app # Mount a local directory for data persistence
+    networks:
+      - hoarder_network
+
+  redis:
+    image: redis:6-alpine
+    volumes:
+      - redis-data:/data
+    environment:
+      - REDIS_PASSWORD=your_password # Set a password for Redis if needed for security
+
+networks:
+  hoarder_network:
+    driver: bridge
+
+volumes:
+  redis-data:

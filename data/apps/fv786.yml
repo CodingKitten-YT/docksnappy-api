@@ -1,0 +1,36 @@
+version: '3.7'
+
+services:
+  bracket-cli:
+    image: brackethq/bracket-cli:v2.5.0 # Use the latest or specific version tag
+    command: /bin/sh -c "./grade && ./bracket"
+    ports:
+      - "8080:8080" # Bracket CLI default port
+    depends_on:
+      - postgres
+
+  local-stack:
+    image: localstack/localstack:latest # Use the latest or specific version tag
+    ports:
+      - "4566:4566" # AWS default port for LocalStack
+      - "9000:9000" # DynamoDB default port for LocalStack
+      - "8000:8000" # API Gateway default port for LocalStack
+    environment:
+      LOCALSTACK_LAUNCH_ZIPS: "true"
+      LOCALSTACK_DOCKER_HOST: "bundle"
+      AWS_ACCESS_KEY_ID: "localstack"
+      AWS_SECRET_ACCESS_KEY: "localstack"
+      AWS_REGION: "us-east-1"
+
+  postgres:
+    image: postgres:13 # Use the latest or specific PostgreSQL version
+    volumes:
+      - bracket-postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: bracket_test
+      POSTGRES_USER: bracket
+      POSTGRES_PASSWORD: secret
+
+volumes:
+  bracket-postgres-data:
+    driver: local

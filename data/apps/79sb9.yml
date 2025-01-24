@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+  lighttpd:
+    image: lighttpd/lighttpd:1.46.2-alpine
+    container_name: lighttpd
+    ports:
+      - "80:80" # Map HTTP port 80 to the container
+      - "443:443": # Map HTTPS port 443 to the container if using SSL
+    volumes:
+      - ./data:/var/www/html # Mount a volume for the web files (adjust the path as needed)
+      - lighttpd-conf.conf:/etc/lighttpd/lighttpd.conf # Mount custom Lighttpd configuration file (optional)
+    environment:
+      - LIGHTTPD_USER=www-data # Set the user for the web server processes
+      - LIGHTTPD_GROUP=www-data # Set the group for the web server processes
+    networks:
+      - webnet
+
+networks:
+  webnet:

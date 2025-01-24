@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  ircd:
+    image: inspircd/inspircd
+    container_name: inspircd
+    ports:
+      - "6667:6667" # Standard port for IRC (can be any other port you prefer)
+      - "6697:6697" # Alternative port for IRC (optional, for more servers)
+    environment:
+      TZ: "Europe/London" # Set the timezone, adjust to your server's timezone
+      SUPERSECRET: "your_very_secure_password" # Change this to a strong password for the superuser account
+      IRCD_IDENT: "irc.example.com" # Define your IRC network's hostname/domain
+      IRCD_NETWORKNAME: "MyNetwork" # Set the name of your IRC network
+    volumes:
+      - ./inspircd.conf:/etc/inspircd.conf
+      - ircdata:/var/lib/inspircd
+    restart: unless-stopped
+
+  redish:
+    image: redis:6
+    volumes:
+      - redish:/data
+    environment:
+      REDIS_PORT: "6379"
+    restart: unless-stopped
+
+# Networks allow us to link our services together. Here we declare a simple
+# internal network and a bridge network which automatically connects containers
+# that are linked to it to each other. In this case, both our ircd and redis
+# services are linked to the redish network so they can communicate with each
+# other.
+networks:
+  default:
+    external:
+      name: ircnet_network
+
+volumes:
+  ircdata:
+  redish:

@@ -1,0 +1,36 @@
+version: '3.7'
+
+services:
+  mindsdb:
+    image: mindsdb/minserver:latest # or use a specific version like 'mindsdb/minserver:v0.25.1'
+    command: -c /app/conf/min.toml --log-format json
+    ports:
+      - "8080:8080" # HTTP API port
+      - "9090:9090" # TCP server
+    volumes:
+      - ./data:/app/data
+      - ./conf:/app/conf
+    environment:
+      - ALLOW_ANONYMOUS_UPLOAD=true
+      - ENABLE_ADMIN_INTERFACE=true
+      - MINDB_METRICS_ENABLED=false # Set to true to enable metrics endpoint
+    depends_on:
+      - postgres
+    networks:
+      - mindsdb-network
+
+  postgres:
+    image: postgres:13
+    command: 'postgres -c "config_file = '/etc/postgresql/main.conf'"'
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: mindsdb
+      POSTGRES_PASSWORD: mindsdb
+      POSTGRES_DB: mindsdb
+    networks:
+      - mindsdb-network
+
+networks:
+  mindsdb-network:
+    driver: bridge

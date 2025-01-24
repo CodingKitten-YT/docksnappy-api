@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  app:
+    image: enclosed/enclosed:latest
+    container_name: enclosed_app
+    ports:
+      - "5000:5000" # Expose the port Enclosed runs on (default is 5000)
+    environment:
+      - SECRET_KEY=<your-secret-key> # Set your own secret key for security
+      - DATABASE_URL=postgres://<USER>:<PASSWORD>@db:5432/<DBNAME> # Database connection string
+      - REDIS_HOST=redis # The hostname for the Redis service
+      - ALLOWED_HOSTS=0.0.0.0,localhost # Allowed hosts for Django settings
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+    volumes:
+      - ./app/static:/code/enclosed/enclosed/static
+      - ./app/media:/code/enclosed/enclosed/media
+      - .env:/code/.env # Load environment variables from a .env file
+      - gunicorn_log:/var/log/gunicorn.log # Log directory for Gunicorn logs
+    command: gunicorn -c gununicorn.conf.py enclosed.wsgi:application --log-file=-
+
+  db:
+    image: postgres:13
+    container_name: enclosed_db
+    environment:
+      - POSTGRES_USER=<USER>
+      - POSTGRES_PASSWORD=<PASSWORD>
+      - POSTGRES_DB=<DBNAME>
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:6-alpine
+    container_name: enclosed_redis
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:3.8-management
+    container_name: enclosed_rabbitmq
+    ports:
+      - "5672:5672" # AMQP protocol
+      - "15672:15672 # Management console (optional)
+    environment:
+      - RABBITMQ_DEFAULT_USERNAME=<RABBITMQ_USERNAME>
+      - RABBITMQ_DEFAULT_PASSWORD=<RABBITMQ_PASSWORD>
+
+volumes:
+  gunicorn_log:
+  postgres_data:

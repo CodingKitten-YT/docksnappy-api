@@ -1,0 +1,49 @@
+version: '3.7'
+
+services:
+  discourse:
+    image: discourse/discourse:latest
+    container_name: discourse
+    ports:
+      - "80:80" # HTTP (redirects to HTTPS)
+      - "443:443" # HTTPS
+      - "2222:22" # SSH for admin access (optional but recommended for initial setup)
+    volumes:
+      - "./discourse_data:/var/discourse"  # For data persistence (user-generated content, attachments, etc.)
+      - "./letsencrypt:/etc/letsencrypt"   # Optional, for Let's Encrypt certificates if you don't use docker-compose-resource
+    environment:
+      DISCOURSE_SITE_URL: example.com
+      DISCOURSE_EMAIL_DOMAIN: example.com
+      DISCOURSE_ENFORCE_HTTPS: '1'
+      TZ: 'Europe/London' # Set your timezone, e.g., Europe/Berlin, America/New_York, etc.
+      VIRTUAL_HOST: example.com
+      VIRTUAL_PORT: 80
+      GITHUB_TOKEN_REPO_SECRETS: 'your github token here' # Optional, for GitHub integration
+    command: /bin/sh -c 'trap exit TERM; while [ 1 -eq $(ssserver -s) ]; do sleep 1; done; rm -f /var/run/discourse/certs/*.pem; ssserver -c /etc/letsencrypt/$DISCOURSE_SITE_URL/*.pem -k /etc/letsencrypt/$DISCOURSE_SITE_URL/*.key -d $VIRTUAL_HOST -p $VIRTUAL_PORT'
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - discourse_net
+
+  postgres:
+    image: postgres:latest
+    volumes:
+      - "./discourse_data/db:/var/lib/postgresql"
+    environment:
+      POSTGRES_DB: discourse_production
+      POSTGRES_USER: discourse
+      POSTGRES_PASSWORD: change_this_password # Change this password
+    networks:
+      - discourse_net
+
+  redis:
+    image: redis:latest
+    volumes:
+      - "./discourse_data/redis:/data"
+    networks:
+      - discourse_net
+
+networks:
+  discourse_net:
+    driver: bridge

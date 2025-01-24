@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # Meelo backend service
+  backend:
+    image: meelotech/meelo:latest
+    ports:
+      - "8081:8080" # Expose the default Meelo port
+    environment:
+      MEELO_HOST: host.docker.internal # Allow the frontend to communicate with this service using 'localhost'
+    depends_on:
+      - db
+
+  # PostgreSQL database
+  db:
+    image: postgres:latest
+    volumes:
+      - ./db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: meelo # Database name
+      POSTGRES_USER: meelo # Username
+      POSTGRES_PASSWORD: password # Password (make sure to set this in your environment or as a secret)
+
+  # Redis cache (optional, if Meelo uses caching)
+  redis:
+    image: redis:latest
+    volumes:
+      - ./redis-data:/data
+
+  # Nginx frontend service (if using Nginx as the reverse proxy)
+  frontend:
+    image: meelotech/meelo-frontend:latest
+    ports:
+      - "3001:3000" # Expose the default Meelo frontend port
+    depends_on:
+      - backend
+
+# Optional: Add a volume for storing persistent data if you want to keep your database and/or Redis data after container restarts
+volumes:
+  db-data:
+  redis-data:
+
+# If you're using Docker secrets for sensitive data like passwords, uncomment the following lines and define them accordingly.
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password.env

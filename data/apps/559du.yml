@@ -1,0 +1,95 @@
+version: '3'
+
+services:
+  etcd:
+    image: registry.access.redhat.com/ubi8/etcd:3.5.1-0.14.20210412.fc35
+    command: --advertise-client-urls=http://<ETCD_SERVICE_IP>:2379 --trusted-ca-file=/etc/kubernetes/pki/ca.crt --listen-client-urls=http://0.0.0.0:2379 --data-dir=/var/lib/etcd
+    command_timeout: 180s
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - etcd-data:/var/lib/etcd
+    command_refresh: true
+
+  kube-apiserver:
+    image: quay.io/coreos/kube-apiserver:v1.20.1
+    depends_on:
+      - etcd
+    ports:
+      - "6443:6443"
+    volumes:
+      - type: bind
+        source: /etc/kubernetes/pki/ca.crt
+        target: /etc/kubernetes/pki/ca.crt
+      - type: secret
+        source: kube-apiserver-kubelet-client
+        target: /etc/kubernetes/.kube/config
+      - etcd-data:/var/lib/etcd
+    environment:
+      ALLOW_HORIZONTAL_POD_AUTOSCALING: "true"
+      KUBE_API_SERVER_ROLE_BASE: kube-apiserver
+      KUBE_CONTROLLER_MANAGER_ROLE_BASE: system:kube-controller-manager
+      KUBE_SERVICE_CA_CERTFILE: /etc/kubernetes/pki/ca.crt
+
+  kube-controller-manager:
+    image: quay.io/coreos/kube-controller-manager:v1.20.1
+    depends_on:
+      - etcd
+    command: --address=0.0.0.0 --root-ca-file=/etc/kubernetes/pki/ca.crt --service-account-private-key-file=/etc/kubernetes/pki/kubelet-client.key --cluster-cidr=10.96.0.0/16 --allow-ieademics=true
+    volumes:
+      - type: bind
+        source: /etc/kubernetes/pki/ca.crt
+        target: /etc/kubernetes/pki/ca.crt
+      - type: secret
+        source: kube-controller-manager-kubelet-client
+        target: /etc/kubernetes/.kube/config
+      - type: secret
+        source: kube-apiserver-kubelet-client
+        target: /var/run/secrets/kubernetes.io/serviceaccount/kubelet.key
+      - etcd-data:/var/lib/etcd
+
+  kube-scheduler:
+    image: quay.io/coreos/kube-scheduler:v1.20.1
+    depends_on:
+      - etcd
+    command: --address=0.0.0.0 --leader-elect=true --log-dir=-
+    volumes:
+      - type: bind
+        source: /etc/kubernetes/pki/ca.crt
+        target: /etc/kubernetes/pki/ca.crt
+
+  kube-proxy:
+    image: quay.io/coreos/kube-proxy:v1.20.1
+    depends_on:
+      - etcd
+    command: --config=/etc/kubernetes/proxy-config.yml --hostname-override=<POD_NETWORK_IP> --cluster-cidr=10.96.0.0/16
+    volumes:
+      - type: bind
+        source: /etc/kubernetes/pki/ca.crt
+        target: /etc/kubernetes/pki/ca.crt
+      - etcd-data:/var/lib/etcd
+
+  kubelet:
+    image: quay.io/coreos/kubelet:v1.20.1
+    depends_on:
+      - etcd
+    command: --address=0.0.0.0 --container-runtime=/opt/cni/bin/docker --image-pull-policy=IfNotPresent --register-with-taints=- --allow-experimental-features=true --kubeconfig=/var/run/secrets/kubernetes.io/serviceaccount/kubelet.conf --eviction-hard=true --fail-swap-on=false
+    volumes:
+      - type: secret
+        source: kube-apiserver-kubelet-client
+        target: /etc/kubernetes/.kube/config
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+      - etcd-data:/var/lib/etcd
+
+  pause:
+    image: quay.io/coreos/pause:3.5
+    restart: always
+
+volumes:
+  etcd-data:
+    driver: local
+
+networks:
+  default_backend:
+    driver: overlay

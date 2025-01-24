@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  grimoirelab:
+    image: grimoirelab/grimoirelab:latest  # or use a specific tag if needed
+    container_name: grimoirelab
+    ports:
+      - "80:80"  # Expose GrimoireLab on port 80 of the host
+      - "443:443" # Optionally expose GrimoireLab on port 443 of the host with SSL/TLS
+    volumes:
+      - "./data:/data"  # Mount a volume for data persistence
+      - "./uploads:/uploads"  # Mount a volume for uploaded files
+      - "./config:/etc/grimoirelab"  # Mount a volume for configuration files
+    environment:
+      - GRIMOIRELAB_DATABASE__HOST=db  # Assuming you have a 'db' service defined for the database
+      - GRIMOIRELAB_DATABASE__NAME=grimoirelab
+      - GRIMOIRELAB_DATABASE__USER=grimoirelabuser
+      - GRIMOIRELAB_DATABASE__PASSWORD=grimoirelapassword
+      # Uncomment the following if you want to enable email notifications
+      # - GRIMOIRELAB_EMAIL_HOST=mailhog  # Assuming you have a 'mailhog' service defined for emails
+      # - GRIMOIRELAB_EMAIL_PORT=1025
+      # - GRIMOIRELAB_EMAIL_USERNAME=your-email@example.com
+      # - GRIMOIRELAB_EMAIL_PASSWORD=your-email-password
+    depends_on:
+      - db  # Assuming you have a 'db' service defined for the database
+      - redis  # Assuming you have a 'redis' service defined for caching and queues
+    networks:
+      - grimoirelab_network
+
+  db:
+    image: postgres:latest  # Use the official PostgreSQL image
+    volumes:
+      - "./db_data:/var/lib/postgresql"  # Mount a volume for database data persistence
+    environment:
+      - POSTGRES_DB=grimoirelab
+      - POSTGRES_USER=grimoirelabuser
+      - POSTGRES_PASSWORD=grimoirelapassword
+    networks:
+      - grimoirelab_network
+
+  redis:
+    image: redis:latest
+    networks:
+      - grimoirelab_network
+
+networks:
+  grimoirelab_network:
+    driver: bridge
+
+# If you want to use Let's Encrypt for SSL/TLS, uncomment the following and replace placeholders:
+# services:
+#   grimoirelab_reverse_proxy:
+#     image: jwilder/nginx-proxy
+#     container_name: grimoirelab_proxy
+#     ports:
+#       - "80:80"
+#       - "443:443"
+#     volumes:
+#       - "./letsencrypt:/etc/letsencrypt"
+#       - "./data:/data"
+#       - "./uploads:/uploads"
+#       - "./config:/etc/grimoirelab"
+#     depends_on:
+#       - grimoirelab
+# environment:
+#   - LESSSECURE_ACCOUNT_EMAIL=your-email@example.com  # Email to register with Let's Encrypt
+#   - LESSSECURE_TERMS_OF_SERVICE_AGREED=1
+#   - LESSSECURE_AGREE_TO_TERMS=1

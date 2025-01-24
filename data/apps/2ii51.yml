@@ -1,0 +1,43 @@
+version: '3.7'
+
+services:
+  mathesar:
+    image: mathesar/mathesar:latest # or specify a particular version like "mathesar/mathesar:v0.24.1"
+    container_name: mathesar
+    environment:
+      - POSTGRES_DB=mathesar
+      - POSTGRES_USER=mathesar
+      - POSTGRES_PASSWORD=mathesar
+      # Optionally, you can set MATHESAR_SMTP_HOST if you want to configure the SMTP settings.
+      # - MATHESAR_SMTP_HOST=your-smtp-server.com
+      # Other environment variables can be set as needed, refer to Mathesar's documentation for more options.
+    ports:
+      - "8000:8000" # Web interface (HTTP)
+      - "8001:8001" # Admin interface (HTTP)
+      - "5432::5432" # PostgreSQL database (TCP)
+    volumes:
+      - mathesar-data:/var/lib/mathesar
+      - mathesar-postgresql:/var/lib/postgresql
+    depends_on:
+      - postgres
+    networks:
+      - mathesar-network
+
+  postgres:
+    image: postgres:latest # or specify a particular version like "postgres:13"
+    container_name: postgres
+    environment:
+      - POSTGRES_DB=mathesar
+      - POSTGRES_USER=mathesar
+      - POSTGRES_PASSWORD=mathesar
+    volumes:
+      - mathesar-postgresql:/var/lib/postgresql
+    networks:
+      - mathesar-network
+
+volumes:
+  mathesar-data:
+  mathesar-postgresql:
+
+networks:
+  mathesar-network:

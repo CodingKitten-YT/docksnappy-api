@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  filestash:
+    image: filestash/filestash:latest # Use the official Filestash image
+    container_name: filestash
+    ports:
+      - "8080:9000" # Web UI (HTTP)
+      - "8081:9001" # File upload (WebSocket)
+    volumes:
+      - "/path/to/filestash:/data" # Mount your local directory to /data inside the container
+      - "./config.yml:/etc/filestash/config.yml" # Optional: Mount your own config file, if you have one
+    environment:
+      - PUID=1000 # Set your Process User ID (PUID)
+      - PGID=1000 # Set your Process Group ID (PGID)
+      - TZ=Europe/London # Set your timezone
+    restart: unless-stopped
+    networks:
+      - filestash_net
+
+networks:
+  filestash_net:
+    driver: bridge

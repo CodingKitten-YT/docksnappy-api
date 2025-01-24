@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  jelu_web:
+    image: jelu/jelu:latest
+    ports:
+      - "8080:80" # Adjust the host port as needed
+    environment:
+      JELU_SECRET_KEY: secret_key # Replace with a real secret key for production
+      JELU_DATABASE_URL: postgres://user:password@db:5432/dbname # Replace with your database connection string
+      JELU_EMAIL_HOST: email-service # This should correspond to the service name of your email service
+      JELU_EMAIL_PORT: '1025' # Email service port
+      JELU_EMAIL_USER: your_email@example.com # Your email address for sending emails
+      JELU_EMAIL_PASSWORD: your_email_password # The password for the above email account
+    depends_on:
+      - jelu_db
+      - jelu_worker
+      - jelu_mailhog
+    volumes:
+      - ./data:/var/www/html/storage  # Mount your local data directory to store files, if needed
+
+  jelu_db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: dbname
+    volumes:
+      - jelu_db_data:/var/lib/postgresql/data
+
+  jelu_worker:
+    image: jelu/jelu-worker:latest
+    environment:
+      JELU_QUEUES: default
+      # Set other necessary worker environment variables here
+    depends_on:
+      - jelu_db
+
+  jelu_mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "8025:8025" # Access MailHog UI on http://localhost:8025
+    environment:
+      MAILHOG_USER: admin
+      MAILHOG_PASSWORD: password
+      MAILHOG_ADMIN_LOGIN: true
+
+volumes:
+  jelu_db_data:

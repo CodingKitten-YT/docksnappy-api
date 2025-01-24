@@ -1,0 +1,60 @@
+version: '3.8'
+services:
+  app:
+    image: linkding/linkding:latest # Use the official Linkerd image
+    ports:
+      - "4001:4001" # Prometheus port for metrics
+      - "8080:8081" # Linkerd Service Mesh dashboard
+    command: >
+      /opt/bin/linkerd \
+        sa \
+        --name linkerd \
+        --dest-server https://linkerd.io/image-stable \
+        --dest-kube-version v1.20.0 \
+        --ambassador-service-account linkerd \
+        --ambassador-namespace default \
+        --ambassador-image linkerd/linkerd-ambassador:v1.20.0-prestable
+    resources:
+      limits:
+        memory: 512Mi
+      requests:
+        cpu: 100m
+    depends_on:
+      - mesh
+
+  mesh:
+    image: linkerd/linkerd:latest # Use the official Linkerd image
+    command: >
+      /opt/bin/linkerd \
+        sa \
+        --name linkerd \
+        --dest-server https://linkerd.io/image-stable \
+        --dest-kube-version v1.20.0 \
+        --ambassador-service-account linkerd \
+        --ambassador-namespace default \
+        --ambassador-image linkerd/linkerd-ambassador:v1.20.0-prestable
+    resources:
+      limits:
+        memory: 512Mi
+      requests:
+        cpu: 100m
+
+  prometheus:
+    image: prom/prometheus:latest
+    command: >
+       --config.file=/etc/prometheus/prometheus.yml
+       --storage.tsdb.path=/prometheus/data
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus:/etc/prometheus:ro
+      - prometheus:/prometheus
+    depends_on:
+      - app
+
+volumes:
+  prometheus:
+
+networks:
+  default:
+    driver: bridge # or any other driver you prefer

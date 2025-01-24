@@ -1,0 +1,48 @@
+version: '3.8'
+services:
+  appflowy:
+    image: appflowy/appflowy:latest
+    command: appflowy server start --backend.address=0.0.0.0 --port.http=80 --port.https=443 --database.type=mysql --database.uri=mysql://appflowy:appflowy@db:3306/appflowy?charset=utf8mb4&parseTime=True&loc=Local
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - db
+    environment:
+      - SERVICE_FLAGS=--read_timeout=600 --client_max_connections=500 --client_idle_limit=1800
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=appflowy
+      - MYSQL_USER=appflowy
+      - MYSQL_PASSWORD=appflowy
+    volumes:
+      - ./appflowy:/appflowy
+      - appflowy-redis:/var/lib/mysql
+      - appflowy-logs:/logs/appflowy
+    depends_on:
+      - db
+      - redis
+
+  mysql:
+    image: mysql:5.7
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: appflowy
+      MYSQL_USER: appflowy
+      MYSQL_PASSWORD: appflowy
+    volumes:
+      - db-data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+  redis:
+    image: redis:6-alpine
+    command: Redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+
+volumes:
+  appflowy-redis:
+  appflowy-logs:
+  db-data:
+  redis-data:

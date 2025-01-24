@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  web:
+    image: ihatemoney/web:latest
+    ports:
+      - "8000:80"
+    environment:
+      - DATABASE_URL=postgres://db:5432/ihate_money
+    depends_on:
+      - db
+      - celery
+    volumes:
+      - .:/code
+
+  worker:
+    image: ihatemoney/worker:latest
+    environment:
+      - DATABASE_URL=postgres://db:5432/ihate_money
+      - CELERY_RESULT_BACKEND=redis
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=ihate_money
+      - POSTGRES_USER=db
+      - POSTGRES_PASSWORD=docker
+
+  redis:
+    image: redis:6
+
+volumes:
+  postgres_data:

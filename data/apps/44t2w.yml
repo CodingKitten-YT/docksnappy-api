@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  app:
+    image: hemmelig/app:latest # Replace with the official or your custom image
+    container_name: hemmelig-app
+    ports:
+      - "3000:3000" # Expose the default Node.js port for development purposes
+    environment:
+      NODE_ENV: development
+      # Add other environment variables required by Hemmelig
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    workdir: /usr/src/app
+    command: npm run start # Use the command that starts your app
+
+  db:
+    image: postgres:13 # Replace with the database image you want to use
+    container_name: hemmelig-db
+    volumes:
+      - hemmelig-db-data:/var/lib/postgresql # Use a named volume for persistence
+    environment:
+      POSTGRES_DB: hemmelig
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password # Replace with secure credentials
+
+  redis:
+    image: redis:6-alpine
+    container_name: hemmelig-redis
+    volumes:
+      - hemmelig-redis-data:/data
+
+# Define named volumes for persistence (optional)
+volumes:
+  hemmelig-db-data:
+  hemmelig-redis-data:
+
+networks:
+  default:
+    driver: bridge

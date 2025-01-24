@@ -1,0 +1,20 @@
+version: '3.8'
+services:
+  domoticz:
+    image: domoticz/domoticz:latest # Use the official Domoticz Docker image or specify a version tag
+    container_name: domoticz
+    ports:
+      - "8080:8080" # Map the Domoticz web interface port to your host, default is 8080
+      - "8700:8700" # Map the Domoticz HTTP API port to your host, default is 8700
+    environment:
+      TZ: "${TZ}" # Set your timezone, e.g., "Europe/London"
+    volumes:
+      - "/path/to/domoticz:/config" # Mount a volume for Domoticz configuration files (optional but recommended)
+      - "/path/to/log:/var/log/domoticz" # Optional volume for Domoticz logs, useful for logging purposes
+    restart: unless-stopped # Automatically restart the container if it stops
+    networks:
+      - domoticz_network
+
+networks:
+  domoticz_network:
+    driver: bridge

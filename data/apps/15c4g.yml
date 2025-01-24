@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:5.7
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: clipbucket
+      MYSQL_USER: clipbucketuser
+      MYSQL_PASSWORD: clipbucketpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+    restart: unless-stopped
+
+  php:
+    image: php:7.4-fpm
+    container_name: clipbucket_php
+    volumes:
+      - ./app:/var/www/html
+      - .phpinit:/usr/local/etc/php-fpm.d/custom.conf
+    depends_on:
+      - db
+      - redis
+      - memcached
+    restart: unless-stopped
+
+  redis:
+    image: redis:6-alpine
+    command: 'redis-server --save . snapshot.tz "snapshot.hr" 10001'
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+  memcached:
+    image: memcached:1.5-alpine
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:latest
+    container_name: clipbucket_nginx
+    volumes:
+      - ./app/public:/var/www/html/public
+      - ./app/.env:/var/www/html/.env
+      - ./app/nginx:/etc/nginx/conf.d
+      - ./app/storage:/var/www/html/storage
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - php
+      - redis
+      - memcached
+    restart: unless-stopped
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: clipbucket_mailhog
+    ports:
+      - "8025:997" # Admin UI
+      - "1025:1025" # SMTP server
+    restart: unless-stopped
+
+volumes:
+  db-data:
+    driver: local
+  redis-data:
+    driver: local
+
+networks:
+  default:
+    external:
+      name: clipbucket_default

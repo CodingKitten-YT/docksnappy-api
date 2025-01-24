@@ -1,0 +1,35 @@
+version: '3.8'
+services:
+  monica:
+    image: 'monica/monica:latest' # Use the official Monica image from Docker Hub
+    container_name: monica
+    restart: unless-stopped
+    ports:
+      - "5000:5000" # Expose Monica API on port 5000
+    volumes:
+      - "./config/monica.json:/code/config/monica.json" # Load your custom config (optional)
+      - monica-data:/code/data # Persist Monica data
+    environment:
+      - MONICA_DB_HOST=db
+      - MONICA_DB_NAME=monica
+      - MONICA_DB_USER=monica
+      - MONICA_DB_PASSWORD=secret
+      - MONICA_DB_DATABASE=postgres # If you're using PostgreSQL
+      - TZ=Europe/Madrid # Set your timezone (optional)
+    depends_on:
+      - db
+
+  db:
+    image: 'postgres:13' # Use the official PostgreSQL image
+    container_name: monica_db
+    restart: unless-stopped
+    volumes:
+      - monica-db-data:/var/lib/postgresql/data # Persist database data
+    environment:
+      - POSTGRES_DB=monica
+      - POSTGRES_USER=monica
+      - POSTGRES_PASSWORD=secret
+
+volumes:
+  monica-data:
+  monica-db-data:

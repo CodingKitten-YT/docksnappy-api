@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  code-server:
+    image: codemicro.com/code server:latest  # Official image from Codespace
+    ports:
+      - "8080:22"  # Map the SSH port to host, default is 22
+      - "8081:8080"  # Map the web UI port to host, for monitoring and debugging
+    volumes:
+      - "/path/to/your/code:/home/codeserver/project"  # Your local code directory
+      - "/tmp"  # Provide temporary space in the container
+    environment:
+      - SHELL=/bin/zsh  # Set your preferred shell (optional)
+      - CODER_SKIP_WELCOME=true  # Skip the welcome screen on startup (optional)
+      # Uncomment the following line to enable password authentication for SSH
+      # - PASSWORD="your-password"  # Set a password for SSH access (optional, for security reasons do not use default passwords)
+    cap_add:
+      - ALL  # Grant all capabilities to avoid permission issues (not recommended for production without understanding the implications)
+    restart: unless-stopped  # Restart the container when it stops (use with caution)
+    user: codeserver  # Default user for code-server

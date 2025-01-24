@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  jump:
+    image: jumpminds/jump:latest # Use the official Jump image from Docker Hub
+    ports:
+      - "9000:9000" # Expose Jump's web UI on port 9000 of the host
+    environment:
+      JUMP_LICENSE_KEY: your_license_key # Replace with your actual license key if required
+    volumes:
+      - ./jump-config.json:/app/conf/jump-config.json # Mount your local jump-config.json to the container
+      - jump-data:/app/data # Persist Jump data (optional, depending on your needs)
+
+volumes:
+  jump-data:

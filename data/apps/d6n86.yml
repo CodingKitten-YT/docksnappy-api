@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  drawio:
+    image: 'swhardhan/drawio:latest' # Use an official image if available, e.g., 'jgraph/drawio:latest'
+    container_name: drawio
+    ports:
+      - "8080:3000" # Expose DrawIO on port 8080 of the host
+    environment:
+      - JGRAPH_LICENSE=<Your-License-Key> # Set your valid draw.io license key
+      - MINIMUM_PAYLOAD=768 # Minimum payload for diagrams (optional, adjust based on your usage)
+      # Additional configurations can be set here
+    volumes:
+      - './data:/data' # Mount a local directory to store diagrams and data
+      - './log:/opt/drawio/logs' # Optional: Mount a log file to keep a record of draw.io logs (useful for debugging)
+    command: /bin/sh -c 'trap exit TERM; while :; do sleep 1 & wait $${!}; done; /opt/jgraph/share/drawio/DrawIO ADMIN' # Keep container running, to handle large diagrams
+    restart: unless-stopped # Restart the container if it stops (useful after updates)
+
+networks:
+  default:
+    driver: bridge

@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  homepage:
+    image: "gethomepage/homepage:latest"
+    container_name: homepage
+    ports:
+      - "80:80" # Expose the homepage on port 80 of the host
+    volumes:
+      - "./data:/usr/src/app/data" # Mount your data directory to the app's data directory
+      - "./uploads:/usr/src/app/uploads" # Mount your uploads directory to the app's uploads directory (if you're using it)
+    environment:
+      - HOMEPAGE_LICENSE_KEY="${HOMEPAGE_LICENSE_KEY}" # Set your license key as an environment variable, if required by your license
+    networks:
+      - homepage_net
+
+networks:
+  homepage_net:
+    driver: bridge

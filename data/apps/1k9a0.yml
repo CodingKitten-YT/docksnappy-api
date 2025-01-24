@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  citadel:
+    image: citadel/citadel:latest
+    container_name: citadel
+    ports:
+      - "5432:5432" # PostgreSQL port, Citadel uses this for its database by default
+      - "7000:7000" # Citadel web interface
+      - "8000:8000" # Mail server submission port (SMTP/IMAP)
+    volumes:
+      - citadel_data:/var/lib/citadel
+      - citadel_cache:/tmp/citadel
+      - ./letsencrypt.yaml:/etc/letsencrypt.yaml # Optional, for Let's Encrypt SSL setup
+    environment:
+      - TZ=Europe/London # Set the timezone as an example, replace with your own
+      - POSTGRES_DB=citadel # Database name, if different from the default
+      - POSTGIS_EXTENSION=1 # Enable PostGIS for spatial data support (optional)
+    command: /opt/citadel/bin/citadeld --log-path=/var/log/citadel
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:latest
+    container_name: citadel_postgres
+    volumes:
+      - citadel_data:/var/lib/postgresql
+    environment:
+      - POSTGRES_DB=citadel
+      - POSTGRES_USER=citadel
+      - POSTGRES_PASSWORD=yourpassword # Replace with a strong password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U citadel"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  citadel_data:
+    driver: local
+  citadel_cache:
+    driver: local
+
+networks:
+  default:
+    driver: bridge

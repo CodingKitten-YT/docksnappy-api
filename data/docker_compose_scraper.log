@@ -1,0 +1,706 @@
+2025-01-23 17:47:11,446 - INFO: Processing 2FAuth (ID: 9e36g)
+2025-01-23 17:47:21,092 - INFO: Saved Docker Compose for 2FAuth
+2025-01-23 17:47:21,093 - INFO: Processing Accent (ID: kp328)
+2025-01-23 17:47:28,907 - INFO: Saved Docker Compose for Accent
+2025-01-23 17:47:28,907 - INFO: Processing Activepieces (ID: 738hm)
+2025-01-23 17:47:42,664 - INFO: Saved Docker Compose for Activepieces
+2025-01-23 17:47:42,664 - INFO: Processing Actual (ID: 3xi22)
+2025-01-23 17:47:51,805 - INFO: Saved Docker Compose for Actual
+2025-01-23 17:47:51,806 - INFO: Processing AdGuard Home (ID: 6t6j0)
+2025-01-23 17:47:57,135 - INFO: Saved Docker Compose for AdGuard Home
+2025-01-23 17:47:57,135 - INFO: Processing admidio (ID: qh330)
+2025-01-23 17:48:04,299 - INFO: Saved Docker Compose for admidio
+2025-01-23 17:48:04,300 - INFO: Processing AdventureLog (ID: 5vk37)
+2025-01-23 17:48:12,590 - INFO: Saved Docker Compose for AdventureLog
+2025-01-23 17:48:12,590 - INFO: Processing Akkoma (ID: a99r6)
+2025-01-23 17:48:20,848 - INFO: Saved Docker Compose for Akkoma
+2025-01-23 17:48:20,848 - INFO: Processing AlertHub (ID: 345aq)
+2025-01-23 17:48:26,444 - INFO: Saved Docker Compose for AlertHub
+2025-01-23 17:48:26,444 - INFO: Processing Algernon (ID: 8f4v9)
+2025-01-23 17:48:37,300 - INFO: Saved Docker Compose for Algernon
+2025-01-23 17:48:37,301 - INFO: Processing AmuseWiki (ID: 50n0g)
+2025-01-23 17:48:42,997 - INFO: Saved Docker Compose for AmuseWiki
+2025-01-23 17:48:42,997 - INFO: Processing AnonAddy (ID: o6g26)
+2025-01-23 17:48:49,213 - INFO: Saved Docker Compose for AnonAddy
+2025-01-23 17:48:49,213 - INFO: Processing Ansible-NAS (ID: fx792)
+2025-01-23 17:49:03,634 - INFO: Saved Docker Compose for Ansible-NAS
+2025-01-23 17:49:03,635 - INFO: Processing Answer (ID: 748dc)
+2025-01-23 17:49:08,910 - INFO: Saved Docker Compose for Answer
+2025-01-23 17:49:08,910 - INFO: Processing AnyCable (ID: 03m6j)
+2025-01-23 17:49:18,802 - INFO: Saved Docker Compose for AnyCable
+2025-01-23 17:49:18,802 - INFO: Processing Apache Airflow (ID: r1o67)
+2025-01-23 17:49:32,587 - INFO: Saved Docker Compose for Apache Airflow
+2025-01-23 17:49:32,587 - INFO: Processing Apache HTTP Server (ID: vj560)
+2025-01-23 17:49:36,289 - INFO: Saved Docker Compose for Apache HTTP Server
+2025-01-23 17:49:36,290 - INFO: Processing Apache Solr (ID: 2l8e0)
+2025-01-23 17:49:42,890 - INFO: Saved Docker Compose for Apache Solr
+2025-01-23 17:49:42,890 - INFO: Processing AppFlowy (ID: b456e)
+2025-01-23 17:49:50,527 - INFO: Saved Docker Compose for AppFlowy
+2025-01-23 17:49:50,527 - INFO: Processing Apprise (ID: 796we)
+2025-01-23 17:49:58,229 - INFO: Saved Docker Compose for Apprise
+2025-01-23 17:49:58,230 - INFO: Processing Appsmith (ID: u36d6)
+2025-01-23 17:50:05,202 - INFO: Saved Docker Compose for Appsmith
+2025-01-23 17:50:05,203 - INFO: Processing Appwrite (ID: p05j0)
+2025-01-23 17:50:16,228 - INFO: Saved Docker Compose for Appwrite
+2025-01-23 17:50:16,228 - INFO: Processing Aptabase (ID: 290qm)
+2025-01-23 17:50:22,685 - INFO: Saved Docker Compose for Aptabase
+2025-01-23 17:50:22,685 - INFO: Processing ArchiveBox (ID: 5v7l6)
+2025-01-23 17:50:28,615 - INFO: Saved Docker Compose for ArchiveBox
+2025-01-23 17:50:28,615 - INFO: Processing Artalk (ID: 2qn80)
+2025-01-23 17:50:37,284 - INFO: Saved Docker Compose for Artalk
+2025-01-23 17:50:37,284 - INFO: Processing asciinema (ID: nm900)
+2025-01-23 17:50:49,987 - INFO: Saved Docker Compose for asciinema
+2025-01-23 17:50:49,987 - INFO: Processing Atheos (ID: 0e45r)
+2025-01-23 17:51:00,901 - INFO: Saved Docker Compose for Atheos
+2025-01-23 17:51:00,901 - INFO: Processing Atomic Server (ID: 559du)
+2025-01-23 17:51:22,360 - INFO: Saved Docker Compose for Atomic Server
+2025-01-23 17:51:22,361 - INFO: Processing Atsumeru (ID: 3d53q)
+2025-01-23 17:51:37,279 - INFO: Saved Docker Compose for Atsumeru
+2025-01-23 17:51:37,279 - INFO: Processing Audiobookshelf (ID: 7w6x4)
+2025-01-23 17:51:48,439 - INFO: Saved Docker Compose for Audiobookshelf
+2025-01-23 17:51:48,439 - INFO: Processing Automatisch (ID: i933i)
+2025-01-23 17:51:57,725 - INFO: Saved Docker Compose for Automatisch
+2025-01-23 17:51:57,725 - INFO: Processing Azimutt (ID: 911xb)
+2025-01-23 17:52:05,931 - INFO: Saved Docker Compose for Azimutt
+2025-01-23 17:52:05,931 - INFO: Processing AzuraCast (ID: s2e72)
+2025-01-23 17:52:14,577 - INFO: Saved Docker Compose for AzuraCast
+2025-01-23 17:52:14,578 - INFO: Processing Bar Assistant (ID: 560yp)
+2025-01-23 17:52:22,939 - INFO: Saved Docker Compose for Bar Assistant
+2025-01-23 17:52:22,939 - INFO: Processing Baserow (ID: 6b0x0)
+2025-01-23 17:52:31,002 - INFO: Saved Docker Compose for Baserow
+2025-01-23 17:52:31,002 - INFO: Processing Beaver Habit Tracker (ID: 867yt)
+2025-01-23 17:52:40,102 - INFO: Saved Docker Compose for Beaver Habit Tracker
+2025-01-23 17:52:40,102 - INFO: Processing beelzebub (ID: 7l5a0)
+2025-01-23 17:52:48,230 - INFO: Saved Docker Compose for beelzebub
+2025-01-23 17:52:48,230 - INFO: Processing bewCloud (ID: y86m9)
+2025-01-23 17:52:55,084 - INFO: Saved Docker Compose for bewCloud
+2025-01-23 17:52:55,084 - INFO: Processing Bigcapital (ID: jv936)
+2025-01-23 17:53:03,378 - INFO: Saved Docker Compose for Bigcapital
+2025-01-23 17:53:03,378 - INFO: Processing Bitcart (ID: 0yz99)
+2025-01-23 17:53:14,537 - INFO: Saved Docker Compose for Bitcart
+2025-01-23 17:53:14,537 - INFO: Processing bitmagnet (ID: nb876)
+2025-01-23 17:53:27,115 - INFO: Saved Docker Compose for bitmagnet
+2025-01-23 17:53:27,116 - INFO: Processing Bitpoll (ID: 03oc7)
+2025-01-23 17:53:33,586 - INFO: Saved Docker Compose for Bitpoll
+2025-01-23 17:53:33,586 - INFO: Processing Bitwarden (ID: a132h)
+2025-01-23 17:53:41,504 - INFO: Saved Docker Compose for Bitwarden
+2025-01-23 17:53:41,504 - INFO: Processing Black Candy (ID: 871ml)
+2025-01-23 17:53:49,498 - INFO: Saved Docker Compose for Black Candy
+2025-01-23 17:53:49,498 - INFO: Processing blocky (ID: o77v5)
+2025-01-23 17:53:54,813 - INFO: Saved Docker Compose for blocky
+2025-01-23 17:53:54,813 - INFO: Processing BookLogr (ID: 0bu73)
+2025-01-23 17:54:01,042 - INFO: Saved Docker Compose for BookLogr
+2025-01-23 17:54:01,042 - INFO: Processing BookStack (ID: a01q0)
+2025-01-23 17:54:08,136 - INFO: Saved Docker Compose for BookStack
+2025-01-23 17:54:08,136 - INFO: Processing Bracket (ID: fv786)
+2025-01-23 17:54:15,680 - INFO: Saved Docker Compose for Bracket
+2025-01-23 17:54:15,681 - INFO: Processing Briefkasten (ID: 33p7g)
+2025-01-23 17:54:23,573 - INFO: Saved Docker Compose for Briefkasten
+2025-01-23 17:54:23,573 - INFO: Processing BunkerWeb (ID: 6y8h1)
+2025-01-23 17:54:30,080 - INFO: Saved Docker Compose for BunkerWeb
+2025-01-23 17:54:30,080 - INFO: Processing Bytebase (ID: 9x0u7)
+2025-01-23 17:54:38,636 - INFO: Saved Docker Compose for Bytebase
+2025-01-23 17:54:38,636 - INFO: Processing Caddy (ID: y71r9)
+2025-01-23 17:54:46,111 - INFO: Saved Docker Compose for Caddy
+2025-01-23 17:54:46,111 - INFO: Processing Cannery (ID: e95e4)
+2025-01-23 17:54:57,400 - INFO: Saved Docker Compose for Cannery
+2025-01-23 17:54:57,400 - INFO: Processing CasaOS (ID: cj365)
+2025-01-23 17:55:09,523 - INFO: Saved Docker Compose for CasaOS
+2025-01-23 17:55:09,523 - INFO: Processing Castopod (ID: 28mb7)
+2025-01-23 17:55:20,972 - INFO: Saved Docker Compose for Castopod
+2025-01-23 17:55:20,972 - INFO: Processing Centrifugo (ID: 893xc)
+2025-01-23 17:55:29,995 - INFO: Saved Docker Compose for Centrifugo
+2025-01-23 17:55:29,995 - INFO: Processing Cerbos (ID: a44n9)
+2025-01-23 17:55:36,094 - INFO: Saved Docker Compose for Cerbos
+2025-01-23 17:55:36,095 - INFO: Processing changedetection.io (ID: 8hy71)
+2025-01-23 17:55:47,259 - INFO: Saved Docker Compose for changedetection.io
+2025-01-23 17:55:47,259 - INFO: Processing Chartbrew (ID: 390sc)
+2025-01-23 17:55:54,693 - INFO: Saved Docker Compose for Chartbrew
+2025-01-23 17:55:54,693 - INFO: Processing Chatwoot (ID: c027l)
+2025-01-23 17:56:11,952 - INFO: Saved Docker Compose for Chatwoot
+2025-01-23 17:56:11,952 - INFO: Processing Chevereto (ID: 79vv4)
+2025-01-23 17:56:18,338 - INFO: Saved Docker Compose for Chevereto
+2025-01-23 17:56:18,338 - INFO: Processing Chhoto URL (ID: 7j7e6)
+2025-01-23 17:56:28,959 - INFO: Saved Docker Compose for Chhoto URL
+2025-01-23 17:56:28,959 - INFO: Processing Chibisafe (ID: 4p71e)
+2025-01-23 17:56:37,498 - INFO: Saved Docker Compose for Chibisafe
+2025-01-23 17:56:37,498 - INFO: Processing ChiefOnboarding (ID: 4vt71)
+2025-01-23 17:56:45,586 - INFO: Saved Docker Compose for ChiefOnboarding
+2025-01-23 17:56:45,587 - INFO: Processing Chirpy (ID: 68b7g)
+2025-01-23 17:56:54,919 - INFO: Saved Docker Compose for Chirpy
+2025-01-23 17:56:54,919 - INFO: Processing Christmas Community (ID: 3f1m0)
+2025-01-23 17:57:04,367 - INFO: Saved Docker Compose for Christmas Community
+2025-01-23 17:57:04,367 - INFO: Processing Citadel (ID: 1k9a0)
+2025-01-23 17:57:12,128 - INFO: Saved Docker Compose for Citadel
+2025-01-23 17:57:12,128 - INFO: Processing Claper (ID: 36p6z)
+2025-01-23 17:57:18,212 - INFO: Saved Docker Compose for Claper
+2025-01-23 17:57:18,212 - INFO: Processing ClearFlask (ID: 500su)
+2025-01-23 17:57:25,640 - INFO: Saved Docker Compose for ClearFlask
+2025-01-23 17:57:25,640 - INFO: Processing ClipBucket (ID: 15c4g)
+2025-01-23 17:57:34,510 - INFO: Saved Docker Compose for ClipBucket
+2025-01-23 17:57:34,510 - INFO: Processing CloudBeaver (ID: x09y3)
+2025-01-23 17:57:44,995 - INFO: Saved Docker Compose for CloudBeaver
+2025-01-23 17:57:44,995 - INFO: Processing Cloudlog (ID: u99t6)
+2025-01-23 17:57:53,525 - INFO: Saved Docker Compose for Cloudlog
+2025-01-23 17:57:53,526 - INFO: Processing code-server (ID: 4u7h2)
+2025-01-23 17:58:00,551 - INFO: Saved Docker Compose for code-server
+2025-01-23 17:58:00,551 - INFO: Processing Coder (ID: f04z7)
+2025-01-23 17:58:07,155 - INFO: Saved Docker Compose for Coder
+2025-01-23 17:58:07,155 - INFO: Processing CommaFeed (ID: u20a2)
+2025-01-23 17:58:13,773 - INFO: Saved Docker Compose for CommaFeed
+2025-01-23 17:58:13,773 - INFO: Processing Convos (ID: 6i7y6)
+2025-01-23 17:58:25,480 - INFO: Saved Docker Compose for Convos
+2025-01-23 17:58:25,480 - INFO: Processing Coral (ID: 43c5q)
+2025-01-23 17:58:32,916 - INFO: Saved Docker Compose for Coral
+2025-01-23 17:58:32,916 - INFO: Processing Countly Community Edition (ID: 9d3p7)
+2025-01-23 17:58:50,047 - INFO: Saved Docker Compose for Countly Community Edition
+2025-01-23 17:58:50,047 - INFO: Processing Crafty Controller (ID: t98u0)
+2025-01-23 17:58:59,129 - INFO: Saved Docker Compose for Crafty Controller
+2025-01-23 17:58:59,129 - INFO: Processing CryptPad (ID: 38m5g)
+2025-01-23 17:59:10,956 - INFO: Saved Docker Compose for CryptPad
+2025-01-23 17:59:10,956 - INFO: Processing Dagu (ID: e8i77)
+2025-01-23 17:59:19,987 - INFO: Saved Docker Compose for Dagu
+2025-01-23 17:59:19,987 - INFO: Processing DailyTxT (ID: 4d02t)
+2025-01-23 17:59:25,955 - INFO: Saved Docker Compose for DailyTxT
+2025-01-23 17:59:25,955 - INFO: Processing Damselfly (ID: 3ki39)
+2025-01-23 17:59:38,399 - INFO: Saved Docker Compose for Damselfly
+2025-01-23 17:59:38,399 - INFO: Processing Dashpress (ID: 945fm)
+2025-01-23 17:59:52,764 - INFO: Saved Docker Compose for Dashpress
+2025-01-23 17:59:52,764 - INFO: Processing Dashy (ID: 9vj26)
+2025-01-23 18:00:00,827 - INFO: Saved Docker Compose for Dashy
+2025-01-23 18:00:00,827 - INFO: Processing Databag (ID: j90w6)
+2025-01-23 18:00:11,144 - INFO: Saved Docker Compose for Databag
+2025-01-23 18:00:11,144 - INFO: Processing Databunker (ID: ke032)
+2025-01-23 18:00:20,618 - INFO: Saved Docker Compose for Databunker
+2025-01-23 18:00:20,618 - INFO: Processing Datasette (ID: w149n)
+2025-01-23 18:00:29,821 - INFO: Saved Docker Compose for Datasette
+2025-01-23 18:00:29,821 - INFO: Processing DeviceHive (ID: 3g5w2)
+2025-01-23 18:00:40,816 - INFO: Saved Docker Compose for DeviceHive
+2025-01-23 18:00:40,816 - INFO: Processing Directus (ID: 05eq3)
+2025-01-23 18:00:50,614 - INFO: Saved Docker Compose for Directus
+2025-01-23 18:00:50,614 - INFO: Processing Discount Bandit (ID: v5e78)
+2025-01-23 18:00:58,607 - INFO: Saved Docker Compose for Discount Bandit
+2025-01-23 18:00:58,607 - INFO: Processing Discourse (ID: 91rc1)
+2025-01-23 18:01:07,937 - INFO: Saved Docker Compose for Discourse
+2025-01-23 18:01:07,937 - INFO: Processing Dittofeed (ID: 68c5f)
+2025-01-23 18:01:21,844 - INFO: Saved Docker Compose for Dittofeed
+2025-01-23 18:01:21,844 - INFO: Processing docassemble (ID: 3y1x4)
+2025-01-23 18:01:31,640 - INFO: Saved Docker Compose for docassemble
+2025-01-23 18:01:31,641 - INFO: Processing DOCAT (ID: 0sj62)
+2025-01-23 18:01:40,505 - INFO: Saved Docker Compose for DOCAT
+2025-01-23 18:01:40,505 - INFO: Processing docker-mailserver (ID: k327h)
+2025-01-23 18:01:50,542 - INFO: Saved Docker Compose for docker-mailserver
+2025-01-23 18:01:50,543 - INFO: Processing DocKing (ID: c7j36)
+2025-01-23 18:01:57,899 - INFO: Saved Docker Compose for DocKing
+2025-01-23 18:01:57,900 - INFO: Processing docmost (ID: 3i0w0)
+2025-01-23 18:02:09,091 - INFO: Saved Docker Compose for docmost
+2025-01-23 18:02:09,091 - INFO: Processing Docspell (ID: 418gv)
+2025-01-23 18:02:17,260 - INFO: Saved Docker Compose for Docspell
+2025-01-23 18:02:17,260 - INFO: Processing Docuseal (ID: 8m67w)
+2025-01-23 18:02:24,285 - INFO: Saved Docker Compose for Docuseal
+2025-01-23 18:02:24,285 - INFO: Processing Domoticz (ID: 00j0l)
+2025-01-23 18:02:29,041 - INFO: Saved Docker Compose for Domoticz
+2025-01-23 18:02:29,041 - INFO: Processing Donetick (ID: 740lb)
+2025-01-23 18:02:35,666 - INFO: Saved Docker Compose for Donetick
+2025-01-23 18:02:35,666 - INFO: Processing dpaste (ID: 9m99v)
+2025-01-23 18:02:41,597 - INFO: Saved Docker Compose for dpaste
+2025-01-23 18:02:41,597 - INFO: Processing draw.io (ID: d6n86)
+2025-01-23 18:02:47,083 - INFO: Saved Docker Compose for draw.io
+2025-01-23 18:02:47,083 - INFO: Processing DreamFactory (ID: 8hq31)
+2025-01-23 18:02:56,350 - INFO: Saved Docker Compose for DreamFactory
+2025-01-23 18:02:56,350 - INFO: Processing Druid (ID: 785jw)
+2025-01-23 18:03:07,461 - INFO: Saved Docker Compose for Druid
+2025-01-23 18:03:07,461 - INFO: Processing E-Label (ID: p3n10)
+2025-01-23 18:03:16,489 - INFO: Saved Docker Compose for E-Label
+2025-01-23 18:03:16,489 - INFO: Processing Eclipse Che (ID: o759p)
+2025-01-23 18:03:29,381 - INFO: Saved Docker Compose for Eclipse Che
+2025-01-23 18:03:29,381 - INFO: Processing EDA (ID: r9x12)
+2025-01-23 18:03:37,182 - INFO: Saved Docker Compose for EDA
+2025-01-23 18:03:37,183 - INFO: Processing ejabberd (ID: i662i)
+2025-01-23 18:03:45,776 - INFO: Saved Docker Compose for ejabberd
+2025-01-23 18:03:45,776 - INFO: Processing EMQX (ID: 6u62v)
+2025-01-23 18:03:52,386 - INFO: Saved Docker Compose for EMQX
+2025-01-23 18:03:52,387 - INFO: Processing Enclosed (ID: e09h4)
+2025-01-23 18:04:01,827 - INFO: Saved Docker Compose for Enclosed
+2025-01-23 18:04:01,827 - INFO: Processing Engity’s Bifröst (ID: 49d6t)
+2025-01-23 18:04:10,215 - INFO: Saved Docker Compose for Engity’s Bifröst
+2025-01-23 18:04:10,215 - INFO: Processing Enigma 1/2 BBS (ID: 904ni)
+2025-01-23 18:04:18,795 - INFO: Saved Docker Compose for Enigma 1/2 BBS
+2025-01-23 18:04:18,795 - INFO: Processing Ente (ID: 6t0k5)
+2025-01-23 18:04:25,150 - INFO: Saved Docker Compose for Ente
+2025-01-23 18:04:25,151 - INFO: Processing Eqivo (ID: a0z10)
+2025-01-23 18:04:34,247 - INFO: Saved Docker Compose for Eqivo
+2025-01-23 18:04:34,247 - INFO: Processing Ergo (ID: iq211)
+2025-01-23 18:04:50,499 - INFO: Saved Docker Compose for Ergo
+2025-01-23 18:04:50,499 - INFO: Processing ERPNext (ID: 6k1b2)
+2025-01-23 18:05:02,212 - INFO: Saved Docker Compose for ERPNext
+2025-01-23 18:05:02,212 - INFO: Processing Etherpad (ID: ft161)
+2025-01-23 18:05:08,603 - INFO: Saved Docker Compose for Etherpad
+2025-01-23 18:05:08,603 - INFO: Processing EverShop (ID: 33m1x)
+2025-01-23 18:05:23,421 - INFO: Saved Docker Compose for EverShop
+2025-01-23 18:05:23,421 - INFO: Processing EveryDocs (ID: 54l2h)
+2025-01-23 18:05:34,673 - INFO: Saved Docker Compose for EveryDocs
+2025-01-23 18:05:34,674 - INFO: Processing ExBin (ID: 53fv4)
+2025-01-23 18:05:41,611 - INFO: Saved Docker Compose for ExBin
+2025-01-23 18:05:41,611 - INFO: Processing ezbookkeeping (ID: e87l1)
+2025-01-23 18:05:50,904 - INFO: Saved Docker Compose for ezbookkeeping
+2025-01-23 18:05:50,904 - INFO: Processing F-Droid (ID: 71qt8)
+2025-01-23 18:06:02,075 - INFO: Saved Docker Compose for F-Droid
+2025-01-23 18:06:02,075 - INFO: Processing farmOS (ID: 7jv42)
+2025-01-23 18:06:12,160 - INFO: Saved Docker Compose for farmOS
+2025-01-23 18:06:12,160 - INFO: Processing Fasten Health (ID: 05p6c)
+2025-01-23 18:06:18,678 - INFO: Saved Docker Compose for Fasten Health
+2025-01-23 18:06:18,678 - INFO: Processing FeedCord (ID: 3mk11)
+2025-01-23 18:06:26,623 - INFO: Saved Docker Compose for FeedCord
+2025-01-23 18:06:26,623 - INFO: Processing Feedpushr (ID: f191g)
+2025-01-23 18:06:37,446 - INFO: Saved Docker Compose for Feedpushr
+2025-01-23 18:06:37,446 - INFO: Processing Fenrus (ID: e1o73)
+2025-01-23 18:06:42,998 - INFO: Saved Docker Compose for Fenrus
+2025-01-23 18:06:42,999 - INFO: Processing Fess (ID: 95ui6)
+2025-01-23 18:06:52,989 - INFO: Saved Docker Compose for Fess
+2025-01-23 18:06:52,989 - INFO: Processing Fider (ID: 52t5o)
+2025-01-23 18:07:01,204 - INFO: Saved Docker Compose for Fider
+2025-01-23 18:07:01,205 - INFO: Processing FileGator (ID: d2s08)
+2025-01-23 18:07:09,995 - INFO: Saved Docker Compose for FileGator
+2025-01-23 18:07:09,995 - INFO: Processing Files Sharing (ID: yf374)
+2025-01-23 18:07:17,206 - INFO: Saved Docker Compose for Files Sharing
+2025-01-23 18:07:17,207 - INFO: Processing Filestash (ID: qo040)
+2025-01-23 18:07:22,662 - INFO: Saved Docker Compose for Filestash
+2025-01-23 18:07:22,663 - INFO: Processing Firefly III (ID: ol172)
+2025-01-23 18:07:32,374 - INFO: Saved Docker Compose for Firefly III
+2025-01-23 18:07:32,374 - INFO: Processing Firezone (ID: 715wx)
+2025-01-23 18:07:42,000 - INFO: Saved Docker Compose for Firezone
+2025-01-23 18:07:42,000 - INFO: Processing Flagsmith (ID: 3dl20)
+2025-01-23 18:07:55,516 - INFO: Saved Docker Compose for Flagsmith
+2025-01-23 18:07:55,516 - INFO: Processing FlashPaper (ID: at012)
+2025-01-23 18:08:01,476 - INFO: Saved Docker Compose for FlashPaper
+2025-01-23 18:08:01,476 - INFO: Processing flatnotes (ID: 37wu4)
+2025-01-23 18:08:05,587 - INFO: Saved Docker Compose for flatnotes
+2025-01-23 18:08:05,587 - INFO: Processing Flexisip (ID: 8vj42)
+2025-01-23 18:08:14,006 - INFO: Saved Docker Compose for Flexisip
+2025-01-23 18:08:14,006 - INFO: Processing Flipt (ID: 466pm)
+2025-01-23 18:08:22,307 - INFO: Saved Docker Compose for Flipt
+2025-01-23 18:08:22,307 - INFO: Processing FlowForge (ID: s1g37)
+2025-01-23 18:08:35,019 - INFO: Saved Docker Compose for FlowForge
+2025-01-23 18:08:35,019 - INFO: Processing Fluidd (ID: 3p16s)
+2025-01-23 18:08:43,584 - INFO: Saved Docker Compose for Fluidd
+2025-01-23 18:08:43,584 - INFO: Processing Flyimg (ID: y2f71)
+2025-01-23 18:08:51,410 - INFO: Saved Docker Compose for Flyimg
+2025-01-23 18:08:51,410 - INFO: Processing Focalboard (ID: 8gl35)
+2025-01-23 18:09:00,241 - INFO: Saved Docker Compose for Focalboard
+2025-01-23 18:09:00,242 - INFO: Processing FoodCoopShop (ID: 3tw05)
+2025-01-23 18:09:09,043 - INFO: Saved Docker Compose for FoodCoopShop
+2025-01-23 18:09:09,043 - INFO: Processing Foodsoft (ID: hd905)
+2025-01-23 18:09:17,435 - INFO: Saved Docker Compose for Foodsoft
+2025-01-23 18:09:17,435 - INFO: Processing Forgejo (ID: i745q)
+2025-01-23 18:09:24,950 - INFO: Saved Docker Compose for Forgejo
+2025-01-23 18:09:24,951 - INFO: Processing form.io (ID: i4q41)
+2025-01-23 18:09:38,548 - INFO: Saved Docker Compose for form.io
+2025-01-23 18:09:38,548 - INFO: Processing Formbricks (ID: 3s79p)
+2025-01-23 18:09:47,414 - INFO: Saved Docker Compose for Formbricks
+2025-01-23 18:09:47,414 - INFO: Processing FOSSBilling (ID: 940zb)
+2025-01-23 18:09:56,477 - INFO: Saved Docker Compose for FOSSBilling
+2025-01-23 18:09:56,478 - INFO: Processing frab (ID: 7xa74)
+2025-01-23 18:10:04,628 - INFO: Saved Docker Compose for frab
+2025-01-23 18:10:04,628 - INFO: Processing FreeScout (ID: 66u0o)
+2025-01-23 18:10:11,268 - INFO: Saved Docker Compose for FreeScout
+2025-01-23 18:10:11,268 - INFO: Processing FreshRSS (ID: 26g7j)
+2025-01-23 18:10:17,816 - INFO: Saved Docker Compose for FreshRSS
+2025-01-23 18:10:17,816 - INFO: Processing Frigate (ID: 6j08p)
+2025-01-23 18:10:26,973 - INFO: Saved Docker Compose for Frigate
+2025-01-23 18:10:26,974 - INFO: Processing Fusio (ID: hj170)
+2025-01-23 18:10:35,251 - INFO: Saved Docker Compose for Fusio
+2025-01-23 18:10:35,251 - INFO: Processing Fusion (ID: c7m64)
+2025-01-23 18:10:42,969 - INFO: Saved Docker Compose for Fusion
+2025-01-23 18:10:42,970 - INFO: Processing Ganymede (ID: ve892)
+2025-01-23 18:10:48,905 - INFO: Saved Docker Compose for Ganymede
+2025-01-23 18:10:48,905 - INFO: Processing GarageHQ (ID: 44i7e)
+2025-01-23 18:10:55,115 - INFO: Saved Docker Compose for GarageHQ
+2025-01-23 18:10:55,115 - INFO: Processing gathio (ID: a696p)
+2025-01-23 18:11:00,836 - INFO: Saved Docker Compose for gathio
+2025-01-23 18:11:00,836 - INFO: Processing Gatus (ID: 3x42n)
+2025-01-23 18:11:08,664 - INFO: Saved Docker Compose for Gatus
+2025-01-23 18:11:08,664 - INFO: Processing Geeftlist (ID: 6eg54)
+2025-01-23 18:11:16,071 - INFO: Saved Docker Compose for Geeftlist
+2025-01-23 18:11:16,071 - INFO: Processing Geo2tz (ID: y0d81)
+2025-01-23 18:11:26,079 - INFO: Saved Docker Compose for Geo2tz
+2025-01-23 18:11:26,079 - INFO: Processing Gerbera (ID: 31zr0)
+2025-01-23 18:11:32,083 - INFO: Saved Docker Compose for Gerbera
+2025-01-23 18:11:32,083 - INFO: Processing Gerrit (ID: 7ce36)
+2025-01-23 18:11:40,702 - INFO: Saved Docker Compose for Gerrit
+2025-01-23 18:11:40,702 - INFO: Processing Ghostfolio (ID: g435w)
+2025-01-23 18:11:47,951 - INFO: Saved Docker Compose for Ghostfolio
+2025-01-23 18:11:47,951 - INFO: Processing Gitea (ID: b19r4)
+2025-01-23 18:11:55,257 - INFO: Saved Docker Compose for Gitea
+2025-01-23 18:11:55,257 - INFO: Processing Github Ntfy (ID: 6dn78)
+2025-01-23 18:12:03,103 - INFO: Saved Docker Compose for Github Ntfy
+2025-01-23 18:12:03,103 - INFO: Processing GitLab (ID: r168w)
+2025-01-23 18:12:11,592 - INFO: Saved Docker Compose for GitLab
+2025-01-23 18:12:11,592 - INFO: Processing Gladys (ID: h7w90)
+2025-01-23 18:12:18,440 - INFO: Saved Docker Compose for Gladys
+2025-01-23 18:12:18,440 - INFO: Processing Glance (ID: 7z1v4)
+2025-01-23 18:12:29,285 - INFO: Saved Docker Compose for Glance
+2025-01-23 18:12:29,285 - INFO: Processing GlitchTip (ID: 847rk)
+2025-01-23 18:12:36,301 - INFO: Saved Docker Compose for GlitchTip
+2025-01-23 18:12:36,301 - INFO: Processing GlobaLeaks (ID: s56i9)
+2025-01-23 18:12:49,227 - INFO: Saved Docker Compose for GlobaLeaks
+2025-01-23 18:12:49,228 - INFO: Processing Gokapi (ID: 39fo4)
+2025-01-23 18:12:59,132 - INFO: Saved Docker Compose for Gokapi
+2025-01-23 18:12:59,133 - INFO: Processing gonic (ID: 06m6p)
+2025-01-23 18:13:03,742 - INFO: Saved Docker Compose for gonic
+2025-01-23 18:13:03,742 - INFO: Processing Gophish (ID: f13d0)
+2025-01-23 18:13:10,608 - INFO: Saved Docker Compose for Gophish
+2025-01-23 18:13:10,608 - INFO: Processing GoSƐ (ID: u475u)
+2025-01-23 18:13:18,141 - ERROR: Wizardlm2 generation error for GoSƐ: 'NoneType' object has no attribute 'strip'
+2025-01-23 18:13:18,141 - WARNING: Failed to generate Docker Compose for GoSƐ
+2025-01-23 18:13:18,141 - INFO: Processing Gotenberg (ID: zm117)
+2025-01-23 18:13:27,177 - INFO: Saved Docker Compose for Gotenberg
+2025-01-23 18:13:27,177 - INFO: Processing Gotify (ID: ya211)
+2025-01-23 18:13:34,990 - INFO: Saved Docker Compose for Gotify
+2025-01-23 18:13:34,990 - INFO: Processing GoToSocial (ID: x71m2)
+2025-01-23 18:13:46,285 - INFO: Saved Docker Compose for GoToSocial
+2025-01-23 18:13:46,285 - INFO: Processing Gramps Web (ID: 673sa)
+2025-01-23 18:13:55,776 - INFO: Saved Docker Compose for Gramps Web
+2025-01-23 18:13:55,776 - INFO: Processing graph-vl (ID: 5tb87)
+2025-01-23 18:14:04,040 - INFO: Saved Docker Compose for graph-vl
+2025-01-23 18:14:04,040 - INFO: Processing Grimoire (ID: yh646)
+2025-01-23 18:14:15,068 - INFO: Saved Docker Compose for Grimoire
+2025-01-23 18:14:15,068 - INFO: Processing Grist (ID: 0nm21)
+2025-01-23 18:14:24,622 - INFO: Saved Docker Compose for Grist
+2025-01-23 18:14:24,623 - INFO: Processing grocy (ID: 921qy)
+2025-01-23 18:14:32,190 - INFO: Saved Docker Compose for grocy
+2025-01-23 18:14:32,190 - INFO: Processing Habitica (ID: 5go07)
+2025-01-23 18:14:39,443 - INFO: Saved Docker Compose for Habitica
+2025-01-23 18:14:39,443 - INFO: Processing HandBrake Web (ID: n790h)
+2025-01-23 18:14:49,934 - INFO: Saved Docker Compose for HandBrake Web
+2025-01-23 18:14:49,934 - INFO: Processing HAProxy (ID: 9t6p5)
+2025-01-23 18:14:56,624 - INFO: Saved Docker Compose for HAProxy
+2025-01-23 18:14:56,624 - INFO: Processing Hasura (ID: ug603)
+2025-01-23 18:15:02,936 - INFO: Saved Docker Compose for Hasura
+2025-01-23 18:15:02,936 - INFO: Processing Hatsu (ID: 59ke6)
+2025-01-23 18:15:11,425 - INFO: Saved Docker Compose for Hatsu
+2025-01-23 18:15:11,426 - INFO: Processing HedgeDoc (ID: 69ss1)
+2025-01-23 18:15:17,683 - INFO: Saved Docker Compose for HedgeDoc
+2025-01-23 18:15:17,683 - INFO: Processing Hemmelig (ID: 44t2w)
+2025-01-23 18:15:26,032 - INFO: Saved Docker Compose for Hemmelig
+2025-01-23 18:15:26,032 - INFO: Processing HeyForm (ID: 676fb)
+2025-01-23 18:15:36,300 - INFO: Saved Docker Compose for HeyForm
+2025-01-23 18:15:36,300 - INFO: Processing Hi.Events (ID: bb675)
+2025-01-23 18:15:44,959 - INFO: Saved Docker Compose for Hi.Events
+2025-01-23 18:15:44,959 - INFO: Processing Hiccup (ID: z83a2)
+2025-01-23 18:15:52,528 - INFO: Saved Docker Compose for Hiccup
+2025-01-23 18:15:52,530 - INFO: Processing Hoarder App (ID: 92i3y)
+2025-01-23 18:15:55,171 - INFO: Saved Docker Compose for Hoarder App
+2025-01-23 18:15:55,171 - INFO: Processing HoloPlay (ID: 0rw67)
+2025-01-23 18:16:05,410 - INFO: Saved Docker Compose for HoloPlay
+2025-01-23 18:16:05,410 - INFO: Processing Homarr (ID: f199w)
+2025-01-23 18:16:14,084 - INFO: Saved Docker Compose for Homarr
+2025-01-23 18:16:14,085 - INFO: Processing Home Assistant (ID: xh690)
+2025-01-23 18:16:23,642 - INFO: Saved Docker Compose for Home Assistant
+2025-01-23 18:16:23,642 - INFO: Processing HomeBox (SysAdminsMedia) (ID: l510t)
+2025-01-23 18:16:30,880 - INFO: Saved Docker Compose for HomeBox (SysAdminsMedia)
+2025-01-23 18:16:30,880 - INFO: Processing HomeGallery (ID: 64v1y)
+2025-01-23 18:16:38,463 - INFO: Saved Docker Compose for HomeGallery
+2025-01-23 18:16:38,463 - INFO: Processing HomelabOS (ID: l384l)
+2025-01-23 18:16:45,915 - INFO: Saved Docker Compose for HomelabOS
+2025-01-23 18:16:45,915 - INFO: Processing Homepage by gethomepage (ID: y24t9)
+2025-01-23 18:16:50,521 - INFO: Saved Docker Compose for Homepage by gethomepage
+2025-01-23 18:16:50,521 - INFO: Processing Homer (ID: 9wj51)
+2025-01-23 18:16:58,211 - INFO: Saved Docker Compose for Homer
+2025-01-23 18:16:58,212 - INFO: Processing Hoppscotch Community Edition (ID: 094ek)
+2025-01-23 18:17:05,700 - INFO: Saved Docker Compose for Hoppscotch Community Edition
+2025-01-23 18:17:05,700 - INFO: Processing HortusFox (ID: 2h2a6)
+2025-01-23 18:17:11,892 - INFO: Saved Docker Compose for HortusFox
+2025-01-23 18:17:11,892 - INFO: Processing Hubleys (ID: 0p1o3)
+2025-01-23 18:17:21,205 - INFO: Saved Docker Compose for Hubleys
+2025-01-23 18:17:21,205 - INFO: Processing Huly (ID: 644mk)
+2025-01-23 18:17:29,325 - INFO: Saved Docker Compose for Huly
+2025-01-23 18:17:29,325 - INFO: Processing HyperSwitch (ID: 5b6v4)
+2025-01-23 18:17:37,591 - INFO: Saved Docker Compose for HyperSwitch
+2025-01-23 18:17:37,591 - INFO: Processing Iguana (ID: 4x0l3)
+2025-01-23 18:17:44,720 - INFO: Saved Docker Compose for Iguana
+2025-01-23 18:17:44,720 - INFO: Processing IHateMoney (ID: z173t)
+2025-01-23 18:17:49,668 - INFO: Saved Docker Compose for IHateMoney
+2025-01-23 18:17:49,668 - INFO: Processing imgproxy (ID: 04j2e)
+2025-01-23 18:17:57,664 - INFO: Saved Docker Compose for imgproxy
+2025-01-23 18:17:57,664 - INFO: Processing Immich Kiosk (ID: n0r92)
+2025-01-23 18:18:06,891 - INFO: Saved Docker Compose for Immich Kiosk
+2025-01-23 18:18:06,891 - INFO: Processing Immich (ID: 056bs)
+2025-01-23 18:18:17,460 - INFO: Saved Docker Compose for Immich
+2025-01-23 18:18:17,460 - INFO: Processing INGInious (ID: 9e3f0)
+2025-01-23 18:18:29,886 - INFO: Saved Docker Compose for INGInious
+2025-01-23 18:18:29,886 - INFO: Processing Input (ID: 506mv)
+2025-01-23 18:18:35,507 - INFO: Saved Docker Compose for Input
+2025-01-23 18:18:35,507 - INFO: Processing InspIRCd (ID: d628i)
+2025-01-23 18:18:43,693 - INFO: Saved Docker Compose for InspIRCd
+2025-01-23 18:18:43,694 - INFO: Processing Invidious (ID: 661fs)
+2025-01-23 18:18:52,358 - INFO: Saved Docker Compose for Invidious
+2025-01-23 18:18:52,358 - INFO: Processing Invoice Ninja (ID: 7l10h)
+2025-01-23 18:19:02,592 - INFO: Saved Docker Compose for Invoice Ninja
+2025-01-23 18:19:02,592 - INFO: Processing InvoiceShelf (ID: 3fp06)
+2025-01-23 18:19:08,532 - INFO: Saved Docker Compose for InvoiceShelf
+2025-01-23 18:19:08,532 - INFO: Processing iSponsorBlockTV (ID: 198co)
+2025-01-23 18:19:17,950 - INFO: Saved Docker Compose for iSponsorBlockTV
+2025-01-23 18:19:17,950 - INFO: Processing Isso (ID: v407j)
+2025-01-23 18:19:24,967 - INFO: Saved Docker Compose for Isso
+2025-01-23 18:19:24,967 - INFO: Processing JARR (ID: 80xz6)
+2025-01-23 18:19:33,460 - INFO: Saved Docker Compose for JARR
+2025-01-23 18:19:33,460 - INFO: Processing Jellyfin (ID: 29vv7)
+2025-01-23 18:19:44,781 - INFO: Saved Docker Compose for Jellyfin
+2025-01-23 18:19:44,781 - INFO: Processing Jellyseerr (ID: 624qe)
+2025-01-23 18:19:57,412 - INFO: Saved Docker Compose for Jellyseerr
+2025-01-23 18:19:57,413 - INFO: Processing Jelu (ID: 4km04)
+2025-01-23 18:20:05,321 - INFO: Saved Docker Compose for Jelu
+2025-01-23 18:20:05,321 - INFO: Processing Jina (ID: 3p9e1)
+2025-01-23 18:20:13,051 - INFO: Saved Docker Compose for Jina
+2025-01-23 18:20:13,051 - INFO: Processing Jitsi Meet (ID: 807is)
+2025-01-23 18:20:21,700 - INFO: Saved Docker Compose for Jitsi Meet
+2025-01-23 18:20:21,700 - INFO: Processing Judge0 CE (ID: f59i6)
+2025-01-23 18:20:31,829 - INFO: Saved Docker Compose for Judge0 CE
+2025-01-23 18:20:31,829 - INFO: Processing Jump (ID: l9s06)
+2025-01-23 18:20:41,002 - INFO: Saved Docker Compose for Jump
+2025-01-23 18:20:41,003 - INFO: Processing JupyterLab (ID: 841wa)
+2025-01-23 18:20:50,282 - INFO: Saved Docker Compose for JupyterLab
+2025-01-23 18:20:50,283 - INFO: Processing Just Short It! (ID: v36l1)
+2025-01-23 18:20:58,570 - INFO: Saved Docker Compose for Just Short It!
+2025-01-23 18:20:58,570 - INFO: Processing Karaoke Eternal (ID: 90i5o)
+2025-01-23 18:21:07,212 - INFO: Saved Docker Compose for Karaoke Eternal
+2025-01-23 18:21:07,212 - INFO: Processing Kasm Workspaces (ID: ua919)
+2025-01-23 18:21:16,377 - INFO: Saved Docker Compose for Kasm Workspaces
+2025-01-23 18:21:16,377 - INFO: Processing Kavita (ID: 5s39q)
+2025-01-23 18:21:23,170 - INFO: Saved Docker Compose for Kavita
+2025-01-23 18:21:23,170 - INFO: Processing Keila (ID: 39l3f)
+2025-01-23 18:21:28,928 - INFO: Saved Docker Compose for Keila
+2025-01-23 18:21:28,928 - INFO: Processing Kestra (ID: 212os)
+2025-01-23 18:21:40,414 - INFO: Saved Docker Compose for Kestra
+2025-01-23 18:21:40,414 - INFO: Processing Kill Bill (ID: 6v3y8)
+2025-01-23 18:21:51,410 - INFO: Saved Docker Compose for Kill Bill
+2025-01-23 18:21:51,410 - INFO: Processing KitchenOwl (ID: 9py39)
+2025-01-23 18:21:57,849 - INFO: Saved Docker Compose for KitchenOwl
+2025-01-23 18:21:57,849 - INFO: Processing Klaus (ID: a5v98)
+2025-01-23 18:22:07,994 - INFO: Saved Docker Compose for Klaus
+2025-01-23 18:22:07,995 - INFO: Processing Koblas (ID: 5n05e)
+2025-01-23 18:22:15,389 - INFO: Saved Docker Compose for Koblas
+2025-01-23 18:22:15,389 - INFO: Processing Koillection (ID: f36c9)
+2025-01-23 18:22:22,069 - INFO: Saved Docker Compose for Koillection
+2025-01-23 18:22:22,069 - INFO: Processing Komga (ID: 515hj)
+2025-01-23 18:22:29,922 - INFO: Saved Docker Compose for Komga
+2025-01-23 18:22:29,922 - INFO: Processing Kong (ID: 829sa)
+2025-01-23 18:22:42,204 - INFO: Saved Docker Compose for Kong
+2025-01-23 18:22:42,205 - INFO: Processing Kresus (ID: 94s3w)
+2025-01-23 18:22:49,437 - INFO: Saved Docker Compose for Kresus
+2025-01-23 18:22:49,437 - INFO: Processing Kyoo (ID: 688wd)
+2025-01-23 18:22:55,203 - INFO: Saved Docker Compose for Kyoo
+2025-01-23 18:22:55,204 - INFO: Processing Lago (ID: x23k6)
+2025-01-23 18:23:02,641 - INFO: Saved Docker Compose for Lago
+2025-01-23 18:23:02,641 - INFO: Processing Lama-Cleaner (ID: r2g74)
+2025-01-23 18:23:08,521 - INFO: Saved Docker Compose for Lama-Cleaner
+2025-01-23 18:23:08,521 - INFO: Processing Lancache (ID: t84z8)
+2025-01-23 18:23:17,979 - INFO: Saved Docker Compose for Lancache
+2025-01-23 18:23:17,979 - INFO: Processing Langfuse (ID: r866h)
+2025-01-23 18:23:25,129 - INFO: Saved Docker Compose for Langfuse
+2025-01-23 18:23:25,129 - INFO: Processing LanguageTool (ID: 854vy)
+2025-01-23 18:23:31,082 - INFO: Saved Docker Compose for LanguageTool
+2025-01-23 18:23:31,082 - INFO: Processing Leantime (ID: 6x9x8)
+2025-01-23 18:23:39,545 - INFO: Saved Docker Compose for Leantime
+2025-01-23 18:23:39,545 - INFO: Processing LedgerSMB (ID: w3z74)
+2025-01-23 18:23:48,341 - INFO: Saved Docker Compose for LedgerSMB
+2025-01-23 18:23:48,342 - INFO: Processing Lemmy (ID: 79a8c)
+2025-01-23 18:23:57,008 - INFO: Saved Docker Compose for Lemmy
+2025-01-23 18:23:57,008 - INFO: Processing lesma (ID: 1d2s7)
+2025-01-23 18:24:05,777 - INFO: Saved Docker Compose for lesma
+2025-01-23 18:24:05,777 - INFO: Processing Libre Translate (ID: 2m2g3)
+2025-01-23 18:24:12,983 - INFO: Saved Docker Compose for Libre Translate
+2025-01-23 18:24:12,983 - INFO: Processing LibrePhotos (ID: 0h5n5)
+2025-01-23 18:24:29,629 - INFO: Saved Docker Compose for LibrePhotos
+2025-01-23 18:24:29,629 - INFO: Processing LibreTime (ID: 2gz68)
+2025-01-23 18:24:37,057 - INFO: Saved Docker Compose for LibreTime
+2025-01-23 18:24:37,057 - INFO: Processing Lidarr (ID: a17h0)
+2025-01-23 18:24:44,209 - INFO: Saved Docker Compose for Lidarr
+2025-01-23 18:24:44,209 - INFO: Processing LidaTube (ID: c355i)
+2025-01-23 18:24:55,756 - INFO: Saved Docker Compose for LidaTube
+2025-01-23 18:24:55,756 - INFO: Processing Lighttpd (ID: 79sb9)
+2025-01-23 18:25:02,932 - INFO: Saved Docker Compose for Lighttpd
+2025-01-23 18:25:02,933 - INFO: Processing LinkAce (ID: 677kn)
+2025-01-23 18:25:11,467 - INFO: Saved Docker Compose for LinkAce
+2025-01-23 18:25:11,467 - INFO: Processing linkding (ID: 27no4)
+2025-01-23 18:25:19,872 - INFO: Saved Docker Compose for linkding
+2025-01-23 18:25:19,872 - INFO: Processing LinkStack (ID: 33pz4)
+2025-01-23 18:25:27,607 - INFO: Saved Docker Compose for LinkStack
+2025-01-23 18:25:27,607 - INFO: Processing LinkWarden (ID: 08c4x)
+2025-01-23 18:25:36,881 - INFO: Saved Docker Compose for LinkWarden
+2025-01-23 18:25:36,881 - INFO: Processing Listmonk (ID: 505mz)
+2025-01-23 18:25:48,680 - INFO: Saved Docker Compose for Listmonk
+2025-01-23 18:25:48,680 - INFO: Processing Litecart (ID: f27j2)
+2025-01-23 18:26:01,449 - INFO: Saved Docker Compose for Litecart
+2025-01-23 18:26:01,449 - INFO: Processing Litlyx (ID: 318nc)
+2025-01-23 18:26:08,714 - INFO: Saved Docker Compose for Litlyx
+2025-01-23 18:26:08,715 - INFO: Processing Livebook (ID: j9g07)
+2025-01-23 18:26:16,770 - INFO: Saved Docker Compose for Livebook
+2025-01-23 18:26:16,770 - INFO: Processing LiveStreamDVR (ID: q5n47)
+2025-01-23 18:26:23,788 - INFO: Saved Docker Compose for LiveStreamDVR
+2025-01-23 18:26:23,788 - INFO: Processing LMS (ID: 6le03)
+2025-01-23 18:26:33,481 - INFO: Saved Docker Compose for LMS
+2025-01-23 18:26:33,481 - INFO: Processing Localess (ID: 4lg79)
+2025-01-23 18:26:40,130 - INFO: Saved Docker Compose for Localess
+2025-01-23 18:26:40,130 - INFO: Processing Lodestone (ID: 886mm)
+2025-01-23 18:26:50,383 - INFO: Saved Docker Compose for Lodestone
+2025-01-23 18:26:50,383 - INFO: Processing Loomio (ID: p3z32)
+2025-01-23 18:27:00,086 - INFO: Saved Docker Compose for Loomio
+2025-01-23 18:27:00,086 - INFO: Processing Lowdefy (ID: 01dt7)
+2025-01-23 18:27:10,783 - INFO: Saved Docker Compose for Lowdefy
+2025-01-23 18:27:10,784 - INFO: Processing Lstu (ID: f99j4)
+2025-01-23 18:27:19,213 - INFO: Saved Docker Compose for Lstu
+2025-01-23 18:27:19,213 - INFO: Processing LubeLogger (ID: 77d0l)
+2025-01-23 18:27:25,729 - INFO: Saved Docker Compose for LubeLogger
+2025-01-23 18:27:25,730 - INFO: Processing Lychee (ID: 6l33x)
+2025-01-23 18:27:34,220 - INFO: Saved Docker Compose for Lychee
+2025-01-23 18:27:34,220 - INFO: Processing Lynx (ID: h798x)
+2025-01-23 18:27:40,857 - INFO: Saved Docker Compose for Lynx
+2025-01-23 18:27:40,857 - INFO: Processing Mafl (ID: 2y4m7)
+2025-01-23 18:27:48,238 - INFO: Saved Docker Compose for Mafl
+2025-01-23 18:27:48,238 - INFO: Processing Mailcow (ID: 074qb)
+2025-01-23 18:27:58,664 - INFO: Saved Docker Compose for Mailcow
+2025-01-23 18:27:58,665 - INFO: Processing Mailu (ID: y99h1)
+2025-01-23 18:28:07,681 - INFO: Saved Docker Compose for Mailu
+2025-01-23 18:28:07,682 - INFO: Processing Mainsail (ID: 709nw)
+2025-01-23 18:28:14,287 - INFO: Saved Docker Compose for Mainsail
+2025-01-23 18:28:14,287 - INFO: Processing Maloja (ID: 118fn)
+2025-01-23 18:28:22,293 - INFO: Saved Docker Compose for Maloja
+2025-01-23 18:28:22,293 - INFO: Processing Manage My Damn Life (ID: 4kp38)
+2025-01-23 18:28:28,661 - INFO: Saved Docker Compose for Manage My Damn Life
+2025-01-23 18:28:28,661 - INFO: Processing Manticore Search (ID: 8r3d2)
+2025-01-23 18:28:35,358 - INFO: Saved Docker Compose for Manticore Search
+2025-01-23 18:28:35,358 - INFO: Processing Manyfold (ID: r365w)
+2025-01-23 18:28:54,419 - INFO: Saved Docker Compose for Manyfold
+2025-01-23 18:28:54,419 - INFO: Processing Mars Server (ID: 61h6c)
+2025-01-23 18:29:01,028 - INFO: Saved Docker Compose for Mars Server
+2025-01-23 18:29:01,028 - INFO: Processing Matchering (ID: 7mf50)
+2025-01-23 18:29:07,973 - INFO: Saved Docker Compose for Matchering
+2025-01-23 18:29:07,973 - INFO: Processing Mathesar (ID: 2ii51)
+2025-01-23 18:29:16,495 - INFO: Saved Docker Compose for Mathesar
+2025-01-23 18:29:16,495 - INFO: Processing Mattermost (ID: co155)
+2025-01-23 18:29:24,187 - INFO: Saved Docker Compose for Mattermost
+2025-01-23 18:29:24,187 - INFO: Processing Maybe (ID: 58uw6)
+2025-01-23 18:29:29,910 - INFO: Saved Docker Compose for Maybe
+2025-01-23 18:29:29,910 - INFO: Processing MediaCMS (ID: 79x4d)
+2025-01-23 18:29:39,754 - INFO: Saved Docker Compose for MediaCMS
+2025-01-23 18:29:39,754 - INFO: Processing Meelo (ID: 56n6b)
+2025-01-23 18:29:47,451 - INFO: Saved Docker Compose for Meelo
+2025-01-23 18:29:47,451 - INFO: Processing MeiliSearch (ID: 05e0x)
+2025-01-23 18:29:52,210 - INFO: Saved Docker Compose for MeiliSearch
+2025-01-23 18:29:52,210 - INFO: Processing Memos (ID: 26p5q)
+2025-01-23 18:29:58,326 - INFO: Saved Docker Compose for Memos
+2025-01-23 18:29:58,326 - INFO: Processing Mere Medical (ID: x085y)
+2025-01-23 18:30:06,611 - INFO: Saved Docker Compose for Mere Medical
+2025-01-23 18:30:06,611 - INFO: Processing Metabase (ID: d562e)
+2025-01-23 18:30:19,183 - INFO: Saved Docker Compose for Metabase
+2025-01-23 18:30:19,183 - INFO: Processing MeTube (ID: 15tg0)
+2025-01-23 18:30:25,830 - INFO: Saved Docker Compose for MeTube
+2025-01-23 18:30:25,830 - INFO: Processing Middleware (ID: 592qb)
+2025-01-23 18:30:33,121 - INFO: Saved Docker Compose for Middleware
+2025-01-23 18:30:33,122 - INFO: Processing mikochi (ID: 83kg4)
+2025-01-23 18:30:42,906 - INFO: Saved Docker Compose for mikochi
+2025-01-23 18:30:42,906 - INFO: Processing MindsDB (ID: c6p91)
+2025-01-23 18:30:48,450 - INFO: Saved Docker Compose for MindsDB
+2025-01-23 18:30:48,451 - INFO: Processing Mindwendel (ID: 84rb9)
+2025-01-23 18:30:54,315 - INFO: Saved Docker Compose for Mindwendel
+2025-01-23 18:30:54,315 - INFO: Processing Miniflux (ID: zx657)
+2025-01-23 18:31:04,290 - INFO: Saved Docker Compose for Miniflux
+2025-01-23 18:31:04,290 - INFO: Processing minimal-git-server (ID: ae396)
+2025-01-23 18:31:10,195 - INFO: Saved Docker Compose for minimal-git-server
+2025-01-23 18:31:10,196 - INFO: Processing Minio (ID: 51tp1)
+2025-01-23 18:31:16,991 - INFO: Saved Docker Compose for Minio
+2025-01-23 18:31:16,991 - INFO: Processing MiroTalk C2C (ID: 5z71a)
+2025-01-23 18:31:26,949 - INFO: Saved Docker Compose for MiroTalk C2C
+2025-01-23 18:31:26,949 - INFO: Processing MiroTalk P2P (ID: g4u21)
+2025-01-23 18:31:32,988 - INFO: Saved Docker Compose for MiroTalk P2P
+2025-01-23 18:31:32,988 - INFO: Processing MiroTalk SFU (ID: ii577)
+2025-01-23 18:31:41,712 - INFO: Saved Docker Compose for MiroTalk SFU
+2025-01-23 18:31:41,712 - INFO: Processing Misago (ID: q52o7)
+2025-01-23 18:31:52,285 - INFO: Saved Docker Compose for Misago
+2025-01-23 18:31:52,285 - INFO: Processing Misskey (ID: co804)
+2025-01-23 18:32:03,407 - INFO: Saved Docker Compose for Misskey
+2025-01-23 18:32:03,407 - INFO: Processing Mistborn (ID: y8y02)
+2025-01-23 18:32:12,819 - INFO: Saved Docker Compose for Mistborn
+2025-01-23 18:32:12,819 - INFO: Processing Mixpost (ID: 8m1g5)
+2025-01-23 18:32:24,808 - INFO: Saved Docker Compose for Mixpost
+2025-01-23 18:32:24,809 - INFO: Processing Mobilizon (ID: 6c4u9)
+2025-01-23 18:32:36,755 - INFO: Saved Docker Compose for Mobilizon
+2025-01-23 18:32:36,755 - INFO: Processing MongooseIM (ID: 0mt66)
+2025-01-23 18:32:44,088 - INFO: Saved Docker Compose for MongooseIM
+2025-01-23 18:32:44,090 - INFO: Processing Monica (ID: k4i62)
+2025-01-23 18:32:51,102 - INFO: Saved Docker Compose for Monica
+2025-01-23 18:32:51,102 - INFO: Processing motion.tools (Antragsgrün) (ID: mi352)
+2025-01-23 18:33:00,048 - INFO: Saved Docker Compose for motion.tools (Antragsgrün)
+2025-01-23 18:33:00,048 - INFO: Processing Motor Admin (ID: lq967)
+2025-01-23 18:33:06,359 - INFO: Saved Docker Compose for Motor Admin
+2025-01-23 18:33:06,359 - INFO: Processing Movim (ID: 576cu)
+2025-01-23 18:33:14,399 - INFO: Saved Docker Compose for Movim
+2025-01-23 18:33:14,399 - INFO: Processing multi-scrobbler (ID: 57tc8)
+2025-01-23 18:33:21,468 - INFO: Saved Docker Compose for multi-scrobbler
+2025-01-23 18:33:21,469 - INFO: Processing MyIP (ID: j984p)
+2025-01-23 18:33:29,786 - INFO: Saved Docker Compose for MyIP
+2025-01-23 18:33:29,786 - INFO: Processing Mylar3 (ID: s45u7)
+2025-01-23 18:33:38,694 - INFO: Saved Docker Compose for Mylar3
+2025-01-23 18:33:38,694 - INFO: Processing Navidrome Music Server (ID: y5q73)
+2025-01-23 18:33:46,531 - INFO: Saved Docker Compose for Navidrome Music Server
+2025-01-23 18:33:46,532 - INFO: Processing Neko (ID: 0ll15)
+2025-01-23 18:33:52,250 - INFO: Saved Docker Compose for Neko
+2025-01-23 18:33:52,250 - INFO: Processing NeonLink (ID: 7b2u9)
+2025-01-23 18:33:59,750 - INFO: Saved Docker Compose for NeonLink
+2025-01-23 18:33:59,750 - INFO: Processing Nginx Proxy Manager (ID: 800kp)
+2025-01-23 18:34:07,151 - INFO: Saved Docker Compose for Nginx Proxy Manager
+2025-01-23 18:34:07,152 - INFO: Processing Nginx (ID: 0d57a)
+2025-01-23 18:34:14,620 - INFO: Saved Docker Compose for Nginx
+2025-01-23 18:34:14,621 - INFO: Processing NocoDB (ID: 4ua74)
+2025-01-23 18:34:22,576 - INFO: Saved Docker Compose for NocoDB
+2025-01-23 18:34:22,576 - INFO: Processing Node RED (ID: h183p)
+2025-01-23 18:34:28,646 - INFO: Saved Docker Compose for Node RED
+2025-01-23 18:34:28,646 - INFO: Processing Note Mark (ID: n713g)
+2025-01-23 18:34:35,565 - INFO: Saved Docker Compose for Note Mark
+2025-01-23 18:34:35,565 - INFO: Processing Novu (ID: ut779)
+2025-01-23 18:34:43,559 - INFO: Saved Docker Compose for Novu
+2025-01-23 18:34:43,559 - INFO: Processing ntfy (ID: 83mz3)
+2025-01-23 18:34:50,868 - INFO: Saved Docker Compose for ntfy
+2025-01-23 18:34:50,868 - INFO: Processing OctoBot (ID: 334jk)
+2025-01-23 18:35:01,910 - INFO: Saved Docker Compose for OctoBot
+2025-01-23 18:35:01,910 - INFO: Processing Octobox (ID: k94j6)
+2025-01-23 18:35:06,799 - INFO: Saved Docker Compose for Octobox
+2025-01-23 18:35:06,799 - INFO: Processing Octoprint (ID: uy827)
+2025-01-23 18:35:15,594 - INFO: Saved Docker Compose for Octoprint
+2025-01-23 18:35:15,594 - INFO: Processing Ocular (ID: y343o)
+2025-01-23 18:35:23,410 - INFO: Saved Docker Compose for Ocular
+2025-01-23 18:35:23,410 - INFO: Processing Odoo (ID: 0c39l)
+2025-01-23 18:35:39,596 - INFO: Saved Docker Compose for Odoo
+2025-01-23 18:35:39,596 - INFO: Processing Offen (ID: qj713)
+2025-01-23 18:35:47,586 - INFO: Saved Docker Compose for Offen
+2025-01-23 18:35:47,586 - INFO: Processing OneDev (ID: 0nv45)
+2025-01-23 18:36:01,909 - INFO: Saved Docker Compose for OneDev
+2025-01-23 18:36:01,909 - INFO: Processing ONLYOFFICE (ID: 05y0q)
+2025-01-23 18:36:11,401 - INFO: Saved Docker Compose for ONLYOFFICE
+2025-01-23 18:36:11,401 - INFO: Processing Open Event Server (ID: zv546)
+2025-01-23 18:36:21,094 - INFO: Saved Docker Compose for Open Event Server
+2025-01-23 18:36:21,094 - INFO: Processing Open-Meteo (ID: 1sx69)
+2025-01-23 18:36:29,294 - INFO: Saved Docker Compose for Open-Meteo
+2025-01-23 18:36:29,294 - INFO: Processing Open QuarterMaster (ID: c659j)
+2025-01-23 18:36:37,802 - INFO: Saved Docker Compose for Open QuarterMaster
+2025-01-23 18:36:37,802 - INFO: Processing OpenBudgeteer (ID: 01dn7)
+2025-01-23 18:36:49,347 - INFO: Saved Docker Compose for OpenBudgeteer
+2025-01-23 18:36:49,347 - INFO: Processing Opengist (ID: 38g1h)
+2025-01-23 18:36:55,980 - INFO: Saved Docker Compose for Opengist
+2025-01-23 18:36:55,980 - INFO: Processing OpenProject (ID: j99q8)
+2025-01-23 18:37:05,833 - INFO: Saved Docker Compose for OpenProject
+2025-01-23 18:37:05,834 - INFO: Processing OpenRouteService (ID: 2b6g3)
+2025-01-23 18:37:18,982 - INFO: Saved Docker Compose for OpenRouteService
+2025-01-23 18:37:18,982 - INFO: Processing OpenSearch (ID: t75r8)
+2025-01-23 18:37:29,201 - INFO: Saved Docker Compose for OpenSearch
+2025-01-23 18:37:29,201 - INFO: Processing OpenSign (ID: 2p56g)
+2025-01-23 18:37:36,791 - INFO: Saved Docker Compose for OpenSign
+2025-01-23 18:37:36,791 - INFO: Processing OpenSlides (ID: 7g0h3)
+2025-01-23 18:37:46,088 - INFO: Saved Docker Compose for OpenSlides
+2025-01-23 18:37:46,088 - INFO: Processing OpenTrashmail (ID: 1p16y)
+2025-01-23 18:37:54,175 - INFO: Saved Docker Compose for OpenTrashmail
+2025-01-23 18:37:54,175 - INFO: Processing OpenTTD (ID: 73qy6)
+2025-01-23 18:38:02,135 - INFO: Saved Docker Compose for OpenTTD
+2025-01-23 18:38:02,135 - INFO: Processing Opik (ID: 57d6h)

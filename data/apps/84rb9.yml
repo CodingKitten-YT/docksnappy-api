@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  mindwendel:
+    image: 'mindwendel/mindwendel:latest' # Assuming there is an official Mindwendel image available
+    ports:
+      - "8080:80" # Expose Mindwendel on host port 8080
+    environment:
+      - JVM_OPTS=-Xms64M -Xmx512M # Example Java VM options, adjust as needed
+    restart: unless-stopped
+
+  redis:
+    image: 'redis:6'
+    healthcheck:
+      test: ["CMD", "REDIS-CLI", "PING"]
+      interval: 5s
+      timeout: 2s
+      retries: 10
+
+  database:
+    image: 'postgres:13'
+    environment:
+      - POSTGRES_DB=mindwendel
+      - POSTGRES_USER=mindwendel
+      - POSTGRES_PASSWORD=secret
+    volumes:
+      - 'database-data:/var/lib/postgresql' # Persist database data to a volume
+
+volumes:
+  database-data:

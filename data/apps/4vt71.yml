@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  onboarding_web:
+    image: chiefonboarding/frontend:latest
+    ports:
+      - "80:80" # Map HTTP port 80 on the host to port 80 in the container
+    depends_on:
+      - onboarding_api
+    environment:
+      - NODE_ENV=production
+
+  onboarding_api:
+    image: chiefonboarding/backend:latest
+    ports:
+      - "5000:5000" # Map internal HTTP port 5000 on the host to port 5000 in the container
+    depends_on:
+      - onboarding_db
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=onboarding_db
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - DB_NAME=onboarding_dev
+    expose:
+      - "5000" # Expose the HTTP port 5000 for the backend service (gunicorn)
+
+  onboarding_db:
+    image: postgres:13.2
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=onboarding_dev
+    volumes:
+      - onboarding-db-data:/var/lib/postgresql/data
+
+volumes:
+  onboarding-db-data:
+    driver: local

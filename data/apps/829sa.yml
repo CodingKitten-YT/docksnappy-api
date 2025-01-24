@@ -1,0 +1,82 @@
+version: '3'
+
+services:
+  kong:
+    image: kong:latest
+    ports:
+      - "8000:8000" # HTTP endpoint exposed to the host
+      - "8443:8443" # HTTPS endpoint with self-signed certificates (if enabled)
+    dependencies:
+      - nginx
+      - postgres
+    environment:
+      KONG_DB_HOST: db
+      KONG_DB_NAME: kong
+      KONG_DB_USER: kong
+      KONG_DB_PASSWORD: change_this_password
+      KONG_PG_EXTENSIONS: "citext,hstore"
+      KONG_PROXY_LISTEN: "0.0.0.0:8000"
+      KONG_ADMIN_ACCESS_API: "allow"
+    volumes:
+      - ./data:/data
+      - ./log:/var/log/kong
+    depends_on:
+      - postgres
+      - kong-admin
+
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: kong
+      POSTGRES_USER: kong
+      POSTGRES_PASSWORD: change_this_password
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kong"]
+      timeout: 10s
+      retries: 5
+
+  nginx:
+    image: kong:latest
+    depends_on:
+      - kong
+    ports:
+      - "5678:5678" # Admin API exposed to the host (only for internal use)
+
+  kong-admin:
+    image: kong:latest
+    ports:
+      - "8001:8001" # Kong admin API endpoint exposed to the host
+    environment:
+      KONG_ADMIN_LISTEN: "0.0.0.0:8001"
+      KONG_ADMIN_ACCESS_API: "allow"
+    depends_on:
+      - kong
+
+  consul:
+    image: hashicorp/consul:latest
+    ports:
+      - "8300-8302:8300-8302" # Consul UI and RPC
+      - "8500:8500"           # Consul DNS, HTTP API, Serf LAN, WATCH, gossip etc.
+    environment:
+      - CONSUL_BIND_INTERFACE=eth0 (replace eth0 with your desired network interface)
+      - CONSUL_CLUSTER_ADVERTISE=kong-consul-cluster (replace with your cluster name)
+      - CONSUL_DATA_DIR=/tmp/consul (optional, for data persistence)
+    volumes:
+      - ./data/consul:/tmp/consul
+
+  kong-service-consul:
+    image: kong:latest
+    environment:
+      KONG_SERVICE_PLUGIN: "true"
+      KONG_SERVICE_PLUGIN_OPTIONS: "consul"
+      KONG_CONSUL_HOST: consul
+      KONG_REGISTRATION: "MANUAL"
+    depends_on:
+      - kong
+      - consul
+
+networks:
+  default:
+    driver: bridge

@@ -1,0 +1,22 @@
+version: '3'
+services:
+  gladys:
+    image: gladysio/gladys:latest
+    container_name: gladys
+    environment:
+      - GLADYS_LANGUAGE=en
+      # Optional, set your timezone e.g. Europe/Paris
+      - TZ=Europe/Paris
+    ports:
+      - "8081:8080" # Expose the web interface on port 8081 of the host
+    volumes:
+      - "./config:/config" # Mount your local config directory to the container
+      - "./gladys_data:/var/lib/gladys" # Mount a data volume for Gladys data persistence
+      - "./logs:/var/log/gladys" # Optional, mount for logs (useful for debugging)
+    restart: unless-stopped # Automatically restart on failure
+    networks:
+      - gladys_network
+
+networks:
+  gladys_network:
+    driver: bridge

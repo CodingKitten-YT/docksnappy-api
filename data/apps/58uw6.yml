@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  app:
+    image: maybe/maybe:latest # Use the official Maybe image from Docker Hub
+    ports:
+      - "4000:4000" # Expose the default port Maybe runs on (can be changed if different)
+    environment:
+      - JVM_OPTS=-Xmx8g -Xms4g # Set Java heap size (adjust as needed for your application)
+    volumes:
+      - maybe-data:/var/lib/maybe # Map a volume for data persistence
+
+  db:
+    image: postgres:latest # Use the official PostgreSQL image from Docker Hub
+    environment:
+      - POSTGRES_USER=maybe
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=maybe
+    volumes:
+      - postgres-data:/var/lib/postgresql # Map a volume for database data persistence
+
+  redis:
+    image: redis:latest # Use the official Redis image from Docker Hub
+    ports:
+      - "6379:6379" # Expose the default port Redis runs on (can be changed if different)
+
+volumes:
+  maybe-data:
+  postgres-data:

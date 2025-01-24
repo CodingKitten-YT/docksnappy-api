@@ -1,42 +1,85 @@
 version: '3.8'
-
 services:
-  airflow:
-    image: apache/airflow:2.5.0
-    container_name: airflow
-    restart: unless-stopped
-    ports:
-      - "8080:8080" # Web UI on port 8080
-    environment:
-      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=mysql+mysqlconnector://airflow_user:airflow_password@mysql/airflow
-      - AIRFLOW__CORE__FERNET_KEY=your_fernet_key_here
-      - AIRFLOW__API__AUTH_BACKEND=airflow.api.auth.backend.basic_auth
-      - AIRFLOW__WEBSERVER__RBAC=True
-      - TZ=Etc/UTC # Replace with your timezone
+  postgres:
+    image: postgres:13
+    command: 'postgres -c "fsync=off" -c "full_page_writes=off"'
     volumes:
-      - ./airflow/dags:/opt/airflow/dags # Persistent DAGs storage
-      - ./airflow/logs:/opt/airflow/logs # Persistent logs storage
-      - ./airflow/plugins:/opt/airflow/plugins # Persistent plugins storage
+      - ./dags:/etc/airflow/dags
+      - postgres_data:/var/lib/postgresql/data
+    env_file: .env
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow_password
+      POSTGRES_DB: airflow
+    restart: on-failure
+
+  celery:
+    image: apache/airflow:2.3.0
     depends_on:
-      - mysql
-      - redis
-
-  mysql:
-    image: mysql:8.0
-    container_name: airflow_mysql
-    restart: unless-stopped
+      - postgres
+    command: celery worker -A airflow.celeryapp beeline_group:beeline_task --logfile
     environment:
-      MYSQL_ROOT_PASSWORD=root_password # Replace with a secure password
-      MYSQL_DATABASE=airflow
-      MYSQL_USER=airflow_user
-      MYSQL_PASSWORD=airflow_password
-    volumes:
-      - ./airflow/mysql:/var/lib/mysql # Persistent MySQL storage
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow_password@postgres/airflow
+      AIRFLOW__CORE__FERNET_KEY: '{}'
+      AIRFLOW__CELERY__RESULT_BACKEND: celeryresult.backend
+    expose:
+      - 4301
+    restart: on-failure
 
-  redis:
-    image: redis:alpine
-    container_name: airflow_redis
-    restart: unless-stopped
+  webserver:
+    image: apache/airflow:2.3.0
+    depends_on:
+      - celery
+    ports:
+      - "8080:8080"
+    environment:
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow_password@postgres/airflow
+      AIRFLOW__CORE__FERNET_KEY: '{}'
+      AIRFLOW__WEBSERVER__PROXY_USER: airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES=False
     volumes:
-      - ./airflow/redis:/data # Persistent Redis storage
+      - ./dags:/etc/airflow/dags
+    expose:
+      - 8080
+    restart: on-failure
+
+  scheduler:
+    image: apache/airflow:2.3.0
+    depends_on:
+      - postgres
+      - celery
+    command: airflow scheduler
+    environment:
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow_password@postgres/airflow
+      AIRFLOW__CORE__FERNET_KEY: '{}'
+    expose:
+      - 8081
+    restart: on-failure
+
+  floki_init:
+    image: apache/airflow-providers-extra:2.3.0
+    command: results db init
+    depends_on:
+      - postgres
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow_password
+      POSTGRES_DB: airflow
+    volumes:
+      - ./dags:/etc/airflow/dags
+    restart: no
+
+  celeryresult:
+    image: apache/airflow-providers-extra:2.3.0
+    command: celery result db root create beeline_group beeline_task --without-server -f /dev/null
+    depends_on:
+      - postgres
+    volumes:
+      - ./dags:/etc/airflow/dags
+    restart: no
+
+volumes:
+  postgres_data:

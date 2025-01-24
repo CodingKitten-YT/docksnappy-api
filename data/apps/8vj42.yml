@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  flexisip:
+    image: 'flexisip/flexisip:latest' # Use the official FlexiSIP image from Docker Hub
+    container_name: flexisip
+    ports:
+      - "5060-5070:5060-5070" # Expose the SIP and RTP ports host <-> container
+    environment:
+      TZ: "Europe/London" # Set the timezone, change to your desired timezone
+      LOG_LEVEL: "debug" # Set the logging level (info, debug, warn, error)
+    volumes:
+      - "./config:/etc/flexisip" # Mount a volume for configuration files
+      - "./certs:/etc/letsencrypt" # Mount a volume for Let's Encrypt certificates if using SSL
+      - "./logs:/var/log/flexisip" # Optional: Mount a volume for logs (useful for log rotation)
+    restart: unless-stopped # Restart the container on failure or if it exits
+
+  database:
+    image: 'postgres:latest' # Use the official PostgreSQL image from Docker Hub
+    container_name: flexisip_db
+    volumes:
+      - "./data:/var/lib/postgresql" # Mount a volume for the database data
+    environment:
+      POSTGRES_DB: "flexisip"
+      POSTGRES_USER: "flexisip"
+      POSTGRES_PASSWORD: "yourpassword" # Replace with your own strong password
+    restart: unless-stopped
+
+  redis:
+    image: 'redis:latest' # Use the official Redis image from Docker Hub
+    container_name: flexisip_redis
+    restart: unless-stopped
+
+networks:
+  default:
+    driver: bridge
+
+# Define a network for the services to communicate over
+networks:
+  flexisip_network:
+    driver: bridge
+
+# Optionally, define a custom network if you need more advanced networking features
+networks:
+  custom_network:
+    name: custom_network
+    driver: bridge
+
+services:
+  flexisip:
+    networks:
+      - flexisip_network
+  database:
+    networks:
+      - default
+  redis:
+    networks:
+      - default

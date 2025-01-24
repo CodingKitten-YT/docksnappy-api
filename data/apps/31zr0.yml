@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  gerbera:
+    image: 'githubcontainerregistry.com/gerbera/gerbera:latest' # Use the official Gerbera Docker image from GitHub Container Registry
+    container_name: gerbera
+    ports:
+      - "5050:5050" # Expose the default Gerbera port for SSL-Bridge (if needed)
+      - "6881:6881"  # Expose the default DHT port for Distributed Hash Table (if needed)
+    volumes:
+      - "./config:/etc/gerbera" # Mount your local configuration directory to the container's configuration directory
+      - "./share:/share"       # Mount a share directory from your host into the container (optional, for sharing files)
+    environment:
+      TZ: "Europe/Madrid"  # Set the timezone (change to your timezone)
+      GERBERA_USER: "gerbera" # Set the user for the Gerbera service (optional, can be customized)
+    restart: unless-stopped # Ensure Gerbera restarts automatically on container start
+
+networks:
+  gerberanetwork:
+    driver: bridge
+
+# Optionally, define a network for Gerbera to communicate with other containers if needed
+# networks:
+#   userdefinednetwork:
+#     external:
+#       name: someothernetwork

@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  hi_events_backend:
+    image: hi_events_backend:latest
+    build:
+      context: ./backend
+    ports:
+      - "5000:5000"
+    command: dotnet run --no-build --configuration Release
+    environment:
+      - DOTNET_ENVIRONMENT=Production
+    depends_on:
+      - hi_events_db
+    volumes:
+      - ./backend:/app
+    networks:
+      - hi_events_network
+
+  hi_events_frontend:
+    image: hi_events_frontend:latest
+    build:
+      context: ./frontend
+    ports:
+      - "80:80"
+    command: npm run start
+    environment:
+      - REACT_APP_BACKEND_URL=http://hi_events_backend:5000
+    depends_on:
+      - hi_events_backend
+    volumes:
+      - ./frontend:/app
+    networks:
+      - hi_events_network
+
+  hi_events_db:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=hi_events_db
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - hi_events_db_data:/var/lib/postgresql/data
+    networks:
+      - hi_events_network
+
+volumes:
+  hi_events_db_data:
+
+networks:
+  hi_events_network:
+    driver: bridge

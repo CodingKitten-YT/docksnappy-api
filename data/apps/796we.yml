@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  apprise:
+    image: apprisecasts/apprise:latest # Use the official Apprise image from Docker Hub
+    container_name: apprise
+    ports:
+      - "9001:9001" # Expose the default Apprise port for incoming events
+    volumes:
+      - ./apprise.config.yaml:/code/apprise.config.yaml # Mount your local Apprise configuration file if you have one
+      - apprise-data:/code/data # Volume for data storage (optional, but recommended)
+    restart: unless-stopped # Restart policy to keep the service running
+
+volumes:
+  apprise-data: {} # Define a named volume for storing Apprise data persistently

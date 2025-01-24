@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  graph_backend:
+    image: 'graph-vl/graph-backend:latest' # Use the appropriate tag if needed
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8080" # Expose the port you want to access the Graph API on host
+    environment:
+      GRAPH_ENV: production
+    command: >
+      graph-server & \
+      tail -f /dev/null
+    depends_on:
+      - db
+    volumes:
+      - ./backend:/app
+
+  db:
+    image: 'postgres:13' # Use the PostgreSQL version you need
+    command: >
+      postgres -c 'fsync=off' -c 'full_page_cache=on'
+    environment:
+      POSTGRES_DB: 'graphdb'
+      POSTGRES_USER: 'graphuser'
+      POSTGRES_PASSWORD: 'graphpassword'
+    volumes:
+      - graph_backend_db:/var/lib/postgresql/data
+
+  nginx:
+    image: 'nginx:stable'
+    ports:
+      - "80:80" # Map HTTP port to the host
+      - "443:443" # Map HTTPS port to the host if using SSL
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html
+      - nginx_conf:/etc/nginx
+      - graph_backend_nginx_log:/var/log/nginx/access.log
+      - graph_backend_nginx_upstream:/etc/nginx/conf.d/graph-backend.upstream
+    depends_on:
+      - graph_backend
+      - db
+      - redis # Uncomment if you are using Redis for session storage or caching
+
+  redis:
+    image: 'redis:6' # Use the Redis version you need
+    command: RedisStart --appendonly yes
+
+volumes:
+  graph_backend_db:
+  nginx_conf:
+  graph_backend_nginx_log:
+  graph_backend_nginx_upstream:
+
+networks:
+  default:
+    driver: bridge

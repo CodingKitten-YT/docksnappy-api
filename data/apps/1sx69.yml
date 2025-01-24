@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  openmeteo:
+    image: openmeteogroup/open-meteo:latest
+    command: open-meteo/daemon.sh
+    restart: unless-stopped
+    ports:
+      - "8000:8000" # HTTP API endpoint
+      - "5601:5601"  # Prometheus metrics (optional, if you want to monitor with Prometheus)
+      - "9090:9090"  # Grafana UI (optional, if you want to create dashboards using Open-Meteo data)
+    environment:
+      OPENMETEO_HOSTNAME: "0.0.0.0"
+      OPENMETEO_USER: "${OPENMETEO_USER:-openmeteo}"
+      OPENMETEO_PASSWORD: "${OPENMETEO_PASSWORD:-change_this_default_password}"
+      OPENMETEO_ENABLE_API: "true"
+    volumes:
+      - openmeteo-data:/var/lib/open-meteo
+      - openmeteo-config:/etc/open-meteo
+      - openmeteo-log:/var/log/open-meteo
+
+volumes:
+  openmeteo-data:
+  openmeteo-config:
+  openmeteo-log:

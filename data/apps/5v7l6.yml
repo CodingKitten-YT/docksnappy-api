@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  archivebox:
+    image: archivebox/archivebox:latest # Use the latest tag or a specific version
+    container_name: archivebox
+    volumes:
+      - ./config.yml:/app/config.yml # Mount your custom config.yml (optional, use if you have one)
+      - archivebox-data:/app/data    # Persistent volume for ArchiveBox data
+    restart: unless-stopped # Restart the container unless it's been explicitly stopped
+
+  archivebox-tor:
+    image: archivebox/tor:latest # Use the latest tag or a specific version
+    volumes:
+      - tor-data:/var/lib/tor     # Persistent volume for Tor data
+    environment:
+      - TOR_NO_LOG=1                # Disable Tor logs to reduce disk usage
+    restart: unless-stopped        # Restart the container unless it's been explicitly stopped
+
+  webui:
+    image: archivebox/webui:latest # Use the latest tag or a specific version
+    container_name: archivebox-webui
+    ports:
+      - "8000:8000"                    # Map WebUI port to host
+    volumes:
+      - ./webui.yml:/app/webui.yml # Mount your custom webui.yml (optional, use if you have one)
+    depends_on:
+      - archivebox
+
+volumes:
+  archivebox-data:
+  tor-data:
+
+networks:
+  default:
+    driver: bridge

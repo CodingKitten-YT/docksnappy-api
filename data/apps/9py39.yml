@@ -1,0 +1,41 @@
+version: '3.8'
+services:
+  kitchenowl_api:
+    image: kitchenowl/kitchenowl-api:latest
+    ports:
+      - "4000:4000"
+    environment:
+      KITCHENOWL__POSTGRES__HOST: db
+      KITCHENOWL__DB__USERNAME: kitchenowl
+      KITCHENOWL__DB__PASSWORD: a_very_secure_password
+      KITCHENOWL__DB__NAME: kitchenowl_dev
+    depends_on:
+      - db
+    command: --dbhost=db --loglevel=info
+
+  kitchenowl_web:
+    image: kitchenowl/kitchenowl-web:latest
+    ports:
+      - "8000:8000"
+    environment:
+      KITCHENOWL__SECRET_KEY: a_very_secret_key
+    depends_on:
+      - kitchenowl_api
+
+  db:
+    image: postgres:13
+    volumes:
+      - ./db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: kitchenowl
+      POSTGRES_PASSWORD: a_very_secure_password
+      POSTGRES_DB: kitchenowl_dev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kitchenowl"]
+      timeout: 10s
+      retries: 5
+
+# Optional, if you need to store your local changes in the database container
+volumes:
+  kitchenowl_db_data:
+    driver: local

@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  feedcord:
+    image: 'feedcord/feedcord'
+    container_name: 'FeedCord'
+    ports:
+      - '8080:8080' # Expose FeedCord's web UI on host port 8080
+    environment:
+      - TZ=Europe/London # Set the timezone, change to your desired timezone
+      - BOT_TOKEN=your_discord_bot_token # Your Discord bot token
+      - OAUTH2_CLIENT_ID=your_oauth2_client_id # Your OAuth2 client ID
+      - OAUTH2_CLIENT_SECRET=your_oauth2_client_secret # Your OAuth2 client secret
+      - FEEDCORD_DATABASE_URL=jdbc:mysql://db:3306/feedcord?useSSL=false # Database URL for MySQL
+      - FEEDCORD_LOGIN=login # Database login for MySQL
+      - FEEDCORD_PASSWORD=password # Database password for MySQL
+    volumes:
+      - './config:/etc/feedcord' # Mount your local config directory to the container for configuration files
+      - './cache:/root/.cache/minecraft' # Mount a cache directory for Minecraft server data (optional, depending on your usage)
+      - './logs:/var/log/feedcord' # Mount your local logs directory to the container for log files
+    depends_on:
+      - db # FeedCord depends on the 'db' service
+    restart: unless-stopped # Restart the container unless it has been explicitly stopped
+
+  db:
+    image: 'postgres:13'
+    container_name: 'FeedCordDB'
+    environment:
+      - POSTGRES_USER=feedcord
+      - POSTGES_PASSWORD=password # Change this to a strong password
+      - POSTGRES_DB=feedcord
+    volumes:
+      - './db:/var/lib/postgresql/data' # Mount your local db directory to the container for database data persistence
+    restart: unless-stopped # Restart the container unless it has been explicitly stopped
+
+networks:
+  default:
+    driver: bridge

@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  homer:
+    image: homerd/homer:latest
+    container_name: homer
+    ports:
+      - "80:80" # Map Homer's web UI to port 80 on the host
+    volumes:
+      - ./homer.yaml:/app/config/homer.yaml # Custom configuration file (if you have one)
+      - homer-data:/app/data     # Persistent data storage for Homer
+
+  postgres:
+    image: postgres:latest
+    volumes:
+      - postgres-data:/var/lib/postgresql # Persistent data storage for PostgreSQL
+      - ./pg_hba.conf:/etc/postgresql/main/pg_hba.conf  # Custom pg_hba.conf (for advanced users)
+      - ./postgresql.conf:/etc/postgresql/main/postgresql.conf # Custom postgresql.conf (for advanced users)
+    environment:
+      POSTGRES_DB: homer
+      POSTGRES_USER: homer
+      POSTGRES_PASSWORD: change_this_password
+
+  redis:
+    image: redis:latest
+    volumes:
+      - redis-data:/data
+
+volumes:
+  homer-data:
+  postgres-data:
+  redis-data:
+
+networks:
+  default:
+    driver: bridge

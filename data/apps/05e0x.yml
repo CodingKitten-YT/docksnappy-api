@@ -1,0 +1,26 @@
+version: '3.8'
+services:
+  meilisearch:
+    image: meilisearch/meilisearch:latest
+    container_name: meilisearch
+    ports:
+      - "7701:7701" # HTTP API
+      - "7543:7543" # Dashboard
+    command: /run.sh dockerized
+    volumes:
+      - ./data:/data
+      - ./logs:/log
+    environment:
+      MEILISEARCH_HOST: '0'
+      MEILISEARCH_PORT: '7701'
+    resources:
+      limits:
+        memory: 2G
+      reservations:
+        memory: 512M
+    networks:
+      - meilinet
+
+networks:
+  meilinet:
+    driver: bridge

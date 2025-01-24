@@ -1,0 +1,30 @@
+version: '3.8'
+services:
+  ghostfolio:
+    image: ghostfolio/ghostfolio:latest  # Use the official Ghostfolio image from Docker Hub
+    container_name: ghostfolio
+    ports:
+      - "8080:3000"  # Map the default Ghostfolio port to host port 8080 for web access
+    restart: unless-stopped  # Ensure the container restarts automatically on failure
+    volumes:
+      - "./data:/var/lib/ghostfolio"  # Persist data to a local directory (create this directory if it doesn't exist)
+      - "./config:/var/opt/ghostfolio"  # Persist configuration files to a local directory (create this directory if it doesn't exist)
+    environment:
+      - TZ=Your/Timezone  # Set the timezone, e.g., "America/New_York"
+    depends_on:
+      - db
+
+  db:
+    image: postgres:13  # Use the official PostgreSQL image
+    container_name: ghostfolio_db
+    volumes:
+      - "./dbdata:/var/lib/postgresql"  # Persist database data to a local directory (create this directory if it doesn't exist)
+    environment:
+      - POSTGRES_DB=ghostfolio  # The name of the database
+      - POSTGRES_USER=ghostfolio  # The default PostgreSQL user
+      - POSTGRES_PASSWORD=changeit  # Set your own strong password
+    restart: unless-stopped
+
+networks:
+  ghostfolio_net:
+    driver: bridge

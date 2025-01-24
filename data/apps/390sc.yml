@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  chartbrewer:
+    image: chartbrewer/chartbrewer:latest # Use the official Chartbrew image from Docker Hub
+    container_name: chartbrewer
+    ports:
+      - "5000:5000" # Expose the Chartbrew server on host port 5000
+    volumes:
+      - ./chartbrewer-data:/data # Mount a volume for Chartbrew data persistence
+      - ./chartbrewer-config:/etc/chartbrewer # Mount a volume for Chartbrew configuration files
+    environment:
+      - JAVA_OPTS="-Xms512M -Xmx512M" # Set initial and max heap size to 512MB
+      - SERVER_PORT=5000 # Set the server port
+      - DB_DRIVER=org.postgresql.Driver # Database driver class for JDBC
+      - DB_CONNECTION_STRING=jdbc:postgresql://db:5432/chartbrewer # Database connection string
+      - DB_USERNAME=user # Database username
+      - DB_PASSWORD=password # Database password
+    depends_on:
+      - db
+
+  postgres:
+    image: postgres:latest # Use the official PostgreSQL image from Docker Hub
+    container_name: chartbrewer_db
+    environment:
+      - POSTGRES_DB=chartbrewer # Database name
+      - POSTGRES_USER=user # Database username
+      - POSTGRES_PASSWORD=password # Database password
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data # Mount a volume for PostgreSQL data persistence
+    ports:
+      - "5432:5432" # Expose the PostgreSQL server on host port 5432
+
+networks:
+  default:
+    name: chartbrewer_network

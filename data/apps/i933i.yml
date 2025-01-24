@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  automatisch_web:
+    image: automatisch/automatisch-web:latest
+    ports:
+      - "8001:80"
+    environment:
+      - DJANGO_SETTINGS_MODULE=automatisch.settings
+      - SECRET_KEY=your_secret_key
+      - DATABASE_URL=postgres://user:password@db:5432/dbname
+      # Add other environment variables as needed
+    depends_on:
+      - automatisch_db
+    volumes:
+      - ./data:/data
+
+  automatisch_worker:
+    image: automatisch/automatisch-worker:latest
+    environment:
+      - INSTALL_POSTGRES=True
+      - DATABASE_URL=postgres://user:password@db:5432/dbname
+      # Add other environment variables as needed
+    depends_on:
+      - automatisch_db
+
+  automatisch_db:
+    image: postgres:13
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=dbname
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
+      timeout: 10s
+      retries: 5
+
+  automatisch_redis:
+    image: redis:6-alpine
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -h 0 ping"]
+      timeout: 10s
+      retries: 5
+
+  automatisch_mailhog:
+    image: mailhog/mailhog:latest
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    environment:
+      - HOST_EMAIL=admin@automatisch.local
+
+  automatisch_celery_beat:
+    image: automatisch/automatisch-worker:latest
+    command: celery -A automatisch worker beat --loglevel=info
+    depends_on:
+      - automatisch_db
+
+  automatisch_celery_worker:
+    image: automatisch/automatisch-worker:latest
+    command: celery -A automatisch worker consumer --loglevel=info
+    depends_on:
+      - automatisch_db
+
+networks:
+  default:
+    name: automatisch_net

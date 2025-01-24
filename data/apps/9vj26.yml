@@ -1,0 +1,21 @@
+version: '3.8'
+services:
+  dashy:
+    image: dasherdecker/dashy:latest
+    container_name: dashy
+    ports:
+      - "80:3000" # Host:Container
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/London  # Set your timezone, e.g., for UTC: TZ=UTC
+    volumes:
+      - ./dashy:/data/dashyd
+      - ./dashy/config:/root/.config/dashy
+      - ./dashy/data:/data/dashy/data
+      - ./dashy/addons:/data/dashy/addons
+    networks:
+      - homeassistant
+
+networks:
+  homeassistant:
+    driver: bridge

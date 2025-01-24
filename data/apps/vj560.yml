@@ -1,15 +1,13 @@
 version: '3.8'
-
 services:
   apache:
     image: httpd:latest
-    container_name: apache
-    restart: unless-stopped
     ports:
-      - "80:80"   # HTTP port
-      - "443:443" # HTTPS port (if needed)
+      - "80:80" # Map HTTP port 80 on the host to port 80 in the container
     volumes:
-      - ./apache/html:/usr/local/apache2/htdocs # Serve static files from ./apache/html
-      - ./apache/config:/usr/local/apache2/conf # Custom Apache configuration
-    environment:
-      - TZ=Etc/UTC # Replace with your timezone
+      - ./data:/usr/local/apache2/htdocs # Mount a local directory (data) to the Apache document root
+      - apache_logdir:/var/log/httpd # Use a Named Volume for logs
+    restart: unless-stopped # Restart the container unless it has been explicitly stopped
+
+volumes:
+  apache_logdir:

@@ -1,0 +1,35 @@
+version: '3'
+services:
+  nocodb:
+    image: 'nocodb/nocodb:latest' # or use a specific version like 'nocodb/nocodb:v0.8.1'
+    container_name: nocodb
+    ports:
+      - "8080:http" # HTTP port, accessible from the host
+      - "4060:ws"     # WebSocket port for real-time features (optional)
+    volumes:
+      - nocodb_data:/var/lib/nocodb
+      - ./sqlite.db:/database
+    environment:
+      POSTGRES_DB: 'nocodb'
+      POSTGRES_USER: 'admin'
+      POSTGRES_PASSWORD: 'admin' # You should change this to a strong password
+    networks:
+      - nocodb-network
+
+  postgres:
+    image: postgres:latest
+    volumes:
+      - nocodb_data:/var/lib/postgresql
+    environment:
+      POSTGRES_DB: 'nocodb'
+      POSTGRES_USER: 'admin'
+      POSTGRES_PASSWORD: 'admin' # Same password as above, or set it with an environment variable for security
+    networks:
+      - nocodb-network
+
+volumes:
+  nocodb_data:
+    driver: 'local'
+
+networks:
+  nocodb-network:

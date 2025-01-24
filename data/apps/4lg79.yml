@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+  app:
+    image: lesscss/lesscss:latest
+    ports:
+      - "8080:8080" # Expose the Less server on port 8080
+    volumes:
+      - ./src:/app/src
+      - ./dist:/app/dist
+    command: lessc --source-map --modify-vinyl-files ./src/less/*.less <= $TmpDir/\* @watch
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80" # Map port 80 to the container for Nginx
+      - "443:443" # Map port 443 to the container for Nginx with HTTPS (if using SSL)
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginxy/ssl:/etc/nginx/ssl
+      - app:/app
+    depends_on:
+      - app
+    networks:
+      - localness
+
+networks:
+  localness:
+    driver: bridge

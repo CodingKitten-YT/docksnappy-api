@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  matching_api:
+    image: matching_service:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8080" # Expose the port the API runs on inside the container (default is 8080)
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_USER=matching
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=matching_db
+    depends_on:
+      - db
+    networks:
+      - backend
+
+  postgres:
+    image: postgres:13
+    command: 'postgres -c "fsync=off"' # Improve performance by disabling fsync
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: matching
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: matching_db
+    networks:
+      - backend
+
+  redis:
+    image: redis:6-alpine
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
+
+# Define named volumes for persistence
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  backend:

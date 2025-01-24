@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  lago-server:
+    image: "lagoapi/lago:latest" # Use a specific tag if needed
+    command: /run.sh
+    ports:
+      - "5601:5601" # HTTP Basic Auth UI
+      - "9000:9000" # Lago API (WebSocket and REST)
+    environment:
+      LAGO_DB_TYPE: "postgresql"
+      LAGO_DB_HOST: "db"
+      LAGO_DB_PORT: "5432"
+      LAGO_DB_USER: "lago"
+      LAGO_DB_PASSWORD: "lago_password"
+      LAGO_DB_NAME: "lago"
+      LAGO_SERVER_HOST: "0.0.0.0"
+      LAGO_SERVER_PORT: "9000"
+      LAGO_SECRET_KEY: "secret_key" # Change this to a secure, random secret key
+      LAGO_ADMIN_USERNAME: "admin"
+      LAGO_ADMIN_PASSWORD: "admin_password"
+      LAGO_MAX_CLIENTS: "1000"
+    volumes:
+      - "./data/lago:/var/lib/lago"
+    depends_on:
+      - lago-db
+    networks:
+      - lago-network
+
+  lago-db:
+    image: "postgres:latest" # Use a specific tag if needed
+    environment:
+      POSTGRES_DB: "lago"
+      POSTGRES_USER: "lago"
+      POSTGRES_PASSWORD: "lago_password"
+    volumes:
+      - "./data/lago-db:/var/lib/postgresql/data"
+    networks:
+      - lago-network
+
+networks:
+  lago-network:
+    driver: bridge

@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  koi_collection_web:
+    image: koi_collection/koi_collection_web:latest
+    ports:
+      - "5000:5000"
+    environment:
+      - SERVICE_NAME=koi_collection_web
+      - SERVICE_ENVIRONMENT=production
+    depends_on:
+      - koi_collection_db
+    networks:
+      - koi_network
+
+  koi_collection_api:
+    image: koi_collection/koi_collection_api:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - SERVICE_NAME=koi_collection_api
+      - SERVICE_ENVIRONMENT=production
+      - DATABASE_HOST=koi_collection_db
+      - DATABASE_USER=coiuser
+      - DATABASE_PASSWORD=coipassword
+      - DATABASE_NAME=koi_collection_db
+    depends_on:
+      - koi_collection_db
+    networks:
+      - koi_network
+
+  koi_collection_db:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=coiuser
+      - POSTGES_PASSWORD=coipassword
+      - POSTGRES_DB=koi_collection_db
+    volumes:
+      - koi_collection_db_data:/var/lib/postgresql/data
+    networks:
+      - koi_network
+
+volumes:
+  koi_collection_db_data:
+
+networks:
+  koi_network:

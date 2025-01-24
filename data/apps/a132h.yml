@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  bitwarden_server:
+    image: 'bitwarden/server:latest' # Use a specific version if needed, e.g., 'bitwarden/server:2021.11.4'
+    container_name: bitwarden
+    ports:
+      - "80:80" # HTTP
+      - "443:443" # HTTPS (use with a TLS certificate)
+    environments:
+      - SECRET_KEY=$(openssl rand -base64 32) # Generate a random secret key
+      - BW_DB_HOST=db
+      - BW_DB_NAME=bitwarden_rw
+      - BW_DB_USER=bitwarden
+      - BW_DB_PASSWORD=bitwarden
+      - BW_SERVER_HOST=0.0.0.0 # Allows access to Bitwarden from the host machine
+      - BW_SERVER_PROTOCOL=HTTPS # Use HTTP if you are not using SSL
+    volumes:
+      - 'bitwarden:/data' # Persistent storage for the database
+      - 'bitwarden_server_data:/data' # Persistent storage for application data
+    restart: unless-stopped # Auto-restart on failure or system shutdown
+    networks:
+      - bitwarden_net
+
+  postgresql:
+    image: 'postgres:latest' # Use a specific version if needed, e.g., 'postgres:13'
+    volumes:
+      - 'bitwarden_db_data:/var/lib/postgresql' # Persistent storage for the PostgreSQL database
+    environments:
+      - POSTGRES_DB=bitwarden_rw
+      - POSTGRES_USER=bitwarden
+      - POSTGRES_PASSWORD=bitwarden
+    networks:
+      - bitwarden_net
+
+volumes:
+  bitwarden:
+  bitwarden_server_data:
+  bitwarden_db_data:
+
+networks:
+  bitwarden_net:

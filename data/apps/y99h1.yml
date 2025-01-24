@@ -1,0 +1,40 @@
+version: '3.8'
+services:
+  mailu:
+    image: mailu/mailu:latest  # or use a specific version like mailu/mailu:2.7.1-python3.8
+    container_name: mailu
+    environment:
+      MAILU_ADMINUSERNAME: admin
+      MAILU_ADMINPASSWORD: password
+      MAILU_DATABASE_ENGINE: postgres
+      MAILU_POSTGRES_DB: mailu
+      MAILU_POSTGRES_USER: mailu
+      MAILU_POSTGRES_PASSWORD: mailupassword
+      MAILHARNESS_ENABLE: 'true'  # Optional: to use MailHarness (Mailu's built-in test suite)
+      SMTP_IN_MEMORY: 'false'  # Change to 'true' if you want to use an in-memory store for SMTP commands (useful for testing)
+    ports:
+      - "8080:8080"  # Web UI port
+      - "5871:5871"  # SMTP submission port (choose a free port on your host)
+      - "4651:465"   # SMTP SSL/TLS port (choose a free port on your host)
+    volumes:
+      - './mailu/:/data'  # Mount this directory to persist emails and configurations
+      - '/var/log/mailu/mailu.log:/var/log/mailu/mailu.log'  # Optional: for logging (you can remove this if you prefer to keep logs inside the container)
+    networks:
+      - mailunetwork
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:latest  # or use a specific version like postgres:13-alpine
+    environment:
+      POSTGRES_DB: mailu
+      POSTGRES_USER: mailu
+      POSTGRES_PASSWORD: mailupassword
+    volumes:
+      - './mailu/data/db:/var/lib/postgresql/data'  # Mount this directory to persist the database data
+    networks:
+      - mailunetwork
+
+networks:
+  mailunetwork:
+    driver: bridge

@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+  bitpoll:
+    image: 'bitpoll/bitpoll:latest' # Use the official or desired tag
+    container_name: bitpoll
+    ports:
+      - "9000:9000" # Expose Bitpoll's default port if needed
+    volumes:
+      - './data:/data' # Mount a volume for data persistence
+    environment:
+      - TZ=Europe/London # Set the timezone, adjust to your needs
+      - JAVA_OPTS=-Xms512M -Xmx512M # Java heap size (adjust as needed)
+    environment:
+      BITPOLL_API_SECRET: 'your_secret' # Your API secret for secure access
+    networks:
+      - bitpoll_network
+
+  redis:
+    image: 'redis:6'
+    volumes:
+      - './data/redis:/data/redis' # Mount a volume for Redis data persistence
+    environment:
+      - REDIS_PASSWORD=your_password # Set a password for Redis, if needed
+    networks:
+      - bitpoll_network
+
+networks:
+  bitpoll_network:
+    driver: bridge

@@ -1,0 +1,123 @@
+version: '3.7'
+
+services:
+  db:
+    image: postgres:latest
+    volumes:
+      - "./data/db:/var/lib/postgresql"
+    environment:
+      POSTGRES_DB: countly
+      POSTGRES_USER: countly
+      POSTGRES_PASSWORD: change_this_password_for_production
+    restart: unless-stopped
+
+  metrics:
+    image: apache/countly-metrics:latest
+    ports:
+      - "8989:8989" # Metrics HTTP port
+    volumes:
+      - "./data/countly-metrics:/var/lib/countly-metrics"
+    environment:
+      COUNTLY_METRICS_DB_HOST: db
+      COUNTLY_METRICS_DB_NAME: countly
+      COUNTLY_METRICS_DB_PASSWORD: change_this_password_for_production
+      COUNTLY_METRICS_DB_USER: countly
+      COUNTLY_SERVER_APP_SECRET: change_this_secret_for_production
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  server:
+    image: apache/countly-server:latest
+    ports:
+      - "8080:8080" # Server HTTP port
+      - "5678:5678"   # WebSocket port for realtime data
+    volumes:
+      - "./data/countly-server:/var/lib/countly-server"
+    environment:
+      COUNTLY_SERVER_DB_HOST: db
+      COUNTLY_SERVER_DB_NAME: countly
+      COUNTLY_SERVER_DB_PASSWORD: change_this_password_for_production
+      COUNTLY_SERVER_DB_USER: countly
+      COUNTLY_SERVER_APP_SECRET: change_this_secret_for_production
+      COUNTLY_SERVER_ADMIN_EMAIL: your-email@example.com
+      COUNTLY_SERVER_ADMIN_PASSWORD: admin_password # Change this for the admin account
+    depends_on:
+      - db
+      - metrics
+    restart: unless-stopped
+
+  storage:
+    image: apache/countly-storage:latest
+    volumes:
+      - "./data/countly-storage:/var/lib/countly-storage"
+    environment:
+      COUNTLY_STORAGE_DB_HOST: db
+      COUNTLY_STORAGE_DB_NAME: countly
+      COUNTLY_STORAGE_DB_PASSWORD: change_this_password_for_production
+      COUNTLY_STORAGE_DB_USER: countly
+      COUNTLY_STORAGE_APP_SECRET: change_this_secret_for_production
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  harvester:
+    image: apache/countly-harvester:latest
+    volumes:
+      - "./data/countly-harvester:/var/lib/countly-harvester"
+    environment:
+      COUNTLY_HARVESTER_DB_HOST: db
+      COUNTLY_HARVESTER_DB_NAME: countly
+      COUNTLY_HARVESTER_DB_PASSWORD: change_this_password_for_production
+      COUNTLY_HARVESTER_DB_USER: countly
+      COUNTLY_HARVESTER_APP_SECRET: change_this_secret_for_production
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  search:
+    image: apache/countly-search:latest
+    volumes:
+      - "./data/countly-search:/var/lib/countly-search"
+    environment:
+      COUNTLY_SEARCH_DB_HOST: db
+      COUNTLY_SEARCH_DB_NAME: countly
+      COUNTLY_SEARCH_DB_PASSWORD: change_this_password_for_production
+      COUNTLY_SEARCH_DB_USER: countly
+      COUNTLY_SEARCH_APP_SECRET: change_this_secret_for_production
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  logstash:
+    image: apache/countly-logstash:latest
+    volumes:
+      - "./data/countly-logstash:/var/lib/countly-logstash"
+    environment:
+      COUNTLY_LOGSTASH_ELASTICSEARCH_HOSTS: "localhost:9200"
+      COUNTLY_LOGSTASH_METRICS_HOST: metrics
+      COUNTLY_LOGSTASH_SERVER_HOST: server
+      COUNTLY_LOGSTASH_STORAGE_HOST: storage
+      COUNTLY_LOGSTASH_HARVESTER_HOST: harvester
+      COUNTLY_LOGSTASH_APP_SECRET: change_this_secret_for_production
+    depends_on:
+      - metrics
+      - server
+      - storage
+      - harvester
+    restart: unless-stopped
+
+  esdb:
+    image: elasticsearch:latest
+    environment:
+      discovery.type: single-node
+    volumes:
+      - "./data/elasticsearch:/var/lib/elasticsearch"
+    ports:
+      - "9200:9200" # Elasticsearch HTTP port
+      - "9300:9300" # Elasticsearch TCP port
+    restart: unless-stopped
+
+networks:
+  default:
+    driver: bridge

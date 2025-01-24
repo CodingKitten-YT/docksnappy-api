@@ -1,0 +1,51 @@
+version: '3.7'
+
+services:
+  dagu-frontend:
+    image: daguio/dagu-frontend:v2.10.0 # Use the appropriate tag for the version you want
+    ports:
+      - "8080:8080"
+    command: >
+      {
+        "server": {
+          "host": "0.0.0.0",
+          "port": 8080,
+          "secure": false
+        }
+      }
+
+  dagu-api:
+    image: daguio/dagu-api:v2.10.0 # Use the appropriate tag for the version you want
+    ports:
+      - "9090:9090"
+    depends_on:
+      - dagu-mysql
+    environment:
+      MYSQL_HOST: dagu-mysql
+      MYSQL_USER: root
+      MYSQL_PASSWORD: secret
+      MYSQL_DATABASE: dagu
+      SERVER_HOST: dagu-frontend
+      SECRET_KEY: a_very_secret_key # Replace with your actual secret key for cryptographic security
+
+  dagu-mysql:
+    image: mysql:5.7
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: dagu
+      MYSQL_USER: root
+      MYSQL_PASSWORD: secret
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  dagu-redis:
+    image: redis:5.0
+    command: --save-mode no-prefork-child
+
+volumes:
+  mysql-data:
+
+networks:
+  default:
+    driver: bridge

@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  mixpost:
+    image: 'mixpost/mixpost:latest' # Use the official Mixpost image
+    container_name: mixpost
+    ports:
+      - "8080:80" # Map port 8080 on your host to port 80 in the container
+    volumes:
+      - './data:/data' # Mount a volume for data persistence
+      - './config:/config' # Mount a volume for configuration files
+    environment:
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: 'yourpassword'
+      DJANGO_SETTINGS_MODULE: 'mixpost.settings.production'
+      SECRET_KEY: 'yoursecretkey' # Replace with your secret key
+    depends_on:
+      - db
+
+  db:
+    image: 'postgres:13' # Use PostgreSQL image version 13
+    container_name: mixpost_db
+    volumes:
+      - './data/db:/var/lib/postgresql' # Mount a volume for database data persistence
+    environment:
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: 'yourpassword'
+      POSTGRES_DB: 'mixpost'
+
+  redis:
+    image: 'redis:6-alpine' # Use Redis image version 6-alpine
+    container_name: mixpost_redis
+
+  rabbitmq:
+    image: 'rabbitmq:3.8-management' # Use RabbitMQ image with management interface
+    container_name: mixpost_rabbitmq
+    ports:
+      - "5672:5672" # Map port 5672 on your host to port 5672 in the container for AMQP
+      - "15672:15672" # Map port 15672 on your host to port 15672 in the container for management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: 'user'
+      RABBITMQ_DEFAULT_PASS: 'password' # Replace with your password
+
+  celery-worker:
+    image: 'mixpost/celery-worker:latest' # Use the official Celery worker image
+    container_name: mixpost_celery-worker
+    volumes:
+      - './data/celery:/var/lib/celery-beat' # Mount a volume for Celery task data persistence
+    environment:
+      CELERY_BROKER_URL: 'amqp://rabbitmq:5672//'
+      CELERY_RESULT_BACKEND: 'redis://redis:6379/0'
+      CELERY_TIMEZONE: 'UTC'
+    depends_on:
+      - db
+      - rabbitmq
+      - redis
+
+  celery-beat:
+    image: 'mixpost/celery-beat:latest' # Use the official Celery beat image
+    container_name: mixpost_celery-beat
+    volumes:
+      - './data/celery:/var/lib/celery-beat' # Mount a volume for Celery beat data persistence
+    environment:
+      CELERY_BROKER_URL: 'amqp://rabbitmq:5672//'
+      CELERY_RESULT_BACKEND: 'redis://redis:6379/0'
+    depends_on:
+      - db
+      - rabbitmq
+      - redis
+
+networks:
+  default:
+    driver: bridge

@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  invoiceshelf-api:
+    image: invoiceshelf/invoiceshelf-api:latest
+    build:
+      context: ./api
+    ports:
+      - "5000:5000"
+    networks:
+      - invoice_network
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/invoiceshelf
+      # Add other environment variables required by the application
+
+  invoiceshelf-db:
+    image: postgres:13
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      # Add other environment variables required by the database if necessary
+    networks:
+      - invoice_network
+
+  redis:
+    image: redis:6-alpine
+    networks:
+      - invoice_network
+
+# Define named volumes for persisting data
+volumes:
+  db-data:
+
+networks:
+  invoice_network:
+    driver: bridge

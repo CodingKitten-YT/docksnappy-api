@@ -1,0 +1,48 @@
+version: '3.7'
+
+services:
+  # Assuming bewCloud consists of multiple components, each with its own service definition
+
+  # Web Application (Example using Flask for a simple web server)
+  webapp:
+    image: "bewcloud/webapp:latest"
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - DB_NAME=bewcloud_data
+    volumes:
+      - .:/src/app
+
+  # Database (Example using PostgreSQL)
+  db:
+    image: "postgres:12"
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=bewcloud_data
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  # Redis Cache (Optional, if needed)
+  redis:
+    image: "redis:6"
+
+  # Other services like load balancer, monitoring, etc., can be added here
+
+  # Volumes defined for data persistence
+  volumes:
+    db-data:
+
+  # Named volumes for ease of management and backup
+  named_volumes:
+    db-data:
+
+# Define networks to ensure service discovery works between services (optional, as it's also configured in the individual service definitions)
+networks:
+  default:
+    driver: bridge

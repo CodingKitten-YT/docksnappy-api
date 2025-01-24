@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:12
+    container_name: ezbookkeeping_db
+    volumes:
+      - db_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: ezbookkeeping
+      POSTGRES_USER: ezbookkeeping
+      POSTGRES_PASSWORD: change_this_password
+    ports:
+      - "5432:5432"
+
+  web:
+    image: ezbookkeeping/web:latest
+    container_name: ezbookkeeping_web
+    volumes:
+      - ./data:/app/data
+      - ./node_modules:/app/node_modules
+      - ./public_html:/app/public_html
+    environment:
+      DATABASE_URL: postgres://ezbookkeeping:change_this_password@db:5432/ezbookkeeping
+      SECRET_KEY: 'your-secret-key'
+      NODE_ENV: development
+    depends_on:
+      - db
+    ports:
+      - "8000:80"
+
+  worker:
+    image: ezbookkeeping/worker:latest
+    container_name: ezbookkeeping_worker
+    volumes:
+      - ./data:/app/data
+      - ./node_modules:/app/node_modules
+      - ./public_html:/app/public_html
+    environment:
+      DATABASE_URL: postgres://ezbookkeeping:change_this_password@db:5432/ezbookkeeping
+      SECRET_KEY: 'your-secret-key'
+      NODE_ENV: development
+    depends_on:
+      - db
+
+  queue:
+    image: ezbookkeeping/queue:latest
+    container_name: ezbookkeeping_queue
+    volumes:
+      - ./data:/app/data
+      - ./node_modules:/app/node_modules
+    environment:
+      DATABASE_URL: postgres://ezbookkeeping:change_this_password@db:5432/ezbookkeeping
+      SECRET_KEY: 'your-secret-key'
+      NODE_ENV: development
+    depends_on:
+      - db
+      - web
+      - worker
+
+  adminer:
+    image: adminer:latest
+    container_name: ezbookkeeping_adminer
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./data/adminer:/var/lib/adminer
+
+volumes:
+  db_data:

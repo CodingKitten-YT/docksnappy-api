@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  erpnext:
+    image: 'erpnext:16.0.1715.5' # Use the latest tag or specific version you prefer
+    container_name: erpnext
+    environment:
+      - POSTGRES_DB=erpnext
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "8000:8000" # Web interface on host, port 8000
+      #- "443:443" # Frappe SSL (optional)
+      #- "3000:3000" # Desk API (optional)
+    volumes:
+      - './config:/etc/erpnext'
+      - './logs:/var/log/erpnext'
+      - './files:/mnt/extra_storage' # Optional volume for file storage
+    depends_on:
+      - postgres
+    command: --nositeconfig && erpnext init_db
+    restart: unless-stopped
+
+  postgres:
+    image: 'postgres:12.2' # Use the latest tag or specific version you prefer
+    container_name: postgres
+    volumes:
+      - './data/postgres:/var/lib/postgresql/data' # Persistent storage for PostgreSQL data
+    environment:
+      - POSTGRES_DB=erpnext
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password
+    restart: unless-stopped
+
+  nginx:
+    image: 'jupyter/all-in-one:latest' # Use the latest tag or specific version you prefer
+    container_name: nginx
+    ports:
+      - "80:80" # HTTP (optional, use if you want to access from outside the docker network)
+      - "443:443" # HTTPS (optional, use if you want to access from outside the docker network and have a valid SSL certificate)
+    volumes:
+      - './data/nginx:/data'
+    depends_on:
+      - erpnext
+    command: sh -c 'while ! nginx -t; do sleep 1; done; nginx -g "daemon of; error_log /dev/null; event {}"'
+    restart: unless-stopped
+
+  redis:
+    image: 'redis:6-alpine' # Use the latest tag or specific version you prefer
+    container_name: redis
+    restart: unless-stopped
+
+  frappe:
+    image: 'frappe/desk:16.0.1715.5' # Use the latest tag or specific version you prefer
+    container_name: frappe
+    environment:
+      - FRAPPE_SITE=erpnext@app.erpnext.com
+      - FRAPPE_REDIS=redis
+      - FRAPPE_POSTGRES_HOST=postgres
+      - FRAPPE_POSTGRES_DB=erpnext
+      - FRAPPE_POSTGRES_USER=admin
+      - FRAPPE_POSTGRES_PASSWORD=password
+    ports:
+      - "3000:3000" # Desk API (optional)
+    volumes:
+      - './data/frappe:/code'
+    depends_on:
+      - postgres
+      - redis
+    command: frappe-desk init_db --existing_app_id=erpnext@app.erpnext.com && frappe exec admin passwd admin 'admin@doe.com' --noinput
+    restart: unless-stopped
+
+networks:
+  default:
+    driver: bridge

@@ -1,0 +1,50 @@
+version: '3.8'
+services:
+  myip:
+    image: myip-service:latest # Assuming you have a Docker image named myip-service
+    container_name: myip
+    ports:
+      - "5000:5000" # Expose the port your application listens on (e.g., HTTP server on port 5000)
+    environment:
+      - SERVICE_ENVIRONMENT=production
+    volumes:
+      - ./data:/var/lib/myip-service # Map a local directory to the container's data directory if needed
+      - ./config:/etc/myip-service/conf.d # Map a local directory for configuration files if needed
+    restart: unless-stopped # Ensure the service restarts automatically on failure
+
+  redis:
+    image: redis:latest
+    command: Redis-server /redis.conf # Optional: If you have a specific configuration file for Redis
+    volumes:
+      - redis-data:/data # Persist Redis data to a named volume
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80" # Expose the port for HTTP (optional, if you want to access it from outside the Docker network)
+      - "443:443" # Expose the port for HTTPS (optional, if you have SSL/TLS configuration)
+    depends_on:
+      - myip
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf # Map your Nginx configuration file
+      - ./ssl:/etc/nginx/ssl # If you're using SSL, map your certificates and keys here
+
+  postgres:
+    image: postgres:latest
+    environment:
+      - POSTGRES_DB=myipdb
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password # Change this with a secure password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data # Persist PostgreSQL data to a named volume
+
+# Define the named volumes used in the above services
+volumes:
+  redis-data:
+  postgres-data:
+
+# Optional: Define networks if needed for more complex setups
+networks:
+  default:
+    driver: bridge # or overlay, depending on your Docker network needs

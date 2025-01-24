@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  langfuse_db:
+    image: postgres:latest
+    volumes:
+      - langfuse_db_data:/var/lib/postgresql/data:ro
+    environment:
+      POSTGRES_DB: langfuse
+      POSTGRES_USER: langfuse
+      POSTGRES_PASSWORD: change_this_password
+    ports:
+      - "5432:5432"
+    command: postgres -c 'listen_addresses = 0.0.0.0'
+
+  langfuse_worker:
+    build: .
+    volumes:
+      - .:/code
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      DB_DSN: postgres://langfuse_db:change_this_password@langfuse_db:5432/langfuse
+      JOB_QUEUE: langfuse_default
+    depends_on:
+      - langfuse_db
+      - redis
+
+  redis:
+    image: redis:latest
+    command: redis-server --appendonly yes
+
+  webapp:
+    build: .
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - langfuse_worker
+
+volumes:
+  langfuse_db_data:

@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  geoserver:
+    image: geoserver:latest
+    container_name: geoserver
+    ports:
+      - "8080:8080" # GeoServer web UI and REST services
+      - "7080:7080"  # GeoServer's embedded PostGIS database (if using the PostGIS extension)
+      - "4289:4289"  # GeoWebCache service (optional, for caching WMS/WMTS requests)
+    volumes:
+      - type: bind
+        source: ./data/data
+        target: /opt/geoserver/data_dir/data
+      - type: bind
+        source: ./data/workspace
+        target: /opt/geoserver/workspace
+      - type: bind
+        source: ./logs
+        target: /opt/geoserver/logs
+    environment:
+      GEOSERVER_LEGAL_GIS_COPYRIGHT: "Copyright and usage terms"
+      GEOSERVER_LEGAL_HARVEST_NOTICE: "Data served by this GeoServer is Copyright (c) its creators."
+    networks:
+      - geonetwork
+      - postgis
+    restart: unless-stopped
+
+  postgis:
+    image: postgis:latest
+    container_name: postgis
+    volumes:
+      - type: bind
+        source: ./data/postgresql
+        target: /var/lib/postgresql/data
+    environment:
+      POSTGIS_DB: geoserver
+      POSTGIS_USER: geoserver
+      POSTGIS_PASSWORD: geoserver
+    networks:
+      - postgis
+    restart: unless-stopped
+
+  geonetwork:
+    image: geonetwork:latest
+    container_name: geonetwork
+    ports:
+      - "8090:8090" # GeoNetwork web UI
+    volumes:
+      - type: bind
+        source: ./data/geostore
+        target: /opt/geonetwork/data_dir/geostore
+      - type: bind
+        source: ./logs
+        target: /opt/geonetwork/logs
+    environment:
+      GEO Network Initial Catalog: "/opt/geonetwork/data_dir/geostore/geonetwork.postgresql.db"
+      GEO Network PostGIS Database: "geoserver"
+      GEO Network User: "geoserver"
+      GEO Network Password: "geoserver"
+    networks:
+      - geonetwork
+    restart: unless-stopped
+
+networks:
+  geonetwork:
+  postgis:
+    driver: bridge

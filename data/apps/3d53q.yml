@@ -1,0 +1,87 @@
+version: '3.8'
+services:
+  atsimeru_atsume_reader:
+    image: 'atsumeru/atsume_reader:latest'
+    container_name: atsimeru_atsume_reader
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:atsumeru;DB_CLOSE_DELAY=-1
+      - SPRING_DATASOURCE_USERNAME=sa
+      - SPRING_DATASOURCE_PASSWORD=password
+      #- API_SECRET=your_secret_here # Optional, for API key based authentication
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  atsimeru_atsume_writer:
+    image: 'atsumeru/atsume_writer:latest'
+    container_name: atsimeru_atsume_writer
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:atsumeru;DB_CLOSE_DELAY=-1
+      - SPRING_DATASOURCE_USERNAME=sa
+      - SPRING_DATASOURCE_PASSWORD=password
+    ports:
+      - "8081:8081"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "localhost:8081/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  atsimeru_atsume_coordinator:
+    image: 'atsumeru/atsume_coordinator:latest'
+    container_name: atsimeru_atsume_coordinator
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:atsumeru;DB_CLOSE_DELAY=-1
+      - SPRING_DATASOURCE_USERNAME=sa
+      - SPRING_DATASOURCE_PASSWORD=password
+    ports:
+      - "8082:8082"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "localhost:8082/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  atsimeru_config_server:
+    image: 'atsumeru/atsume_config_server:latest'
+    container_name: atsimeru_atsume_config_server
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:atsumeru;DB_CLOSE_DELAY=-1
+      - SPRING_DATASOURCE_USERNAME=sa
+      - SPRING_DATASOURCE_PASSWORD=password
+    ports:
+      - "8083:8083"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "localhost:8083/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  atsimeru_eureka_server:
+    image: 'atsumeru/atsume_eureka_server:latest'
+    container_name: atsimeru_atsume_eureka_server
+    environment:
+      - EUREKA_CLIENT_REGISTER_WITH_EUREKA=false
+      - EUREKA_CLIENT_FETCH_FROM_EUREKA=true
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:atsumeru;DB_CLOSE_DELAY=-1
+      - SPRING_DATASOURCE_USERNAME=sa
+      - SPRING_DATASOURCE_PASSWORD=password
+    ports:
+      - "8084:8761"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "localhost:8761/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  atsimeru_data:
+    driver: local
+
+networks:
+  atsimeru_net:
+    driver: bridge

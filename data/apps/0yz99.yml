@@ -1,0 +1,68 @@
+version: '3.7'
+
+services:
+  bitcart-api:
+    image: "bitcart/bitcart-api:latest" # Replace with the official Bitcart API Docker image tag
+    ports:
+      - "8000:8000" # Adjust the host and container port as needed
+    environment:
+      # Set necessary environment variables for the Bitcart API
+      BITCART_SECRET_KEY: "${BITCART_SECRET_KEY}"
+      BITCART_DATABASE_URL: "postgres://db:5432/bitcart"
+      # Add other required environment variables
+    depends_on:
+      - db
+    volumes:
+      - "./config:/etc/bitcart" # Mount your config directory to the container for configuration files
+    networks:
+      - bitcart-network
+
+  postgres:
+    image: "postgres:13" # Replace with the official PostgreSQL Docker image tag
+    volumes:
+      - "db:/var/lib/postgres" # Use a named volume for persistent database storage
+    environment:
+      POSTGRES_DB: "bitcart"
+      POSTGRES_USER: "db"
+      POSTGRES_PASSWORD: "dbpassword" # Make sure to change this to a secure password
+    networks:
+      - bitcart-network
+
+  redis:
+    image: "redis:6-alpine" # Replace with the official Redis Docker image tag
+    networks:
+      - bitcart-network
+
+# Optional services like Nginx, Celery, etc., if your Bitcart setup requires them
+bitcart-webserver:
+  image: "bitcart/bitcart-webserver:latest" # Replace with the official Bitcart Webserver Docker image tag
+  ports:
+    - "80:80" # Adjust the host and container port as needed
+  depends_on:
+    - bitcart-api
+  networks:
+    - bitcart-network
+
+# If you're using a worker service, e.g., Gunicorn with Bitcart
+bitcart-worker:
+  image: "bitcart/bitcart-worker:latest" # Replace with the official Bitcart Worker Docker image tag
+  depends_on:
+    - bitcart-api
+  networks:
+    - bitcart-network
+
+# Define the network for the services to communicate with each other
+networks:
+  bitcart-network:
+    driver: bridge
+
+# Optionally, you can define a custom healthcheck if not already implemented in the service images
+healthcheck:
+  test: ["CMD-SHELL", "curl --fail http://bitcart-api:8000/health || exit 1"]
+  timeout: 10s
+  retries: 3
+
+# If you need to use external tools like Redis, you can define them here
+services_external_tools:
+  redis:
+    image: "redis:6-alpine" # Use the same image as the Redis service above

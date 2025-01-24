@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  glance-api:
+    image: registry.openstack.org/storyboard/glance:latest
+    depends_on:
+      - mysql
+    environment:
+      GLANCE_DB_CONNECTION: 'mysql://glance:${GLANCE_DB_PASSWORD}@mysql:3306/glance'
+      GLANCE_RPC_BACKEND: rabbitmq
+      GLANCE_API_DISCOVERY_ENABLED: true
+    ports:
+      - "92:92"
+    commandReviewable: |
+      globe-api --config-file=/etc/glance/paste.ini glance.conf
+    volumes:
+      - ./data/glance/:/etc/glance/
+      - ./logs/glance/:/var/log/glance/
+      - ./glance_proxy_config.json:/etc/glance/glance_proxy.conf
+    depends_on:
+      - mysql
+      - rabbitmq
+      - keystone
+    networks:
+      - private
+
+  glance-registry:
+    image: registry.openstack.org/storyboard/glance:latest
+    depends_on:
+      - mysql
+    environment:
+      GLANCE_DB_CONNECTION: 'mysql://glance:${GLANCE_DB_PASSWORD}@mysql:3306/glance'
+      GLANCE_NOTIFICATION_DRIVER: "mongodb"
+      GLANCE_API_DISCOVERY_ENABLED: false
+    volumes:
+      - ./data/glance/:/etc/glance/
+      - ./logs/glance/:/var/log/glance/
+      - ./glance_registry_config.json:/etc/glance/glance_registry.conf
+    depends_on:
+      - mysql
+      - mongodb
+      - keystone
+    networks:
+      - private
+
+  mysql:
+    image: mariadb:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: glance
+      MYSQL_USER: glance
+      MYSQL_PASSWORD: glancepassword
+    volumes:
+      - ./data/mysql/:/var/lib/mysql/
+    commandReviewable: |
+      mysqld
+    networks:
+      - private
+
+  rabbitmq:
+    image: rabbitmq:3.8-management
+    environment:
+      RABBITMQ_DEFAULT_USER: glance
+      RABBITMQ_DEFAULT_PASSWORD: glancepassword
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - private
+
+  keystone:
+    image: registry.openstack.org/storyboard/keystone:latest
+    environment:
+      MYSQL_PASSWORD: mysqlpassword
+      KEEPALIVE_INTERVAL: "10"
+      KEEPALIVE_TIMEOUT: "2"
+      SERVICE_PASSWORD: keystonepassword
+      SERVICE_USERNAME: admin
+      SERVICE_PROTOCOL: http
+    ports:
+      - "5000:5000"
+    networks:
+      - private
+
+networks:
+  private:

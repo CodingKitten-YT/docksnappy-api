@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  gitlab:
+    image: gitlab/gitlab-ce:latest
+    container_name: minimal-git-server
+    ports:
+      - "80:443" # Redirect port 80 to SSL port 443 for HTTP access
+      - "22:22"   # SSH access
+    volumes:
+      - /path/to/gitlab/config:/etc/gitlab
+      - /path/to/git/repositories:/var/opt/gitlab
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        gitlab_shell['sshd']['use_port': 22]
+        gitlab_rails['lfs.enabled'] = true
+        external_url 'https://your-git-server.example.com' # Replace with your actual URL
+    networks:
+      - gitlab-network
+
+networks:
+  gitlab-network:
+    driver: bridge

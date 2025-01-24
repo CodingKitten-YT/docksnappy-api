@@ -1,0 +1,47 @@
+version: '3'
+
+services:
+  isponsorblocktv-backend:
+    image: isponsorblocktv/backend:latest
+    container_name: isponsorblocktv-backend
+    ports:
+      - "5000:5000"
+    environment:
+      API_SECRET_KEY: your_secret_key
+      DATABASE_URL: postgres://user:password@db:5432/database_name
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./backend:/app
+    command: >
+      python manage.py runserver 0.0.0.0:5000 --insecure
+
+  isponsorblocktv-frontend:
+    image: isponsorblocktv/frontend:latest
+    container_name: isponsorblocktv-frontend
+    ports:
+      - "8000:8000"
+    environment:
+      FRONTEND_URL: http://backend:5000
+    depends_on:
+      - backend
+
+  db:
+    image: postgres:13
+    container_name: isponsorblocktv-db
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: your_database_name
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
+      timeout: 10s
+      retries: 5
+
+  redis:
+    image: redis:6
+    container_name: isponsorblocktv-redis

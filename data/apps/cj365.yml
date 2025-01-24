@@ -1,0 +1,86 @@
+version: '3.7'
+
+services:
+  casaos-node:
+    image: 'casaos/casaos-node:latest' # Use the latest tag or a specific release of CasaOS Node
+    container_name: casaos-node
+    restart: unless-stopped
+    environment:
+      - NODE_NAME=casanode1
+      - DATA_DIR=/data
+      - RPC_ENABLED=false
+      - CASAOS_NODE_EXPOSED=true
+    ports:
+      - "8336:8336" # CasaOS Node port for RPC (if enabled)
+      - "4001:4001" # CasaOS Node port for P2P
+    volumes:
+      - casaos-node-data:/data
+      - ./casanode.key:/root/.casaos-node/config/casanode.key # Your node's key file
+      - ./casanode.cert:/root/.casaos-node/config/casanode.cert # Your node's certificate file (if applicable)
+    networks:
+      - casaos-network
+
+  casaos-wallet:
+    image: 'casaos/casaos-wallet:latest' # Use the latest tag or a specific release of CasaOS Wallet
+    container_name: casaos-wallet
+    restart: unless-stopped
+    environment:
+      - WALLET_NAME=casawallet1
+      - DATA_DIR=/data
+    volumes:
+      - casaos-wallet-data:/data
+      - ./wallet.key:/root/.casaos-wallet/config/wallet.key # Your wallet's key file
+    depends_on:
+      - casaos-node
+    networks:
+      - casaos-network
+
+  casaos-gateway:
+    image: 'casaos/casaos-gateway:latest' # Use the latest tag or a specific release of CasaOS Gateway
+    container_name: casaos-gateway
+    restart: unless-stopped
+    environment:
+      - DATA_DIR=/data
+    volumes:
+      - casaos-gateway-data:/data
+    networks:
+      - casaos-network
+
+  lnd:
+    image: 'lightningd/lnd:0.13.1-beta' # Use the appropriate tag for your version of LND
+    container_name: lnd
+    restart: unless-stopped
+    environment:
+      - LIGHTNINGD_NETWORK=testnet # Change to mainnet or testnet as needed
+      - LND_DB_DIR=/root/.lnd/data # LND data directory
+      - LND_LOG_LEVEL=info
+    volumes:
+      - lnd-data:/root/.lnd
+    ports:
+      - "10009:10009" # LND gRPC API (if enabled)
+      - "lightning:9735:lightning" # LND Lightning socket
+    depends_on:
+      - casaos-node
+
+  bitcoin-fullnode:
+    image: 'bitcoincore/bitcoin-core:23.0' # Use the appropriate tag for your desired Bitcoin Core version
+    container_name: bitcoin-fullnode
+    restart: unless-stopped
+    environment:
+      - BITCOINCORE_DATADIR=/root/.bitcoin
+      - BITCOINCORE_RPCAUTHTYPE=none # No authentication for RPC if not needed
+    volumes:
+      - bitcoin-fullnode-data:/root/.bitcoin
+    depends_on:
+      - casaos-node
+
+networks:
+  casaos-network:
+    driver: bridge
+
+volumes:
+  casaos-node-data:
+  casaos-wallet-data:
+  casaos-gateway-data:
+  lnd-data:
+  bitcoin-fullnode-data:

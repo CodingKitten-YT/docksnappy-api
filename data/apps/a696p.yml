@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  gathio_backend:
+    image: gathio/gathio-backend:latest
+    command: gunicorn -b :8000 app.wsgi
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_USER: gathio
+      DB_PASSWORD: changeme
+      DB_NAME: gathio
+      SECRET_KEY: 'your_secret_key'
+    volumes:
+      - ./app:/app
+
+  gathio_frontend:
+    image: gathio/gathio-frontend:latest
+    ports:
+      - "5000:5000"
+    depends_on:
+      - backend
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: gathio
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB: gathio
+    volumes:
+      - gathio-db:/var/lib/postgresql/data
+
+  redis:
+    image: redis:6-alpine
+    command: redis-server --appendonly yes
+
+volumes:
+  gathio-db:
+    driver: local

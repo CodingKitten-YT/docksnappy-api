@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:12
+    volumes:
+      - db_data:/var/lib/postgresql
+    environment:
+      POSTGRES_DB: chevereto
+      POSTGRES_USER: chevereto
+      POSTGRES_PASSWORD: change_this_password
+    command: postgres -c 'listen_addresses = 0.0.0.0'
+
+  php:
+    image: chevereto/chevereto-php:latest
+    volumes:
+      - php_data:/var/www/html
+      - ./chevereto.env:/etc/Chevereto/.env
+    depends_on:
+      - db
+    environment:
+      CHEVERETO_DB_HOST: db
+      CHEVERETO_DB_NAME: chevereto
+      CHEVERETO_DB_USER: chevereto
+      CHEVERETO_DB_PASSWORD: change_this_password
+      CHEVERETO_ADMIN_EMAIL: admin@example.com
+      CHEVERETO_ADMIN_USERNAME: admin
+      CHEVERETO_ADMIN_PASSWORD: admin_password
+    ports:
+      - "8080:80"
+
+  nginx:
+    image: chevereto/chevereto-nginx:latest
+    volumes:
+      - php_data:/var/www/html
+    depends_on:
+      - php
+    ports:
+      - "80:80"
+
+volumes:
+  db_data:
+  php_data:

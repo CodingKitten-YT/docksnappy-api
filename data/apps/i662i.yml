@@ -1,0 +1,46 @@
+version: '3.7'
+
+services:
+  ejabberd:
+    image: ejabberd/ejabberd:latest # Use a specific tag if needed
+    container_name: ejabberd
+    ports:
+      - "5222-5280:5222-5280" # XMPP client ports (canonical and non-canonical)
+      - "443:444" # HTTPS port for admin web interface (if configured)
+      - "5281:5281" # Administrative interfaces (EjabberdCP, AdminCP)
+    volumes:
+      - ejabberd-data:/var/lib/ejabberd
+      - ejabberd-config:/etc/ejabberd
+      - ejabberd-logs:/var/log/ejabberd
+    environment:
+      EJABBERD_CREATE_ADMIN: "admin" # Create an admin user upon first run
+      EJABBERD_HOSTNAME: "0.0.0.0" # Bind to all interfaces
+      TZ: "Europe/London" # Timezone for logs and such (set your preferred timezone)
+    command: start
+    restart: unless-stopped
+    networks:
+      - ejabberd_network
+
+volumes:
+  ejabberd-data:
+  ejabberd-config:
+  ejabberd-logs:
+
+networks:
+  ejabberd_network:
+
+# Optionally, you can define a separate service for PostgreSQL if you're not using an existing database
+# postgres:
+#   image: postgres:latest
+#   volumes:
+#     - postgres-data:/var/lib/postgresql
+#   environment:
+#     POSTGRES_DB: ejabberd
+#     POSTGRES_USER: ejabberd
+#     POSTGRES_PASSWORD: secret
+#   restart: unless-stopped
+
+# Optionally, mount the configuration directory from the host to allow for easy editing of configuration files
+# ejabberd-config:
+#   binds:
+#     - ./ejabberd-config:/etc/ejabberd

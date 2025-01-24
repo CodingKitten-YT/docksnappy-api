@@ -1,0 +1,37 @@
+version: '3.7'
+
+services:
+  libretranslate:
+    image: 'libretranslate/libretranslate:latest' # or use a specific tag if needed
+    ports:
+      - "5000:5000" # Expose the API on port 5000 of the host
+    command: --backend.redis_db_url=redis://redis:6379/1 --server.secret_key='super_secret_key' --api.enabled=True --backend.model_urls={'en': 'distilroberta-base'} --frontend.host='0.0.0.0'
+    environment:
+      - REDIS_URL=redis://redis:6379/1
+      - SECRET_KEY=super_secret_key
+      - ALLOWED_HOSTS=0.0.0.0
+    depends_on:
+      - redis
+    volumes:
+      - type: bind
+        source: ./libretranslate-data
+        target: /var/lib/libretranslate
+        mode: "rw"
+
+  redis:
+    image: 'redis:latest'
+    command: --save-mode no-save
+    volumes:
+      - type: bind
+        source: ./redis-data
+        target: /data
+        mode: "rw"
+
+# Optional volume for data persistence
+volumes:
+  libretranslate-data:
+  redis-data:
+
+networks:
+  default:
+    driver: bridge

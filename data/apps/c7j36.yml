@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  docking:
+    image: 'docking/docking:latest' # Use the official or your custom DocKing image
+    container_name: docking
+    ports:
+      - "5000:5000" # Expose the port DocKing runs on (default is 5000)
+    volumes:
+      - './data:/app/data' # Mount a volume for DocKing to store its files
+      - './config:/app/config' # Optional: Mount a volume for Docking to store its configuration
+    environment:
+      - DOCKING_DB_HOST=db
+      - DOCKING_DB_NAME=docking
+      - DOCKING_DB_USER=dockinguser
+      - DOCKING_DB_PASSWORD=dockingpassword
+      # Optional additional environment variables for DocKing configurations
+    depends_on:
+      - db
+
+  db:
+    image: 'postgres:latest' # Use the official PostgreSQL image or a tag of your choice
+    container_name: docking_db
+    volumes:
+      - './data/db:/var/lib/postgresql/data' # Persist database data
+    environment:
+      - POSTGRES_USER=dockinguser
+      - POSTGRES_PASSWORD=dockingpassword
+      - POSTGRES_DB=docking
+    environment:
+      # Optionally, set up POSTGRES_PASSWORD if you didn't set it in a secret way
+      - POSTGRES_PASSWORD=rootpassword
+
+  redis:
+    image: 'redis:latest' # Use the official Redis image or a tag of your choice
+    container_name: docking_redis
+
+# Define any volumes if you want to persist data across container restarts
+volumes:
+  data:
+  db:
+    driver: local
+  config:
+
+# Define any networks if you need them beyond the default network
+networks:
+  default:
+    driver: bridge

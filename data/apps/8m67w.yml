@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # PostgreSQL database
+  db:
+    image: postgres:12
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: docuseal
+      POSTGRES_USER: docuseal
+      POSTGRES_PASSWORD: change_this_password
+    restart: unless-stopped
+
+  # DocuSeal application server
+  app:
+    image: docuseal/docuseal:latest
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+    environment:
+      DOCUSEAL__DB__HOSTNAME: db
+      DOCUSEAL__DB__DATABASE: docuseal
+      DOCUSEAL__DB__USERNAME: docuseal
+      DOCUSEAL__DB__PASSWORD: change_this_password
+      DOCUSEAL__SECRET_KEY: changeme12345
+    volumes:
+      - app_data:/app/data
+    restart: unless-stopped
+
+  # Nginx as a reverse proxy (optional, if you want to expose DocuSeal publicly)
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - nginx_conf:/etc/nginx/conf.d
+      - app_data:/app/data
+    depends_on:
+      - app
+    restart: unless-stopped
+
+volumes:
+  db_data:
+  app_data:
+  nginx_conf:
+
+networks:
+  default:
+    driver: bridge

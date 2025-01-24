@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  lama-cleaner:
+    image: lama_cleaner:latest # Assuming you have pushed your image to a registry as lama_cleaner
+    container_name: lama-cleaner
+    ports:
+      - "5000:5000" # Expose the port your application runs on (e.g., Flask app)
+    volumes:
+      - .:/app # Mount the current directory into the container for code changes without rebuilding
+      - lama-cleaner-data:/data # Define a volume for data persistence
+
+  redis:
+    image: redis:latest
+    volumes:
+      - redis-data:/data
+
+# Define named volumes
+volumes:
+  lama-cleaner-data:
+  redis-data:
+
+networks:
+  default:
+    driver: bridge

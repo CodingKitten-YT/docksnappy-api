@@ -1,0 +1,110 @@
+version: '3.8'
+services:
+  odoo:
+    image: odoo:latest  # or use a specific version like 'odoo:14.0'
+    command: /usr/local/bin/gunicorn -c /etc/odoo/gunicorn.py --workers=4 odoo-all && /usr/local/bin/wait-for-it --timeout=300 --retry=5 odp::http || true
+    ports:
+      - "8069:8069"  # HTTP API (admin) on the host, port 8069 of the container
+      - "80:80"       # HTTP web server on the host, port 80 of the container (optional)
+      - "443:443"    # HTTPS if you have SSL configured (optional)
+    volumes:
+      - type: bind
+        source: ./odoo-data
+        target: /mnt/extra_storage  # For Odoo addons and data, adjust the path as needed
+      - type: bind
+        source: ./config:/etc/odoo
+      - type: bind
+        source: ./log:/var/log/odoo
+      - type: bind
+        source: ./odoo-server-cert.pem:/etc/ssl/certs/odoo-server.pem  # If you have a custom SSL certificate
+      - type: bind
+        source: ./odoo-server.key:/etc/ssl/private/odoo-server.key  # If you have a custom SSL key
+      - type: tar
+        source: /path/to/odoo_addons_backup.tar
+        target: /mnt/extra_storage/addons/
+    environment:
+      - POSTGRES_DB=yourdbname
+      - POSTGRES_USER=youruser
+      - POSTGRES_PASSWORD=yourpassword
+      - NODE_ENV=production
+      - DJANGO_SETTINGS_MODULE=odoo.root_settings
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:latest  # or use a specific version like 'postgres:13'
+    volumes:
+      - type: bind
+        source: ./postgres-data
+        target: /var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=yourdbname
+      - POSTGRES_USER=youruser
+      - POSTGRES_PASSWORD=yourpassword
+    command: --max_connections=200
+
+  nginx:
+    image: nginx:latest  # or use a specific version like 'nginx:1.21.6'
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - type: bind
+        source: ./nginx/conf.d:/etc/nginx/conf.d
+      - type: bind
+        source: ./nginx/certs:/etc/nginx/ssl
+    depends_on:
+      - odoo
+    restart: unless-stopped
+
+  redis:
+    image: redis:latest  # or use a specific version like 'redis:6.0-alpine'
+    command: redis-server --appendonly yes
+
+  celery_worker:
+    image: odoo:latest
+    command: /usr/local/bin/celery -A odoo worker --loglevel=info
+    depends_on:
+      - odoo
+      - redis
+    restart: unless-stopped
+
+  celery_beat:
+    image: odoo:latest
+    command: /usr/local/bin/celery -A odoo beat --loglevel=info
+    depends_on:
+      - odoo
+      - redis
+    restart: unless-stopped
+
+# Uncomment the following if you're using let's encrypt for SSL
+# services:
+#   odoo-nginx:
+#     build: ./nginx
+#     ports:
+#       - "80:80"
+#       - "443:443"
+#     volumes:
+#       - type: bind
+#         source: ./nginx/conf.d:/etc/nginx/conf.d
+#       - type: bind
+#         source: ./nginx/certs:/etc/nginx/ssl
+#     depends_on:
+#       - odoo
+#     networks:
+#       - webnet
+#   odoo-letsencrypt:
+#     image: jrcss/letsencrypt
+#     volumes:
+#       - ./nginx/certs:/etc/letsencrypt
+#       - ./nginx/conf.d:/etc/nginx/conf.d
+#     ports:
+#       - "80:80"
+#       - "443:443"
+#     environment:
+#       - LE_EMAIL=your-email@example.com
+#       - LE_DOMAIN=example.com
+#       - LE_AGREE_TERMS=true
+#       - LE_REGISTER_DOMAIN=true
+#       - LE_RENEW=true

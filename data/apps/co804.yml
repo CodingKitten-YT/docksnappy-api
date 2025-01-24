@@ -1,0 +1,59 @@
+version: '3.7'
+services:
+  app:
+    image: 'misskey/misskey:latest' # Use the official image from misskey, or a specific version if needed
+    container_name: misskey
+    ports:
+      - "9080:9080" # Misskey web UI on host port 9080
+      - "9081:9081" # Feed API on host port 9081
+      - "9082:9082" # WebSocket API on host port 9082
+    volumes:
+      - './appdata:/data' # Persistent storage for user data (custom path based on your setup)
+      - './letsencrypt:/letencrypt' # Required for Let's Encrypt support (optional, if you want to use LE certs)
+    environment:
+      - MISSKEY_DATABASE=postgres
+      - POSTGRES_DB=misskey
+      - POSTGRES_USER=misskey
+      - POSTGRES_PASSWORD=changeit
+      # Additional Misskey environment variables (e.g., for setting the admin account password, enabling signup, etc.)
+    command: ["--http", "0.0.0.0:9080", "--wss", "0.0.0.0:9082"] # HTTP and WebSocket interfaces
+    restart: unless-stopped
+    depends_on:
+      - db
+
+  db:
+    image: 'postgres:latest'
+    volumes:
+      - './appdata/db:/var/lib/postgresql' # Persistent storage for database data (custom path based on your setup)
+    environment:
+      - POSTGRES_DB=misskey
+      - POSTGRES_USER=misskey
+      - POSTGRES_PASSWORD=changeit
+    command: ["--listen", "localhost"] # Database listens only on localhost
+    healthcheck:
+      test: ["/usr/local/bin/run-sql.sh", "SELECT 1;"]
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+# Optionally, you can also define a redis service if you want to use it for caching or pub/sub functionality.
+redis:
+  image: 'redis:latest'
+  volumes:
+    - './appdata/redis:/data' # Persistent storage for Redis data (custom path based on your setup)
+  command: redis-server --appendonly yes
+  restart: unless-stopped
+
+# If you want to use Let's Encrypt for SSL, uncomment the following services and configure them.
+letsencrypt:
+  image: 'certbot/certbot:latest'
+  volumes:
+    - './letsencrypt:/letencrypt'
+    - './appdata/letsencrypt:/etc/letsencrypt' # Persistent storage for Let's Encrypt certificates and configuration (custom path based on your setup)
+  depends_on:
+    - app
+  command: certbot certonly --webroot --webroot-path=/var/www/certbot --email your-email@example.com --agree-tos --no-eff-email --force-renewal
+  entrypoint: ''
+  restart: unless-stopped
+
+# Note: Make sure to replace './appdata', './letsencrypt', and 'your-email@example.com' with your actual data paths and email address.

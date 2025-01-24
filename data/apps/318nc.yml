@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  litomy:
+    image: litomy/litomy:latest
+    container_name: litomy
+    environment:
+      LITOMY_DEFAULT_PASSWORD: "password" # Change this to a strong password for security reasons
+      LITOMY_ADMIN_USERNAME: "admin"
+      LITOMY_ADMIN_EMAIL: "admin@example.com"
+    ports:
+      - "8080:80"
+    volumes:
+      - ./config:/etc/litomy
+      - ./data:/var/lib/litomy
+      - ./cache:/var/cache/litomy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:13
+    container_name: litomy_postgres
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: litomy
+      POSTGRES_USER: litomy
+      POSTGRES_PASSWORD: litomy_password # Change this to a secure password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U litomy"]
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:6.2-alpine
+    container_name: litomy_redis
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli --scan ping"]
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+networks:
+  default:
+    driver: bridge

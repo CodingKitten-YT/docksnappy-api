@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  moto_admin:
+    image: motor-admin:latest  # Use the specific tag you prefer, e.g., a release tag
+    container_name: moto_admin
+    environment:
+      MOTOR_ADMIN_SECRET_KEY: secret_key_here  # Replace with your secret key
+      # Add other environment variables as needed
+    ports:
+      - "8000:8000"  # Expose the web port if you want to access Motor Admin via host machine
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 120
+
+  postgres:
+    image: postgres:latest  # Use the specific tag you prefer, e.g., a stable tag
+    container_name: moto_admin_postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: motor  # Database name for Motor
+      POSTGRES_USER: user  # Database user for Motor
+      POSTGRES_PASSWORD: password  # Database password for Motor
+
+volumes:
+  postgres_data:
+    driver: local

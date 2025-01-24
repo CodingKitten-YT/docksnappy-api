@@ -1,0 +1,52 @@
+version: '3.8'
+services:
+  gristapp:
+    image: grist/gristapp:latest # Use the official Grist app image from Docker Hub
+    container_name: gristapp
+    restart: unless-stopped
+    ports:
+      - "3000:3000" # Expose the default port that the Grist app runs on
+    environment:
+      - GRIST_SECRET_KEY=$(openssl rand -base64 24) # Set a random secret key for production-ready security
+      - GRIST_DB_HOST=db                              # Reference the database service by name
+      - GRIST_DB_USER=grist                           # Database user for PostgreSQL
+      - GRIST_DB_PASSWORD=gristpassword                  # Database password (make sure to use an environment variable in production)
+      - GRIST_DB_NAME=gristdb                          # Database name
+      - GRIST_USE_SSL=false                            # Set to true if SSL is used for the database connection
+    volumes:
+      - ./data:/data                                   # Mount a volume for data persistence
+      - ./ssl:/code/src/main/resources/ssl           # Optional: mount SSL certificates if using SSL
+    depends_on:
+      - db
+
+  db:
+    image: postgres:latest
+    container_name: gristdb
+    environment:
+      - POSTGRES_DB=gristdb
+      - POSTGRES_USER=grist
+      - POSTGRES_PASSWORD=gristpassword
+    volumes:
+      - ./db_data:/var/lib/postgresql/data       # Mount a volume for database data persistence
+
+  redis:
+    image: redis:latest
+    container_name: gristredis
+
+  worker:
+    image: grist/gristworker:latest
+    container_name: gristworker
+    restart: unless-stopped
+    environment:
+      - QUEUE_URL=https://your-queue-url # Set the queue URL for AWS SQS if you're using it
+    volumes:
+      - ./data:/data
+
+  webhook_receiver:
+    image: grist/gristwebhookreceiver:latest
+    container_name: gristwebhookreceiver
+    restart: unless-stopped
+
+networks:
+  default:
+    driver: bridge

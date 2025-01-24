@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  manticore:
+    image: manticoresearch/manticore-full:latest
+    container_name: manticore
+    command: /bin/sh -c "/opt/manticore/scripts/init && \
+               /opt/manticore/bin/manticore -c /etc/manticore/manticore.conf && \
+               tail -f /dev/null"
+    ports:
+      - "6001:6001/tcp" # HTTP API
+      - "5984:5984"     # REST API (for the OLM Client)
+      - "8000:8000"    # Admin UI
+      - "9000:9000"    # Manticore Monitoring UI
+    volumes:
+      - "./data:/opt/manticore/data"
+      - "./conf:/etc/manticore"
+      - "./lib:/opt/manticore/share/manticore-configs"
+    environment:
+      TZ: "Europe/London" # Set the Timezone accordingly
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "localhost:6001/info"]
+      timeout: 5s
+      retries: 3
+
+networks:
+  default:
+    driver: bridge

@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  opengist:
+    image: opengist/opengist:latest
+    container_name: opengist
+    ports:
+      - "8080:8080" # HTTP port, you can change it as per your requirement
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - "./data:/var/lib/grafana" # Bind a volume for Grafana data (optional but recommended)
+      - "./opengist-data:/tmp/openGIS/data" # Bind a volume for OpenGIS data (optional but recommended)
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:13
+    container_name: opengist_postgres
+    environment:
+      POSTGRES_USER: opengist
+      POSTGRES_PASSWORD: openGist
+      POSTGRES_DB: opengist
+    volumes:
+      - "./opengist-db:/var/lib/postgresql/data" # Bind a volume for PostgreSQL data (optional but recommended)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U opengist"]
+      timeout: 10s
+      retries: 5
+
+networks:
+  default:
+    driver: bridge

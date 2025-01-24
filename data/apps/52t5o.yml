@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  fider:
+    image: fider.io/fider:latest
+    container_name: fider
+    ports:
+      - "80:3000" # Expose Fider on port 80 for HTTP access, mapping to the default 3000 port of Fider
+    environment:
+      - FIDER_HOST=0.0.0.0
+      - FIDER_PORT=3000
+      - FIDER_PROTOCOL=http
+      - FIDER_AUTH_ENABLED=true
+      - FIDER_ADMIN_EMAIL=admin@example.com
+      - FIDER_ADMIN_PASSWORD=changeme
+      - FIDER_JWT_SECRET=very_secret_key # Change this to a secure, random secret key
+      - FIDER_DB_DRIVER=postgres # Set the database driver (postgres, mysql, sqlite3)
+      - FIDER_DB_HOST=db  # The name of the db service defined below
+      - FIDER_DB_PORT=5432    # The default postgreSQL port
+      - FIDER_DB_DATABASE=fider  # Database name (for PostgreSQL)
+      - FIDER_DB_USERNAME=fider  # Database username
+      - FIDER_DB_PASSWORD=fiderpassword
+    volumes:
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt
+    depends_on:
+      - db
+    networks:
+      - fider_network
+
+  db:
+    image: postgres:latest
+    container_name: fider_db
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=fider
+      - POSTGRES_PASSWORD=fiderpassword
+      - POSTGRES_DB=fider
+    networks:
+      - fider_network
+
+networks:
+  fider_network:
+    driver: bridge

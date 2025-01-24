@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  formbricks-broker:
+    image: formbricks/formbricks-broker:latest
+    environment:
+      FORMBRICKS_BROKER__SERVICES__ZOOKEEPER__URL: zookeeper:2181
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+
+  formbricks-zookeeper:
+    image: formbricks/formbricks-zookeeper:latest
+    environment:
+      FORMBRICKS_ZOOKEEPER__ZOOKEEPER__CLIENT_PORT: 2181
+      FORMBRICKS_ZOOKEEPER__ZOOKEEPER__LEADER_PORT: 3888
+    ports:
+      - "2181:2181"
+      - "3888:3888"
+      - "8080:8080" # Optional: for ZooKeeper's client-side utilities (ZKCli)
+    depends_on:
+      - tephra
+
+  formbricks-tephra:
+    image: formbricks/formbricks-tephra:latest
+    environment:
+      FORMBRICKS_TEPHRA__TEPHRA__JMX_PORT: 7002
+      FORMBRICKS_TEPHRA__TEPHRA__HTTP_PORT: 8091
+    ports:
+      - "7001-7003:7001-7003" # Metrics, Prometheus endpoint, etc.
+      - "8091:8091"
+    depends_on:
+      - zookeeper
+
+  prometheus:
+    image: prom/prometheus:latest
+    command: >
+      --config.file=prometheus.yml
+      --storage.tsdb.path=/formbricks/tephra/data
+    ports:
+      - "9090:9090"
+    volumes:
+      - formbricks-tephra-data:/formbricks/tephra/data
+    depends_on:
+      - formbricks-tephra
+
+volumes:
+  formbricks-broker-data:
+    driver: local
+  formbricks-zookeeper-data:
+    driver: redis
+  formbricks-tephra-data:
+    driver: redis
+
+networks:
+  default:
+    name: formbricks_network

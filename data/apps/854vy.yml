@@ -1,0 +1,30 @@
+version: '3.8'
+services:
+  lang-tool-api:
+    image: linguastatistickey/languagetool:latest # Use the official LanguageTool image
+    ports:
+      - "5000:5000" # Expose the LanguageTool API on port 5000 of the host
+    environment:
+      LANGUAGE_TOOL_API_LISTEN: true # Enable API listen mode
+      JAVA_OPTS: "-Xmx2g -Xms1g" # Set Java heap size (optional, improves performance)
+    networks:
+      - lang-tool-network
+
+  lang-tool-backend:
+    image: linguastatistickey/languagetool-core:latest # Use the LanguageTool core image for background tasks
+    environment:
+      LANGUAGE_TOOL_API_LISTEN: false # Do not enable API listen mode, this is a background service
+      LANGUAGE_TOOL_UPDATE.interval: 12h # Update LanguageTool every 12 hours (optional)
+      JAVA_OPTS: "-Xmx2g -Xms1g" # Set Java heap size (optional, improves performance)
+    volumes:
+      - lang-tool-data:/tmp/lt-data # Mount a volume for LanguageTool data (optional, for data persistence)
+    networks:
+      - lang-tool-network
+
+volumes:
+  lang-tool-data:
+    driver: local
+
+networks:
+  lang-tool-network:
+    driver: bridge

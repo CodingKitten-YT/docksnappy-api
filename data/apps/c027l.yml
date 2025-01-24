@@ -1,0 +1,131 @@
+version: '3.8'
+services:
+  # PostgreSQL - Database Service
+  db:
+    image: postgres:12
+    command: 'postgres -c "listen_addresses = '*'"'
+    volumes:
+      - ./db:/var/lib/postgresql/data
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: chatwoot
+      POSTGRES_USER: chatwoot
+      POSTGRES_PASSWORD: change_this_password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chatwoot"]
+      timeout: 10s
+      retries: 5
+
+  # Sidekiq - Background Job Service
+  sidekiq:
+    image: chatwoot/sidekiq:latest
+    command: bundle exec sidekiq -e production
+    depends_on:
+      - app
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    healthcheck:
+      test: ["TCP", "::ffff:redis:6379"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  # Rails - Web Application Service
+  app:
+    image: chatwoot/chatwoot:latest
+    command: bundle exec rails s -b 0.0.0.0 -p 8080 -e production
+    volumes:
+      - ./app:/var/app/current
+      - ./db:/var/lib/postgresql/data
+    depends_on:
+      - db
+      - sidekiq
+    environment:
+        DATABASE_URL: postgres://chatwoot:change_this_password@db/chatwoot
+        REDIS_URL: redis://redis:6379/0
+        SECRET_KEY_BASE: change-this-to-a-secret-key
+        SIDEKIQ_CONCURRENT_PROCESSS: 5
+    healthcheck:
+      test: ["TCP", "0.0.0.0:8080"]
+      timeout: 30s
+      retries: 120
+      interval: 10s
+
+  # Redis - Message Broker Service
+  redis:
+    image: redis:6
+    command: redis-server --save . snapshots 100
+    volumes:
+      - ./redis:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+# Nginx - Web Server Service (Optional, if you want to expose your application publicly)
+nginx:
+  image: chatwoot/chatwoot-nginx:latest
+  command: bundle exec exec bundler nginx -c /etc/nginx/conf.d -e production
+  volumes:
+    - ./app/public:/usr/share/nginx/html:ro
+  ports:
+    - "80:80"
+    - "443:443"
+  depends_on:
+    - app
+  environment:
+    RAILS_ENV: production
+    SERVER_PORT: 8080
+    DOMAIN: example.com
+  healthcheck:
+    test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+    timeout: 30s
+    retries: 120
+    interval: 10s
+
+# Let's Encrypt - SSL Certificate Service (Optional)
+letsencrypt:
+  image: certbot/certbot:latest
+  volumes:
+    - ./letsencrypt:/etc/letsencrypt
+  command: certonly --standalone --email your-email@example.com --agree-tos --no-eff-email --expand -d example.com
+  depends_on:
+    - nginx
+
+# Cache Service (Optional, if you want to use Redis for caching)
+redis_cache:
+  image: redis:6
+  command: redis-server --save . snapshots 100
+  volumes:
+    - ./redis_cache:/data
+  healthcheck:
+    test: ["CMD-SHELL", "redis-cli ping"]
+    interval: 10s
+    timeout: 5s
+    retries: 30
+
+# Sidekiq Cache Service (Optional, if you want to use Redis for caching with Sidekiq)
+sidekiq_cache:
+  image: redis:6
+  command: redis-server --save . snapshots 100
+  volumes:
+    - ./sidekiq_cache:/data
+  healthcheck:
+    test: ["CMD-SHELL", "redis-cli ping"]
+    interval: 10s
+    timeout: 5s
+    retries: 30
+
+# Cache Service for Sidekiq (Optional, if you want to use Redis for caching)
+sidekiq_unique_jobs:
+  image: redis:6
+  command: redis-server --save . snapshots 100
+  volumes:
+    - ./sidekiq_unique_jobs:/data
+  healthcheck:
+    test: ["CMD-SHELL", "redis-cli ping"]
+    interval: 10s
+    timeout: 5s
+    retries: 30

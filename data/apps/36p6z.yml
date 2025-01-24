@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  claper:
+    image: claper/claper:latest
+    ports:
+      - "8080:8080" # HTTP server port
+    volumes:
+      - "./claper-config.yml:/etc/claper/config.yml" # Configuration file for Claper
+      - claper-data:/var/lib/claper
+      - claper-logs:/var/log/claper
+
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: claper
+      POSTGRE_PASSWORD: change_this_password
+      POSTGRES_DB: claper
+    volumes:
+      - claper-postgres-data:/var/lib/postgresql
+
+  redis:
+    image: redis:latest
+
+volumes:
+  claper-data:
+  claper-logs:
+  claper-postgres-data:
+
+networks:
+  default:
+    driver: bridge

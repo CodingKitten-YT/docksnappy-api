@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  gatus:
+    image: gliderlabs/gatus:latest
+    container_name: gatus
+    ports:
+      - "9090:9090" # Gatus HTTP API
+      - "9443:9443" # Gatus HTTPS API (if you set up SSL)
+    volumes:
+      - "./gatus/data:/data"
+      - "./gatus/config:/config"
+    environment:
+      GATUS_API_TIMEOUT: 10s
+      GATUS_API_LISTEN: "0.0.0.0"
+      GATUS_API_HTTP_PORT: "9090"
+      GATUS_API_HTTPS_PORT: "9443" # Set this if you enable HTTPS
+      GATUS_LOG_LEVEL: "info"
+    restart: unless-stopped
+
+  gatus-db:
+    image: postgres:latest
+    container_name: gatus-db
+    volumes:
+      - "./gatus/db:/var/lib/postgresql/data"
+    environment:
+      POSTGRES_DB: gatus
+      POSTGRES_USER: gatus
+      POSTGRES_PASSWORD: change_this_password # Replace with a strong password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+
+  nginx-ingress:
+    image: nginx-ingress-controller:latest
+    container_name: nginx-ingress
+    ports:
+      - "80:80"
+      - "443:443"
+    command: ["--defaults-file=/etc/nginx/conf.d/default.conf"]
+    dependencies:
+      - gatus
+
+  cert-manager:
+    image: jetstack/cert-manager-ctl:v1.9.1
+    container_name: cert-manager
+    command: ["--retry-pull=True"]
+    volumes:
+      - "./gatus/certs:/tmp/certs" # This directory will be created by gatus to store certificates and keys
+    restart: unless-stopped
+
+networks:
+  default:
+    driver: bridge

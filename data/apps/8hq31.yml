@@ -1,0 +1,61 @@
+version: '3.7'
+
+services:
+  dreamfactory:
+    image: 'dreamfactory/dreamfactory:latest'
+    container_name: dreamfactory
+    ports:
+      - "80:80" # HTTP
+      - "443:443" # HTTPS (if using SSL)
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London # Set to your timezone
+      - DF_LICENSE=(Your license key here)
+      - DF_DEBUG=false # Set to true for debug mode
+    volumes:
+      - "./config:/config"
+      - "./data:/datastore"
+      - "./logs:/logs"
+    restart: unless-stopped
+    networks:
+      - dreamfactory_network
+
+  postgres:
+    image: 'postgres:12'
+    container_name: dreamfactory_db
+    environment:
+      - POSTGRES_DB=dreamfactory
+      - POSTGREES_USER=dfuser
+      - POSTGRES_PASSWORD=dfpassword
+    volumes:
+      - "./data/db:/var/lib/postgresql"
+    restart: unless-stopped
+    networks:
+      - dreamfactory_network
+
+  nginx-proxy:
+    image: 'jwilder/nginx-proxy':'1.0.2'
+    container_name: nginx_proxy
+    ports:
+      - "80:80" # HTTP
+      - "443:443" # HTTPS
+    volumes:
+      - "./letsencrypt:/etc/letsencrypt"
+      - "./nginx-data:/data"
+    depends_on:
+      - dreamfactory
+    networks:
+      - dreamfactory_network
+
+  letsencrypt:
+    image: 'jrcassancy/letsencrypt-certbot':'latest'
+    container_name: letsencrypt
+    volumes:
+      - "./letsencrypt:/etc/letsencrypt"
+    networks:
+      - dreamfactory_network
+
+networks:
+  dreamfactory_network:
+    driver: bridge

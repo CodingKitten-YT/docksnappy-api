@@ -1,0 +1,98 @@
+version: '3.7'
+services:
+  # Eclipse Che components
+  che-console:
+    image: 'eclipse/che:latest'
+    container_name: che-console
+    ports:
+      - "8080:8426" # HTTP (Admin UI)
+      - "9428:9428"  # Server communicator (RPC)
+    environment:
+      CHE_LOG_LEVEL: DEBUG
+      CHE_ENABLE_X_FRAME_OPTIONS: "1"
+      CHE_HOSTNAME: che.local
+      JAVA_OPTS: "-Dserver.tomcat.maxThreads=20 -Djavafx.headless=true"
+    networks:
+      default:
+        alias: che-console
+
+  # Eclipse Che server components
+  che-server:
+    image: 'eclipse/che:latest'
+    container_name: che-server
+    environment:
+      CHE_LOG_LEVEL: DEBUG
+      CHE_ENABLE_X_FRAME_OPTIONS: "1"
+      CHE_SERVER_HOSTNAME: che.local
+      JAVA_OPTS: "-Dhttp.port=8081 -Dserver.tomcat.maxThreads=20 -Djavafx.headless=true"
+    ports:
+      - "8081:8081" # Server communicator (Web UI)
+    depends_on:
+      - che-postgres
+    networks:
+      default:
+        alias: che-server
+
+  # PostgreSQL database for Eclipse Che
+  che-postgres:
+    image: 'postgres:latest'
+    container_name: che-postgres
+    environment:
+      POSTGRES_USER: che
+      POSTGRES_PASSWORD: change_this_password
+      POSTGRES_DB: eclipse-che
+      POSTGRES_DATABASE: 'eclipse-che'
+    volumes:
+      - che-postgres-data:/var/lib/postgresql/data
+    networks:
+      default:
+        alias: che-postgres
+
+  # Eclipse Che server UI (optional)
+  che-ui:
+    image: 'eclipse/che-webui:latest'
+    container_name: che-webide
+    environment:
+      CHE_LOG_LEVEL: DEBUG
+      CHE_SERVER_HOSTNAME: che-server
+      CHE_SERVER_URL: http://che-server:8081
+      CHE_UI_HOSTNAME: che.local
+    ports:
+      - "8425:8425" # Web UI (In-memory state)
+    depends_on:
+      - che-server
+    networks:
+      default:
+        alias: che-webide
+
+  # Eclipse Che server metrics exporter (optional, for monitoring)
+  che-metrics:
+    image: 'eclipse/che-metrics-exporter:latest'
+    container_name: che-metrics-exporter
+    environment:
+      CHE_LOG_LEVEL: DEBUG
+      CHE_SERVER_HOSTNAME: che-server
+    ports:
+      - "9411:9411" # Metrics (Prometheus)
+    depends_on:
+      - che-server
+    networks:
+      default:
+        alias: che-metrics
+
+  # Eclipse Che server logging (optional, for collecting logs)
+  che-log-forwarder:
+    image: 'eclipse/che-log-forwarder:latest'
+    container_name: che-log-forwarder
+    depends_on:
+      - che-console
+      - che-server
+    networks:
+      default:
+        alias: che-log-forwarder
+
+volumes:
+  che-postgres-data:
+
+networks:
+  default:

@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  goTocials:
+    image: 'gotosocial/core:latest' # or use a specific tag or commit if needed
+    container_name: 'gotocials'
+    ports:
+      - "8080:8080" # HTTP
+    environment:
+      SERVICE_NAME: 'goTocials'
+      CACHE_MECHANISM: 'redis'
+      SERVICE_ENVIRONMENT: 'production' # Use 'test' for test environment
+      JWT_SECRET: '$JWT_SECRET' # Replace with your own secret
+      DATA_PATH: '/data'
+      REDIS_HOST: 'redis'
+      REDIS_PORT: '6379'
+      DB_HOST: 'postgres'
+      DB_USERNAME: 'gotosocial'
+      DB_PASSWORD: '$DB_PASSWORD'
+      MAILER_HOST: 'mailhog'
+      MAILER_PORT: '8025'
+      MAILER_USERNAME: 'user@example.com' # Replace with a valid email for test purposes
+      MAILER_PASSWORD: '$MAILER_PASSWORD'
+    volumes:
+      - './data:/data'
+      - './gotosocial.env:/app/.env' # Optionally use an environment file for configuration
+    depends_on:
+      - redis
+      - postgres
+      - mailhog
+    restart: unless-stopped
+
+  redis:
+    image: 'redis:6'
+    command: redis-server --appendonly yes
+    volumes:
+      - './docker/data/redis:/data'
+    environment:
+      REDIS_PORT: '6379'
+    restart: unless-stopped
+
+  postgres:
+    image: 'postgres:12'
+    environment:
+      POSTGRES_DB: 'gotosocial'
+      POSTGRES_USER: 'gotosocial'
+      POSTGRES_PASSWORD: '$DB_PASSWORD' # Replace with your own password
+    volumes:
+      - './docker/data/postgres:/var/lib/postgresql/data'
+    restart: unless-stopped
+
+  mailhog:
+    image: 'mailhog:latest'
+    ports:
+      - "8025:8025" # API
+      - "8000:8000" # Web UI
+    environment:
+      MAILHOG_USERNAME: 'user@example.com' # Replace with a valid email for test purposes
+      MAILHOG_PASSWORD: '$MAILHOG_PASSWORD'
+    restart: unless-stopped
+
+# Uncomment the following services if you want to use them
+# db_backup:
+#   image: 'tuwen/mysql-dumper:latest'
+#   volumes:
+#     - './backups:/backups'
+#   environment:
+#     MYSQL_HOST: 'postgres'
+#     MYSQL_USERNAME: 'gotosocial'
+#     MYSQL_PASSWORD: '$DB_PASSWORD'
+#     MYSQL_DATABASE: 'gotosocial'
+#     BACKUP_DESTINATION: '/backups/'
+#   restart: unless-stopped
+
+# Define the networks to be used by each service
+networks:
+  default: true

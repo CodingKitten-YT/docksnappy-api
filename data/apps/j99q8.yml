@@ -1,0 +1,70 @@
+version: '3.8'
+services:
+  openproject:
+    image: openproject/openproject:latest # or a specific version like openproject/openproject:EE-12.0.0
+    container_name: openproject
+    ports:
+      - "9000:9000" # HTTP (Web UI)
+      - "8080:8080" # Admin API (for backup, etc.)
+      - "9001:9001" # Rails console for maintenance purposes
+    environment:
+      OP_ENVIRONMENT: production
+      OP_DATABASE_DATABASE: openproject
+      OP_DATABASE_USER: openproject
+      OP_DATABASE_PASSWORD: your_database_password
+      OP_DATABASE_HOST: db
+      OP_DB_ENFORCE_SCHEMAS: false # set to true for enforcing schemas (not recommended for production)
+      OP_RAILS_SERVE_STATIC_FILES: true
+      OP_WEB_CONSOLE_ENABLED: true # Allows to access the Rails console through a web interface at http://<OpenProject-Host>:9001/
+      OP_ADMIN_API_ENABLED: true # Enables the Admin API at http://<OpenProject-Host>:8080/
+      OP_LOG_LEVEL: INFO # Change this to DEBUG for more verbose logging, etc.
+    volumes:
+      - openproject-shared:/var/lib/openproject
+      - openproject-logs:/var/log/openproject
+    depends_on:
+      - db
+      - redmine_rails
+      - redis
+      - mailcatcher # Optional service for receiving emails sent by the system (useful for testing)
+      # Uncomment the next line if you want to use a different configuration file
+      # environment:
+      #   OP_CONFIG_PATH: /path/to/custom/config.yml
+    networks:
+      - openproject_default
+
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: openproject
+      POSTGRES_USER: openproject
+      POSTGRES_PASSWORD: your_database_password
+    volumes:
+      - openproject-db:/var/lib/postgresql
+    networks:
+      - openproject_default
+
+  redis:
+    image: redis:latest
+    networks:
+      - openproject_default
+
+  mailcatcher:
+    image: mailcatcher:alpine
+    ports:
+      - "1080:1080"
+    networks:
+      - openproject_default
+
+  redis:
+    image: redis:latest
+    networks:
+      - openproject_default
+
+networks:
+  openproject_default:
+    driver: bridge
+
+volumes:
+  openproject-shared:
+  openproject-logs:
+  openproject-db:

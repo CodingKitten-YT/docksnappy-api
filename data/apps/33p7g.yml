@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+  briefkasten-postgres:
+    image: postgres:13
+    command: postgres -c 'listen_addresses = 0.0.0.0'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: briefkasten
+      POSTGES_USER: briefkasten
+      POSTGRES_PASSWORD: your_secret_password
+    ports:
+      - "5432:5432"
+
+  briefkasten-app:
+    image: briefkasten/briefkasten
+    depends_on:
+      - briefkasten-postgres
+    environment:
+      DATABASE_URL: postgres://briefkasten:your_secret_password@localhost:5432/briefkasten
+      JWT_SECRET: your_jwt_secret
+    ports:
+      - "8080:8080"
+    volumes:
+      - briefkasten_data:/tmp/cache
+
+volumes:
+  postgres_data:
+  briefkasten_data:

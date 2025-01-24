@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  ente_api:
+    image: entegro/ente:latest # Use the official image or a specific tag
+    ports:
+      - "80:8080" # Map HTTP port to host for external access, default is 8080
+    depends_on:
+      - ente_db
+    environment:
+      ENTE_DB_HOST: ente_db
+      ENTE_DB_NAME: your_database_name
+      ENTE_DB_USER: your_database_user
+      ENTE_DB_PASSWORD: your_database_password
+      ENTE_DB_PORT: 5432 # Default PostgreSQL port, change if necessary
+      ENTE_SECRET_KEY: a_very_secret_key # Use an environment variable or file for this
+      ENTE_ALLOWED_HOSTS: '*' # Adjust CORS settings as needed
+    volumes:
+      - ente-api-data:/var/task # Persistent storage for the API data
+
+  ente_db:
+    image: postgres:latest # Use the official PostgreSQL image
+    environment:
+      POSTGRES_DB: your_database_name
+      POSTGRES_USER: your_database_user
+      POSTGRES_PASSWORD: your_database_password
+      POSTGRES_PORT: 5432 # Default PostgreSQL port
+    volumes:
+      - ente-db-data:/var/lib/postgresql # Persistent storage for the database data
+
+volumes:
+  ente-api-data:
+  ente-db-data:

@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  lodestone-db:
+    image: postgres:12
+    volumes:
+      - lodestone-db-data:/var/lib/postgresql
+    environment:
+      POSTGRES_DB: lodestone
+      POSTGRES_USER: lodestone
+      POSTGRES_PASSWORD: your_secret_password
+    networks:
+      - lodestone-network
+
+  lodestone-app:
+    image: dassaultsystemes/lodestone:latest
+    depends_on:
+      - lodestone-db
+    environment:
+      DB_HOST: lodestone-db
+      DB_NAME: lodestone
+      DB_USER: lodestone
+      DB_PASSWORD: your_secret_password
+      JVM_OPTIONS: "-Xms4g -Xmx8g"
+    ports:
+      - "8081:8080" # Lodestone default port exposed to the host
+    volumes:
+      - lodestone-data:/opt/lodestone/data
+      - lodestone-config:/opt/lodestone/config
+    networks:
+      - lodestone-network
+
+  lodestone-proxy:
+    image: nginx:stable-alpine
+    ports:
+      - "80:80" # Public HTTP port for reverse proxy
+      - "443:443" # Public HTTPS port for reverse proxy
+    volumes:
+      - lodestone-proxy-conf.tpl:/etc/nginx/conf.d/default.conf:ro
+      - lodestone-ssl:/etc/nginx/ssl
+    networks:
+      - lodestone-network
+
+volumes:
+  lodestone-db-data:
+  lodestone-data:
+  lodestone-config:
+  lodestone-ssl:
+
+networks:
+  lodestone-network:
+    driver: bridge

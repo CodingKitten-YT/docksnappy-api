@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  gotify:
+    image: 'gotify/server:latest' # Use a specific version if needed, e.g., 'gotify/server:v0.26.0'
+    ports:
+      - '443:443'
+      - '80:80' # HTTP to redirect to HTTPS
+    volumes:
+      - './config:/config'
+      - './letsencrypt:/etc/letsencrypt'
+      - './gotify-data:/data'
+    environment:
+      - GOTIFY_SERVER_HOSTNAME=example.com # Set your domain here
+      - GOTIFY_SERVER_PROTOCOL=https
+      - TZ=Europe/London
+      - MYSQL_DATABASE=gotify
+      - MYSQL_USER=gotify
+      - MYSQL_PASSWORD=your_mysql_password
+      - MYSQL_ROOT_PASSWORD=your_root_password # Optional, if you are using root access
+    depends_on:
+      - mysql
+    networks:
+      - gotify-net
+
+  mysql:
+    image: 'mysql:5.7'
+    environment:
+      MYSQL_ROOT_PASSWORD: your_root_password
+      MYSQL_DATABASE=gotify
+      MYSQL_USER=gotify
+      MYSQL_PASSWORD=your_mysql_password
+    volumes:
+      - './mysql-data:/var/lib/mysql'
+    networks:
+      - gotify-net
+
+networks:
+  gotify-net:
+    driver: bridge
+
+restart: unless.stopped
+
+# For Let's Encrypt to automate certificate issuance and renewal.
+services:
+  lego:
+    image: 'cert-bot/certbot:latest'
+    volumes:
+      - './letsencrypt:/etc/letsencrypt'
+    entrypoint: '/bin/sh -c "trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;"'

@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  atheos-api:
+    image: atheos/atheos-api:latest
+    container_name: atheos-api
+    ports:
+      - "8080:8080" # Expose the API on port 8080 of the host
+    environment:
+      - APP_ENV=prod # Set the environment to production, for example
+      - DATABASE_URL=postgres://user:password@db:5432/dbname # Example database URL
+    depends_on:
+      - db
+    volumes:
+      - ./data:/data # Mount a volume for data persistence
+
+  atheos-worker:
+    image: atheos/atheos-worker:latest
+    container_name: atheos-worker
+    depends_on:
+      - db
+      - atheos-api
+    environment:
+      - WORKER_QUEUE=default # Set the default queue for the worker
+
+  db:
+    image: postgres:13
+    container_name: atheos-db
+    volumes:
+      - ./data/db:/var/lib/postgresql/data # Mount a volume for database data persistence
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=dbname
+      - POSTGRES_PORT=5432
+
+  redis:
+    image: redis:6-alpine
+    container_name: atheos-redis
+    ports:
+      - "6379:6379" # Expose Redis on port 6379 of the host
+    volumes:
+      - ./data/redis:/data
+
+  redis-sentinel:
+    image: redissentinel:6-alpine
+    container_name: atheos-redis-sentinel
+    ports:
+      - "26379:26379" # Expose Sentinel on port 26379 of the host
+    volumes:
+      - ./data/redis/sentinel:/etc/redis-sentinel/conf.d
+    environment:
+      - CLIENTS: redis-master:26379 redis-slave:26380 # Example Sentinel configuration for Redis instances
+      - REDIS_MASTER_HOST: redis
+      - REDIS_MASTER_PORT: 6379
+      - REDIS_SLAVE_HOST: redis
+      - REDIS_SLAVE_PORT: 6379
+
+  # Add any other services Atheos might require, like a cache or a message queue.
+  # For example:
+  # cache:
+  #   image: redis:6-alpine
+  #   container_name: atheos-cache
+  #   ports:
+  #     - "6379:6379"
+
+networks:
+  default:
+    driver: bridge
+
+# Uncomment the following if you need to use a custom network
+# networks:
+#   atheos_net:
+#     driver: bridge

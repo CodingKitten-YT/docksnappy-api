@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  artalk_db:
+    image: postgres:12
+    environment:
+      POSTGRES_USER: artalk
+      POSTGRES_PASSWORD: change_this_password
+    volumes:
+      - artalk-db-data:/var/lib/postgresql2
+    command: --utf8=true --lc-collate=C --lc-ctype=C --max_connections=200
+
+  artalk_redis:
+    image: redis:6-alpine
+    command: redis-server --appendonly yes
+
+  artalk_webapp:
+    build: .
+    volumes:
+      - .:/code
+      - artalk-webapp-data:/code/static
+    environment:
+      DATABASE_URL: postgres://artalk:change_this_password@artalk_db:5432/artalk
+      REDIS_HOST: artalk_redis
+      REDIS_PASSWORD: '' # Leave empty if not required
+      SECRET_KEY: 'a_very_secret_key' # Replace with a real secret key for production
+    dependencies:
+      - type: volume
+        source:
+          name: artalk-webapp-data
+        target:
+          path: /code/static
+          mode: cached
+        volumes:
+          - artalk-webapp-data
+
+  artalk_worker:
+    image: node:16-alpine
+    command: yarn install && yarn run start
+    volumes:
+      - .:/code
+    environment:
+      DATABASE_URL: postgres://artalk:change_this_password@artalk_db:5432/artalk
+      REDIS_HOST: artalk_redis
+      REDIS_PASSWORD: '' # Leave empty if not required
+      SECRET_KEY: 'a_very_secret_key' # Replace with a real secret key for production
+    depends_on:
+      - artalk_webapp
+
+volumes:
+  artalk-db-data:
+  artalk-webapp-data:

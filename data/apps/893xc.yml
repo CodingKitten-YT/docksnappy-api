@@ -1,0 +1,56 @@
+version: '3.7'
+services:
+  centrifugo:
+    image: centrifugo/centrifugo:latest
+    command: -config /etc/centrifugo/production.yaml -debug info
+    ports:
+      - "8080:8080" # HTTP API
+      - "8081:8081" # WebSocket server (use this for real-time connections)
+      - "4430:4430" # Secure WebSocket server (if you have SSL certificates and want to use WSS)
+    volumes:
+      - ./centrifugo/conf:/etc/centrifugo
+      - ./centrifugo/log:/var/log/centrifugo
+      - ./centrifugo/public:/usr/src/centrifugo/app/public  # if you have custom assets
+    environment:
+      CENTRIFUGO_ENV: production
+      SERVICE_NAME: centrifugo
+      LOG_LEVEL: info
+    cap_drop:
+      - all
+    restart: unless-stopped
+
+  redis:
+    image: redis:6.0-alpine
+    command: --save-on-flush NO --appendonly yes
+    volumes:
+      - ./data/redis:/data
+    environment:
+      CENTRIFUGO_REDIS_DSN: "redis://127.0.0.1:6379/0"
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:13
+    command: --password=centrifugo
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: centrifugo
+      POSTGRES_PASSWORD: centrifugo
+      CENTRIFUGO_DB_URI: "postgres://127.0.0.1:5432/centrifugo?sslmode=disable"
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"   # HTTP
+      - "443:443"  # HTTPS (use with SSL certificates)
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/certs:/etc/nginx/ssl:ro # mount your SSL certificates here if you have them
+    depends_on:
+      - centrifugo
+    restart: unless-stopped
+
+networks:
+  default:
+    driver: bridge

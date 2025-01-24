@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  komga:
+    image: 'komga/komga:latest' # Use a specific tag if needed, e.g., 'komga/komga:v1.5.0'
+    container_name: komga
+    ports:
+      - "8080:8080" # Web UI port
+      - "4040:4040" # Admin interface port
+      - "9000-9002:9000-9002" # Default range for Komga's built-in download server
+    environment:
+      KOMGA_INITDB_HOSTS: 'postgres' # Assume PostgreSQL service name
+      KOMGA_POSTGRES_HOST: â€˜postgres' # Match your PostgreSQL service name
+      KOMGA_POSTGRES_USER: 'komga'
+      KOMGA_POSTGRES_PASSWORD: 'your_password' # Set a strong password for security
+      KOMGA_POSTGRES_DB: 'komga'
+      JWT_SECRET: 'very_secret_key' # Change to a secure, random key
+      COMMON_SERVER_HOST: '0.0.0.0' # Allow connections from any network interface
+    volumes:
+      - './komga-data:/data' # Mount for user uploads and database backup
+    depends_on:
+      - postgres
+    networks:
+      - komga_network
+
+  postgres:
+    image: 'postgres:latest' # Use a specific tag if needed, e.g., 'postgres:13-alpine'
+    container_name: postgres
+    volumes:
+      - './komga-data/db:/var/lib/postgresql/data' # Mount for PostgreSQL data persistence
+    environment:
+      POSTGRES_DB: 'komga'
+      POSTGRES_USER: 'komga'
+      POSTGRES_PASSWORD: 'your_password' # Same password as Komga, or set it via a secret
+    networks:
+      - komga_network
+
+networks:
+  komga_network:
+    driver: bridge

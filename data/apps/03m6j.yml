@@ -1,25 +1,54 @@
 version: '3.8'
 
 services:
-  anycable:
-    image: anycable/anycable-go:latest
-    container_name: anycable
-    restart: unless-stopped
+  anycable_gateway:
+    image: anycable/anycable-gateway:latest
+    command: -e 'LISTEN_ADDRESS=0.0.0.0'
     ports:
-      - "3333:3333" # WebSocket server on port 3333
-    volumes:
-      - ./anycable/config:/etc/anycable # Persistent configuration storage
+      - "4000:4000" # Subscription cable server port
     environment:
-      - ANYCABLE_REDIS_URL=redis://redis:6379/0 # Redis connection URL
-      - ANYCABLE_RPC_HOST=0.0.0.0
-      - ANYCABLE_RPC_PORT=50051
-      - TZ=Etc/UTC # Replace with your timezone
+      - DB_HOST=postgres_1 # Assuming a linked PostgreSQL service with the alias 'postgres_1'
+      - DB_USER=anycable       # Database user for AnyCable
+      - DB_PASSWORD=anycabledb   # Database password for AnyCable
+      - DB_DATABASE=anycable     # Database name for AnyCable
+      - DB_PORT=5432             # PostgreSQL port (default is 5432)
+      - REDIS_HOST=redis_1      # Assuming a linked Redis service with the alias 'redis_1'
+      - REDIS_PASSWORD=anycabledis # Redis password (optional, for security purposes)
     depends_on:
-      - redis
-
-  redis:
-    image: redis:alpine
-    container_name: anycable_redis
-    restart: unless-stopped
+      - postgres_1
+      - redis_1
     volumes:
-      - ./anycable/redis:/data # Persistent Redis storage
+      - ./data:/data
+
+  postgres_1:
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=anycable
+      - POSTGRES_PASSWORD=anycabledb
+      - POSTGRES_DB=anycable
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+
+  redis_1:
+    image: redis:latest
+    command: --requirepass foobaredis # Set Redis password (optional)
+
+  webapp: # Replace 'webapp' with the name of your Web application that will connect to AnyCable
+    image: your-webapp-image:latest
+    ports:
+      - "8000:8000" # Port used by your Web application (default is 8000)
+    depends_on:
+      - anycable_gateway
+
+# Uncomment the following if you need to use SSL/TLS with AnyCable Gateway
+# anycable_gateway:
+#   image: anycable/anycable-gateway:latest
+#   command: -e 'LISTEN_ADDRESS=0.0.0.0' -e 'USE_TLS=1'
+#   ports:
+#     - "4000:4000" # Subscription cable server port
+#   volumes:
+#     - ./tls:/tls
+#   environment:
+#     # ... (other variables)
+#     - SSL_CERTIFICATE=/tls/cert.pem
+#     - SSL_KEY=/tls/key.pem

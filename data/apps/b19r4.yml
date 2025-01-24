@@ -1,0 +1,37 @@
+version: '3.8'
+services:
+  gitea:
+    image: gitea/gitea:latest # or use a specific version like gitea/gitea:10.8.2-ce
+    container_name: gitea
+    ports:
+      - "3000:3000" # HTTP Port
+      - "3001:3001" # HTTPS Port (optional, if you want to use Let's Encrypt for SSL)
+    volumes:
+      - gitea-data:/data/current
+      - gitea-config:/etc/gitea
+      - gitea-logs:/root/.logrotate.d
+    environment:
+      - GITEA_USER=root
+      - GITEA_PASSWORD=your_password
+      - GITEA_EMAIL=admin@example.com
+      - GITEA_DOMAIN=example.com # Set your domain or subdomain here
+      - UID=1000
+      - GUID=100
+    user: "1000"
+    restart: unless-stopped
+    networks:
+      - gitea_net
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "localhost:3000"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+networks:
+  gitea_net:
+    driver: bridge
+
+volumes:
+  gitea-data:
+  gitea-config:
+  gitea-logs:

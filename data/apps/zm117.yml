@@ -1,0 +1,53 @@
+version: '3.7'
+services:
+  gotenberg:
+    image: gotenberg/gotenberg:latest
+    container_name: gotenberg
+    ports:
+      - "8090:80" # HTTP API
+      - "8100:81" # Web UI (Adminer)
+    volumes:
+      - "./config:/etc/gotenberg" # Configuration files
+      - "./letsencrypt:/etc/letsencrypt" # Let's Encrypt certificates (optional, for HTTPS)
+      - "./pdf-storage:/var/lib/gotenberg/pdfs" # Storage for PDF files (optional, can be a remote path if using a volume driver like NFS or CSI)
+    environment:
+      - "DB_HOST=db"             # Database service name (if you are using a separate database service)
+      - "DB_USER=gotenberg"     # Database user
+      - "DB_PASSWORD=password" # Database password
+      - "DB_NAME=gotenberg"       # Database name
+      - "DB_TYPE=mysql"          # Database type (mysql, postgres, sqlite3)
+      - "ADMINER_HOST=adminer"  # Adminer service name (if you are running Adminer separately)
+      - "SERVER_HOST=0.0.0.0"     # Bind HTTP server to this host (use '127.0.0.1' if you want to restrict access)
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: postgres:latest
+    container_name: gotenberg-db
+    volumes:
+      - "./gotenberg-db:/var/lib/postgresql/data" # Database data (optional, for persistence)
+    environment:
+      - "POSTGRES_USER=gotenberg"
+      - "POSTGRES_PASSWORD=password"
+      - "POSTGRES_DB=gotenberg"
+    restart: unless-stopped
+
+# Optional Adminer service to manage the database
+adminer:
+  image: adminer:latest
+  container_name: gotenberg-adminer
+  ports:
+    - "8100:80" # Web UI (Adminer)
+  volumes:
+    - "./adminer:/data" # Adminer data (optional, for persistence)
+  restart: unless-stopped
+
+# Let's Encrypt service (optional, requires DNS configuration pointing to the host running Gotenberg)
+letsencrypt:
+  image: certbot/certbot:latest
+  container_name: letsencrypt
+  volumes:
+    - "./letsencrypt:/etc/letsencrypt" # Let's Encrypt certificates (optional, for HTTPS)
+  entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+  restart: unless-stopped

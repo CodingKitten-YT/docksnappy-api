@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  octoprint:
+    image: octoprint/octoprint:latest  # Use the official OctoPrint image or specify a tag/version
+    container_name: octoprint  # Optional, sets the container name to 'octoprint'
+    ports:
+      - "5000:5000"  # Web interface on port 5000 (host:guest)
+      - "8000:8000"  # WebSocket server on port 8000 (host:guest), for plugins that need it
+    environment:
+      TZ: "Europe/London"  # Set the timezone, use your own if needed
+    volumes:
+      - "/path/to/your/octoprint-data:/data"  # Mount your local directory as the data volume
+      - "/dev/shm:/dev/shm"  # Required for sharing the RAM disk between Docker containers on Linux
+      - "./custom_plugins:/home/octo/.local/share/octoprint/plugins:ro"  # Optional, mount custom plugins (read-only)
+      - "./config:/data/config"  # Optional, mount your local configuration directory
+    restart: unless-stopped  # Restart on failure
+    networks:
+      - octoprint_network  # Define a user-defined network for the host and this service
+
+  server:
+    image: octoprint/octoprint-server:latest  # Optional, if you prefer to run octoprint-server separately
+    container_name: octoprint-server
+    volumes:
+      - "/path/to/your/octoprint-data:/data"
+      - "/dev/shm:/dev/shm"
+      - "./custom_plugins:/home/octo/.local/share/octoprint/plugins:ro"
+      - "./config:/data/config"
+    ports:
+      - "8022:22"  # SSH access to the OctoPrint server (host:guest)
+    environment:
+      TZ: "Europe/London"
+    restart: unless-stopped
+    depends_on:
+      - octoprint
+    networks:
+      - octoprint_network
+
+networks:
+  octoprint_network:
+    driver: bridge

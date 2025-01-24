@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  docat:
+    image: docat/docat:latest # Use the latest official image or a specific tag/version
+    ports:
+      - "8000:8000" # Expose Docat UI on port 8000 of the host
+    volumes:
+      - "./docs:/usr/src/app/docs" # Mount your local docs directory to the container
+      - "./node_modules:/usr/src/app/node_modules" # Optional: Keep node modules between restarts if you have custom themes or plugins
+    environment:
+      - DOCAT__OUTPUT=./output # Set the output directory for generated documentation
+      - GOOGLE_ANALYTICS_ID=UA-12345678-9 # Optional: Set your Google Analytics ID for tracking
+      - ADMIN_USERNAME=admin # Optional: Set an admin username for Docat UI
+      - ADMIN_PASSWORD=password # Optional: Set an admin password for Docat UI
+    environment:
+      - DOCAT__USE_VIRTUAL_HOSTS=false # Optional: Set to true if you're using virtual hosts in your docs
+    restart: unless-stopped # Ensure the container restarts on failure
+
+  nginx-reverse-proxy:
+    image: nginx:latest
+    ports:
+      - "80:80" # Map HTTP port 80 to the host for a reverse proxy
+      - "443:443" # Map HTTPS port 443 to the host for a reverse proxy (if you have SSL setup)
+    volumes:
+      - "./nginx/conf.d:/etc/nginx/conf.d" # Mount your local nginx configuration directory to the container
+      - "./certs:/etc/ssl/certs" # Mount your SSL certificates directory to the container (if using HTTPS)
+    depends_on:
+      - docat
+    networks:
+      - backend
+
+networks:
+  backend:

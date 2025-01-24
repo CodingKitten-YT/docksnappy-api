@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  caddy:
+    image: caddy:latest
+    ports:
+      - "80:80" # HTTP
+      - "443:443" # HTTPS (use with SSL certificates)
+    volumes:
+      - ./data:/data
+      - ./config:/etc/caddy
+    networks:
+      - caddy_network
+
+networks:
+  caddy_network:
+    driver: bridge

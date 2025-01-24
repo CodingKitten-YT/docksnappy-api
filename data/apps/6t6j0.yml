@@ -1,27 +1,23 @@
 version: '3.8'
 
 services:
-  adguardhome:
-    image: adguard/adguardhome:latest
-    container_name: adguardhome
-    restart: unless-stopped
-    network_mode: "host" # Use host networking for DNS resolution
-    volumes:
-      - ./adguard/workdir:/opt/adguardhome/work
-      - ./adguard/confdir:/opt/adguardhome/conf
-    environment:
-      - TZ=Etc/UTC # Replace 'Etc/UTC' with your timezone, e.g., 'America/New_York'
+  adguard-home:
+    image: 'adguard/adguard-home:latest'
+    container_name: adguard-home
     ports:
-      # Uncomment below if you prefer mapped ports instead of host networking
-      # - "53:53/tcp"
-      # - "53:53/udp"
-      # - "67:67/udp"
-      # - "68:68/tcp"
-      # - "80:80/tcp"
-      # - "443:443/tcp"
-      # - "3000:3000/tcp"
+      - "8080:8080" # HTTP web interface
+      - "3000:3000" # Admin API (change adminapi_port in AdGuard Home settings if needed)
+      - "5182:5182" # DNS port (optional, only if you want to use AdGuard Home as your DNS server)
+    volumes:
+      - "./AdGuardHome/config.yaml:/etc/adguard/config.yaml"
+      - "./AdGuardHome/logs:/var/log/adguard-home"
+      - "./AdGuardHome/storage:/var/lib/adguard-home"
+    environment:
+      TZ: "Europe/Moscow" # Replace with your timezone, e.g., "America/New_York"
+    restart: 'unless-stopped'
+    networks:
+      - adguard-network
 
-# Uncomment the networks section if you disable network_mode: host
-# networks:
-#   default:
-#     driver: bridge
+networks:
+  adguard-network:
+    driver: bridge

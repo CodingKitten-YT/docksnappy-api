@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  anonaddy:
+    image: anonymousaddy/anonaddylib
+    container_name: anonaddy
+    ports:
+      - "8080:80" # Web interface
+      - "54321:5432" # Postfix for email receiving
+    volumes:
+      - ./data/conf.d:/etc/anonaddy/conf.d
+      - ./data/certs:/etc/letsencrypt
+      - ./data/mail:/var/spool/mail
+    environment:
+      - ANONADDY_DOMAIN=yourdomain.com
+      - TZ=Your/Timezone
+      - PGID=100
+      - PGROUPNAME=anonaddy
+      - PUID=100
+      - GUI=true
+      - DOMAIN_ALLOWLIST=example.com,another.com
+    networks:
+      - anonaddy_net
+
+networks:
+  anonaddy_net:
+    driver: bridge
+
+volumes:
+  anonaddy_data:
+    driver: local

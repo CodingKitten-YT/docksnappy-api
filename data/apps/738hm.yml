@@ -1,43 +1,96 @@
-version: '3.0'
+version: '3.8'
+
 services:
   activepieces:
-    image: ghcr.io/activepieces/activepieces:0.39.6
+    image: activepieces/activepieces-ce:latest
     container_name: activepieces
-    restart: unless-stopped
-    ## Enable the following line if you already use AP_EXECUTION_MODE with SANDBOXED or old activepieces, checking the breaking change documentation for more info.
-    ## privileged: true
     ports:
-      - '8080:80'
-    depends_on:
-      - postgres
-      - redis
-    env_file: .env
-    volumes:
-      - ./cache:/usr/src/app/cache
-    networks:
-      - activepieces
-  postgres:
-    image: 'postgres:14.4'
-    container_name: postgres
-    restart: unless-stopped
+      - "8081:8080" # HTTP API
+      - "9000:9000" # WebSocket
     environment:
-      - 'POSTGRES_DB=${AP_POSTGRES_DATABASE}'
-      - 'POSTGRES_PASSWORD=${AP_POSTGRES_PASSWORD}'
-      - 'POSTGRES_USER=${AP_POSTGRES_USERNAME}'
+      DJANGO_ALLOWED_HOSTS: '[]'
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      POSTGRES_DB: ${DATABASE_DB}
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - activepieces
-  redis:
-    image: 'redis:7.0.7'
-    container_name: redis
-    restart: unless-stopped
+      - ./data:/root/.local/share/activepieces/
+      - ./config:/code/config:ro
+    depends_on:
+      - db
+
+  db:
+    image: postgres:13
+    container_name: activepieces-db
     volumes:
-      - 'redis_data:/data'
-    networks:
-      - activepieces
-volumes:
-  postgres_data:
-  redis_data:
-networks:
-  activepieces:
+      - ./data/postgres:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${DATABASE_DB}
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+
+# Optional Redis service for caching if needed.
+redis:
+  image: redis:6-alpine
+  container_name: activepieces-redis
+
+# Uncomment the following lines to enable logging with ELK stack (Elasticsearch, Logstash, Kibana)
+# logs-stack:
+#   image: docker.elastic.co/logstash/logstash:8.2.0
+#   container_name: activepieces-logs
+#   ports:
+#     - "5044:5044" # Logstash TCP
+#   environment:
+#     LS_JAVA_OPTS=-Xms512m -Xmx512m
+#   depends_on:
+#     - activepieces
+
+# Uncomment the following lines to enable monitoring with Prometheus and Grafana
+# monitor-stack:
+#   image: prom/prometheus:v8.2.0
+#   container_name: activepieces-monitor
+#   ports:
+#     - "9090:9090" # Prometheus HTTP interface and web console
+#   command:
+#     - '--config.file=/etc/prometheus/prometheus.yml'
+#   volumes:
+#     - ./monitoring/prometheus:/etc/prometheus:ro
+#     - ./monitoring/grafana:/etc/grafana:ro
+#   depends_on:
+#     - activepieces
+# grafana:
+#   image: grafana/grafana:8.2.0
+#   container_name: activepieces-grafana
+#   ports:
+#     - "3000:3000" # Grafana HTTP interface and web console
+#   environment:
+#     GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+
+# Uncomment the following lines if you need to set up a reverse proxy with Nginx.
+# nginx:
+#   image: nginx:stable-alpine
+#   container_name: activepieces-nginx
+#   ports:
+#     - "80:80" # HTTP
+#   volumes:
+#     - ./nginx/conf.d:/etc/nginx/conf.d
+#   depends_on:
+#     - activepieces
+
+# Uncomment the following lines to set up NodeRed with Activepieces.
+# nodered:
+#   image: node-red/node-red:latest
+#   container_name: activepieces-nodered
+#   ports:
+#     - "1880:1880" # Node-RED HTTP router
+#   volumes:
+#     - ./flow:/root/.node-red
+
+# Uncomment the following lines to enable a mail service with Postfix.
+# mailhog:
+#   image: mailhog/mailhog:latest
+#   container_name: activepieces-mailhog
+#   ports:
+#     - "8025:25"  # SMTP server
+#     - "1025:1025" # Submission port
+#     - "8079:8079" # Admin UI

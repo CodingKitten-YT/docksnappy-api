@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  gitlab:
+    image: gitlab/gitlab-ee:latest # or gitlab/gitlab-ce for Community Edition
+    container_name: gitlab
+    ports:
+      - '80:80'        # HTTP (unauthenticated) web access
+      - '8443:443'     # HTTPS (authenticated) web access
+      - '22:22'         # SSH Access for GitLab Runner and Git operations
+    volumes:
+      - '/path/to/gitlab/config:/etc/gitlab'  # Configuration files (optional, for configuration persistence)
+      - '/path/to/gitlab/logs:/var/log/gitlab'   # Logs (optional, for log persistence)
+      - '/path/to/gitlab/data:/var/opt/gitlab'  # Data (optional, for data persistence)
+      - '/path/to/gitlab/ssl:/etc/pki/gitlab'   # SSL certificates (optional, for SSL certs persistence)
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        gitlab_rails['lfs_enabled'] = true
+        external_url 'http://your-domain.com'  # Set the external URL of your GitLab instance
+        gitlab_rails['ssl_external_url'] = 'https://your-domain.com'  # The SSL external URL (if you use HTTPS)
+    dns:
+      - 'gitlab.example.com'  # Use a hostname to access your GitLab instance via DNS
+    depends_on:
+      - postgres
+    networks:
+      - gitlab_network
+
+  postgres:
+    image: postgres:latest
+    volumes:
+      - '/path/to/gitlab/data:/var/lib/postgresql'  # Data (optional, for data persistence)
+    environment:
+      POSTGRES_DB: gitlabhq_maintenance
+      POSTGRES_USER: gitlab
+      POSTGRES_PASSWORD: your_password  # Replace with a strong password
+    healthcheck:
+      timeout: 5s
+      retries: 10
+      test: ["exec", "pg_isready", "-U", "gitlab"]
+
+networks:
+  gitlab_network:
+    driver: bridge

@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  mattermost:
+    image: mattermost:latest
+    container_name: mattermost
+    ports:
+      - "8065:8065" # HTTP interface
+      - "8443:8443" # Secure HTTP interface (HTTPS)
+      - "8066:8066" # Websocket port for real-time messaging
+    environment:
+      MM_LICENSE_KEY: ${MM_LICENSE_KEY} # Set your license key here if you have one
+      SERVICE_NAME: mattermost
+      MM_SERVER_URL: "https://${HOSTNAME}.local"
+      MM_ADMIN_EMAIL: "admin@example.com"
+      MM_REDIS_HOST: redis
+      MM_DB_HOST: db
+      MM_DB_USERNAME: root
+      MM_DB_PASSWORD: secret
+    volumes:
+      - mattermost-data:/data
+      - mattermost-logs:/logs
+    depends_on:
+      - redis
+      - db
+    networks:
+      - mattermostnet
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    volumes:
+      - redis-data:/data
+    command: "RedisStart"
+    networks:
+      - mattermostnet
+
+  db:
+    image: postgres:latest
+    container_name: db
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: mattermost
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: secret
+    networks:
+      - mattermostnet
+
+volumes:
+  mattermost-data:
+  mattermost-logs:
+  redis-data:
+  db-data:
+
+networks:
+  mattermostnet:

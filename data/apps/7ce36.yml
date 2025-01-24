@@ -1,0 +1,42 @@
+version: '3.7'
+
+services:
+  gerrit:
+    image: gerrit/gerrit:latest # Use a specific version if needed, e.g., "8-rc-x.y"
+    container_name: gerrit
+    ports:
+      - "29418:29418" # HTTPS port for Gerrit (adjust the host port as needed)
+      - "8030:29418"   # HTTP port for Gerrit (optional, for non-HTTPS setups)
+    volumes:
+      - gerrit-data:/var/lib/gerrit
+      - gerrit-config:/etc/gerrit
+      - gerrit-logs:/var/log/gerrit
+    environment:
+      GERRIT_TIMEZONE: UTC
+      JVM_OPTIONS: "-Xms512m -Xmx1024m" # Memory options for the JVM
+      GERRIT_PROJECTS: default,public,private # Default projects to initialize
+    networks:
+      - gerrit-network
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:latest # Use a specific version if needed
+    container_name: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    environment:
+      POSTGRES_DB: gerrit
+      POSTGRES_USER: gerrit
+      POSTGRES_PASSWORD: gerrit-password # Replace with a strong password
+    networks:
+      - gerrit-network
+
+volumes:
+  gerrit-data:
+  gerrit-config:
+  gerrit-logs:
+  postgres-data:
+
+networks:
+  gerrit-network:

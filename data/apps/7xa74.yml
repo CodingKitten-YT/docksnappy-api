@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  frab:
+    image: 'frab/frab:latest' # Use the official Docker image for Frab
+    ports:
+      - "5000:5000" # Expose the Frab web interface on port 5000
+    volumes:
+      - './config:/etc/frab' # Mount a config directory to store Frab configuration
+      - './workspace:/var/lib/frab' # Mount a workspace directory for events and uploads
+    environment:
+      FRAB_ADMIN_USERNAME: 'admin' # Set the default admin username
+      FRAB_ADMIN_PASSWORD: 'password' # Set the default admin password
+      TZ: 'Europe/Madrid' # Set the timezone (change to your desired timezone)
+    restart: unless-stopped # Restart the service unless it is explicitly stopped
+
+  postgres:
+    image: 'postgres:13' # Use PostgreSQL 13 as the database server
+    environment:
+      POSTGRES_DB: frab # Database name for Frab
+      POSTGRES_USER: frab # Username for the database
+      POSTGRES_PASSWORD: frab # Password for the database
+    volumes:
+      - './frab-db:/var/lib/postgresql' # Mount a database directory to persist data
+    environment:
+      POSTGRES_USER: 'frab'
+      POSTGRES_PASSWORD: 'frab'
+      PGDATA: '/var/lib/postgresql/data/frab.db' # Specify the data directory for PostgreSQL
+
+  redis:
+    image: 'redis:6-alpine' # Use Redis 6 with Alpine base image
+    volumes:
+      - './frab-redis:/data' # Mount a Redis data directory to persist data
+
+networks:
+  frab_default:
+    driver: bridge

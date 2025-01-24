@@ -1,0 +1,54 @@
+version: '3.7'
+
+services:
+  cloudlog-frontend:
+    image: cloudlog/cloudlog-frontend:latest
+    ports:
+      - "80:3000" # Expose Cloudlog frontend on host port 80 (HTTP)
+    depends_on:
+      - cloudlog-backend
+    environment:
+      - LOG_BACKEND=http://cloudlog-backend:8080/v1
+
+  cloudlog-backend:
+    image: cloudlog/cloudlog-backend:latest
+    ports:
+      - "8080:8080" # Expose Cloudlog backend on host port 8080 (gRPC)
+    volumes:
+      - "./data:/etc/cloudlog/config/data" # Mount a volume for data storage
+      - "./logs:/var/log" # Mount logs to a local directory
+    environment:
+      - ENV=prod # Set the environment to production
+
+  postgres:
+    image: postgres:latest
+    volumes:
+      - "./data/postgres:/var/lib/postgresql/data" # Persist PostgreSQL data
+    environment:
+      - POSTGRES_DB=cloudlog
+      - POSTGRES_USER=cloudlog
+      - POSTGRES_PASSWORD=changeit
+
+  prometheus:
+    image: prom/prometheus:v1.8.2
+    ports:
+      - "9090:9090" # Expose Prometheus UI on host port 9090
+    volume_mountings_config:
+      - source: /etc/cloudlog/config/data, target: /data
+        read_only: true
+    depends_on:
+      - cloudlog-backend
+
+  grafana:
+    image: grafana/grafana:7.4.3
+    ports:
+      - "3000:3000" # Expose Grafana UI on host port 3000 (default)
+    depends_on:
+      - prometheus
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=grafanadmin
+
+  logging-sidecar:
+    image: cloudlog/logging-sidecar:latest
+    depends_on:
+      - cloudlog-backend

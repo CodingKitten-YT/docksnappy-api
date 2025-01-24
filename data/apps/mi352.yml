@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  motion-core:
+    image: antragsgruen/motion:latest
+    container_name: motion_core
+    ports:
+      - "8081:80" # HTTP web interface
+      - "9090:9090" # Motion FFmpeg overlay port
+    volumes:
+      - ./config:/etc/motion:rw
+      - ./videos:/var/lib/motion/videos:rw
+      - ./data:/var/lib/motion/data:rw
+      - ./log:/var/log/motion:rw
+    environment:
+      - MOTION_ARGS="--config /etc/motion/motion.conf --loglevel 2"
+      - TZ=Europe/Berlin # Set your timezone, if needed
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:latest
+    container_name: motion_postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data:rw
+    environment:
+      - POSTGRES_DB=motion
+      - POSTGRES_USER=motion
+      - POSTGRES_PASSWORD=change_this_password
+    restart: unless-stopped
+
+  motion-api:
+    image: antragsgruen/motion-api:latest
+    container_name: motion_api
+    depends_on:
+      - motion-core
+      - postgres
+    ports:
+      - "8082:80" # Motion API web interface
+    volumes:
+      - ./motion-api/data:/var/lib/motion-api:rw
+    environment:
+      - MOTION_CORE_HOST=motion_core
+      - POSTGRES_DB=motion
+      - POSTGRES_USER=motion
+      - POSTGES_PASSWORD=change_this_password
+      - MOTION_API_SECRET=my_secret_key # Set your secret key for JWT tokens
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  motion_net:
+    driver: bridge

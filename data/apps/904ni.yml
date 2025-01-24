@@ -1,0 +1,47 @@
+version: '3'
+
+services:
+  enigma-bbs:
+    image: 'enigmabbs/enigma-bbs:latest' # Use the latest official image
+    ports:
+      - "8081:80" # BBS port (you can change the host port as needed)
+      - "8001:8001" # Telnet port for terminal emulation clients like PuTTY
+    environment:
+      TZ: 'America/New_York' # Set the timezone, adjust to your needs
+      ENIGMA_WEB_ENABLE: 'true' # Enable the web interface
+    volumes:
+      - './enigma-data:/data' # Persistent storage for the BBS data
+      - './enigma-boardlist.txt:/etc/boardlist.txt' # Custom boardlist (optional)
+    depends_on:
+      - postgres
+
+  postgres:
+    image: 'postgres:latest'
+    volumes:
+      - 'enigma-postgres-data:/var/lib/postgresql' # Persistent storage for PostgreSQL data
+    environment:
+      POSTGRES_DB: 'enigma'
+      POSTGRES_USER: 'enigma'
+      POSTGRES_PASSWORD: 'change_this_password_please'
+
+  redis:
+    image: 'redis:latest'
+    volumes:
+      - 'enigma-redis-data:/data' # Persistent storage for Redis data (optional if not used by Enigma)
+
+  enigma-web:
+    image: 'enigmabbs/enigma-web:latest' # Use the latest official image
+    ports:
+      - "8080:80" # Web interface port (you can change the host port as needed)
+    environment:
+      ENIGMA_DB_HOST: 'postgres' # Set the database service name
+      ENIGMA_DB_USERNAME: 'enigma'
+      ENIGMA_DB_PASSWORD: 'change_this_password_please'
+      ENIGMA_DB_DATABASE: 'enigma'
+    depends_on:
+      - postgres
+
+volumes:
+  enigma-data:
+  enigma-postgres-data:
+  enigma-redis-data:

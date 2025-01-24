@@ -1,0 +1,80 @@
+version: '3.8'
+services:
+  mobilizon:
+    image: 'mobilizon/mobilizon:latest'
+    container_name: mobilizon
+    restart: unless-stopped
+    environment:
+      - MOBILIZON_DATABASE__DB_HOST=db
+      - MOBILIZON_DATABASE__DB_USER=mobilizon
+      - MOBILIZON_DATABASE__DB_PASSWORD=change_this_password
+      - MOBILIZON_DATABASE__DB_NAME=mobilizon
+      # Uncomment and set the following if you want to use a Redis instance
+      # MOBILIZON_REDIS__REDIS_HOST=redis
+      # MOBILIZON_REDIS__REDIS_PASSWORD=change_this_password
+    volumes:
+      - ./mobilizon-data:/code
+      - ./mobilizon-data/database:/var/lib/postgresql
+      - ./mobilizon-data/logs:/code/log
+    ports:
+      - "80:3000"
+    depends_on:
+      - db
+      # Uncomment the following if you have set up Redis
+      # - redis
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:3000/health"]
+      timeout: 10s
+      interval: 30s
+      retries: 6
+
+  db:
+    image: 'postgres:latest'
+    environment:
+      - POSTGRES_DB=mobilizon
+      - POSTGRES_USER=mobilizon
+      - POSTGRES_PASSWORD=change_this_password
+    volumes:
+      - ./mobilizon-data/database:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mobilizon"]
+      timeout: 10s
+      retries: 6
+
+  # Uncomment the following if you have set up Redis
+  redis:
+    image: 'redis:latest'
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -h 0 ping"]
+      timeout: 10s
+      retries: 6
+    volumes:
+      - ./mobilizon-data/redis:/data
+
+  # Optionally, you can also set up a mail service like Postfix or use a managed service like MailHog for development purposes
+  mailhog:
+    image: 'mailhog/mailhog'
+    ports:
+      - "8025:8025"
+    environment:
+      - MAILHOG_INCOMING_EMAILS=true
+      - MAILHOG_PROXY_CONCURRENT_CONNECTIONS=100
+    expose:
+      - "8025"
+
+  # Optionally, you can use a caching service like Nginx or Varnish to cache static assets
+  nginx-cache:
+    image: 'nginx:latest'
+    restart: always
+    volumes:
+      - ./mobilizon-data/nginx-cache:/usr/share/nginx/html
+    depends_on:
+      - mobilizon
+    ports:
+      - "80:80"
+
+# If you are using a managed Redis service, you can configure it like this:
+# redis:
+#   image: 'redislabs/redis:latest'
+#   environment:
+#     - REDIS_URL=redis://<your_redis_instance_url>

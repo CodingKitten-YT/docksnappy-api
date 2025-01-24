@@ -1,0 +1,34 @@
+version: '3.8'
+services:
+  amusewiki:
+    image: amuseco/amusewiki
+    container_name: amusewiki
+    ports:
+      - "8080:80" # HTTP port exposed to host
+    volumes:
+      - ./AmuseWiki/data:/var/amusewiki/data # Path to your data volume (create this directory)
+      - ./AmuseWiki/conf:/var/amusewiki/conf # Path to your configuration directory (create this directory)
+    environment:
+      - TZ=Europe/Paris # Set the timezone (change to your timezone if needed)
+    restart: unless-stopped # Restart policy
+  redis:
+    image: redis:6.0-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    environment:
+      - REDIS_PORT=6379
+    restart: unless-stopped
+  db:
+    image: postgres:12.2
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=amusewiki
+      - POSTGES_USER=amusewiki
+      - POSTGRES_PASSWORD=yourpassword # Replace with your PostgreSQL password
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+  db-data:

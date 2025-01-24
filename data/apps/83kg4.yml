@@ -1,0 +1,68 @@
+version: '3.8'
+services:
+  mikochi-gateway:
+    image: mikochi/gateway:latest
+    ports:
+      - "8080:8080"
+    environment:
+      MKCHI_TIER: gateway
+      MKCHI_ISTIO_SETUP: "IstioSidecarInjector,IstioSecurityPolicyInjector"
+    depends_on:
+      - mikochi-dashboard
+      - mikochi-auth
+      - mikochi-admin
+      - mikochi-api
+    command: >
+      sh -c 'trap "kill0" INT TERM EXIT; sleep infinity; while :; do echo -n "."; (curl -f -s -X HEAD http://mikochi-api:8081/health || sleep 1) & wait ${!}; done;'
+    networks:
+      - mikochi_net
+
+  mikochi-dashboard:
+    image: mikochi/dashboard:latest
+    environment:
+      MKCHI_TIER: dashboard
+      MKCHI_ISTIO_SETUP: "IstioSidecarInjector"
+    ports:
+      - "8082:9091"
+    depends_on:
+      - mikochi-api
+    networks:
+      - mikochi_net
+
+  mikochi-auth:
+    image: mikochi/auth:latest
+    environment:
+      MKCHI_TIER: auth
+      MKCHI_ISTIO_SETUP: "IstioSidecarInjector"
+    ports:
+      - "8083:9092"
+    depends_on:
+      - mikochi-api
+    networks:
+      - mikochi_net
+
+  mikochi-admin:
+    image: mikochi/admin:latest
+    environment:
+      MKCHI_TIER: admin
+      MKCHI_ISTIO_SETUP: "IstioSidecarInjector"
+    ports:
+      - "8084:9093"
+    depends_on:
+      - mikochi-api
+    networks:
+      - mikochi_net
+
+  mikochi-api:
+    image: mikochi/api:latest
+    ports:
+      - "8081:8081"
+    environment:
+      MKCHI_TIER: api
+      MKCHI_ISTIO_SETUP: "IstioSidecarInjector,IstioSecurityPolicyInjector"
+    networks:
+      - mikochi_net
+
+networks:
+  mikochi_net:
+    driver: bridge

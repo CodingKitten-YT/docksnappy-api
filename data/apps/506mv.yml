@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  input-service:
+    image: "input/input:latest" # Use the specific input Docker image you need, e.g., "input/input:v1.0"
+    ports:
+      - "8080:8080" # Expose the port if needed, change the host and container port as required
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/google-key.json # Set environment variables if necessary
+    volumes:
+      - "/path/on/host/to/InputData:/app/data" # Mount a volume from the host to the container if needed
+    depends_on:
+      - postgres # Define dependencies, e.g., if Input service relies on PostgreSQL database
+
+  db:
+    image: "postgres:13" # Use the PostgreSQL image you want to use
+    environment:
+      POSTGRES_USER: "user"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: "inputdb"
+    volumes:
+      - "postgres_data:/var/lib/postgresql/data" # Use a named volume for persistent storage
+
+volumes:
+  postgres_data:

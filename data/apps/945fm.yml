@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  dashpress:
+    image: 'dashpress/dashpress:latest' # Use the official Dashpress image from Docker Hub
+    container_name: dashpress
+    ports:
+      - "8000:8000" # Expose Dashpress on port 8000 of the host
+    volumes:
+      - "./dashpress-data:/data" # Mount a volume for Dashpress data (user-generated content)
+      - "./dashpress-media:/media" # Mount a volume for user media uploads
+    environment:
+      - DJANGO_SETTINGS_MODULE=dashpress.settings  # Set the Django settings module
+      - SECRET_KEY=random_secret_key  # Replace with a random secret key for development
+      - ALLOWED_HOSTS=0.0.0.0  # Allow hosting from any IP (change to specific hosts as needed)
+    command: gunicorn dashpress.wsgi --bind 0.0.0.0:8000  # Run Dashpress with Gunicorn
+    restart: unless-stopped  # Restart the container unless it has been manually stopped
+
+  redis:
+    image: 'redis:latest'  # Use the official Redis image from Docker Hub
+    volumes:
+      - "./dashpress-redis:/data"  # Persist Redis data to a volume (optional but recommended)
+    environment:
+      - REDIS_PORT=6379  # Default port for Redis
+    restart: unless-stopped
+
+  db:
+    image: 'postgres:latest'  # Use the official PostgreSQL image from Docker Hub
+    volumes:
+      - "./dashpress-db:/var/lib/postgresql"  # Persist database data to a volume (optional but recommended)
+    environment:
+      - POSTGRES_DB=dashpress  # Database name
+      - POSTGRES_USER=dashpress  # Database user
+      - POSTGRES_PASSWORD=random_password  # Replace with a random password for development
+    restart: unless-stopped
+
+  nginx:
+    image: 'nginx:latest'  # Use the official Nginx image from Docker Hub
+    container_name: nginx
+    ports:
+      - "80:80"  # Map HTTP port 80 to the container (optional, you can use another port)
+      - "443:443"  # Map HTTPS port 443 to the container (if using SSL/TLS)
+    volumes:
+      - "./dashpress-nginx:/etc/nginx"  # Mount a volume for Nginx configuration files
+    depends_on:
+      - dashpress
+    restart: unless-stopped
+
+# If you want to use SSL/TLS with Nginx, uncomment the following and generate the certificates:
+# nginx:
+#   image: 'jwilder/nginx-proxy':latest
+#   container_name: nginx
+#   ports:
+#     - "80:80"
+#     - "443:443"
+#   volumes:
+#     - "./dashpress-nginx:/etc/nginx"
+#   networks:
+#     default:
+#       external_links:
+#         - letssencrypt
+#   depends_on:
+#     - dashpress
+#   restart: unless-stopped
+
+# Uncomment the following if you want to include SSL certificates with Let's Encrypt (requires Docker 1.13+):
+# nginx:
+#   image: 'jwilder/letsencrypt-nginx-proxy:latest'
+#   container_name: nginx
+#   ports:
+#     - "80:80"
+#     - "443:443"
+#   volumes:
+#     - "./dashpress-nginx:/etc/nginx"
+#     - "/var/run/docker.sock:/var/run/docker.sock" # Required for Let's Encrypt to work
+#   restart: unless-stopped
+
+# Note: The `jwilder/nginx-proxy` and `jwilder/letsencrypt-nginx-proxy` images are deprecated in favor of the `Jeiwan/nginx-proxy` and `Jeiwan/letsencrypt-nginx-proxy` images.
+
+# Add any additional configurations or services as needed for your Dashpress setup.

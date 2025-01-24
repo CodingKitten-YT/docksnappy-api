@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  npm:
+    image: linuxserver/nginx-proxy-manager:latest
+    container_name: nginx_proxy_manager
+    ports:
+      - "80:80" # HTTP
+      - "443:443" # HTTPS (you will set up TLS in the next step)
+      - "81:81" # Admin UI (optional, but recommended for setup and troubleshooting)
+    volumes:
+      - "/path/to/nginx/proxy/manager/conf.d:/data/letencrypt:rw"  # Certbot configuration for TLS
+      - "/path/to/nginx/proxy/manager/certs:/etc/letsencrypt:rw"   # Let's Encrypt certificates
+      - "/path/to/nginx/proxy/manager/data:/data:rw"                # Main data directory for Nginx Proxy Manager
+      - "/path/to/nginx/proxy/manager/ssl:/etc/ssl:ro"              # SSL certificates (if you have existing ones)
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ="Europe/London"
+      - WEBPASSWORDCOM_nginx_proxy_manager_admin_users.user=root&password=YOURPASSWORD # Replace YOURPASSWORD with a secure password of your choice
+    networks:
+      - webnet
+
+networks:
+  webnet:
+    driver: bridge

@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+  inginious:
+    image: "inguinious/inguinious:latest"
+    command: -c /etc/inguinious/dev.conf
+    ports:
+      - "80:80" # HTTP
+      - "443:443" # HTTPS (requires a valid SSL certificate)
+      - "9100:9100" # Admin UI (optional, for maintenance/monitoring purposes)
+    volumes:
+      - "./inguinious/:/etc/inguinious/"  # Mounts the local INGInious directory to the container's configuration directory
+      - "/var/run/docker.sock:/var/run/docker.sock" # Allows Docker inside Docker for image building (if needed)
+    environment:
+      - "HOST_IP=0.0.0.0"  # Set the host IP to 0.0.0.0 to allow access from any network interface
+      - "DB_TYPE=postgres"  # Sets the database type (other options: mysql, sqlite)
+      - "DB_HOST=db"  # The service name of the database service in this docker-compose file
+      - "DB_USER=inguinious"  # Database username
+      - "DB_PASSWORD=inguinious"  # Database password
+      - "DB_NAME=inguinious"  # Database name
+      - "WEB_SERVER=gunicorn"  # Sets the WSGI server (other options: mod_wsgi, waitress)
+      - "INGINIOUS_DEBUG=1"  # Enables debug mode (1 for yes, 0 for no)
+      - "INGINIOUS_BIND_PORT=80"  # The port that INGInious will bind to (only needed if not using a reverse proxy)
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: postgres:latest
+    volumes:
+      - "./inguinious/db/:/etc/inguinious/db/"  # Mounts the local db directory to the container's database directory (optional, for backups/migrations)
+    environment:
+      - "POSTGRES_DB=inguinious"  # The default database name
+      - "POSTGRES_USER=inguinious"  # The default database username
+      - "POSTGRES_PASSWORD=inguinious"  # The default database password
+    restart: unless-stopped
+
+  redis:
+    image: redis:latest
+    volumes:
+      - "./inguinious/redis/:/etc/inguinious/redis/"  # Mounts the local redis directory to the container's redis directory (optional, for backups)
+    restart: unless-stopped

@@ -1,0 +1,43 @@
+version: '3.8'
+services:
+  focalboard:
+    image: focalboard/focalboard
+    container_name: focalboard
+    ports:
+      - "80:80" # HTTP
+      - "443:443" # HTTPS (only if you have a reverse proxy like Traefik, NGINX, etc. configured)
+    restart: unless-stopped
+    environment:
+      JAVA_OPTIONS: "-Xms512M -Xmx512M"
+      SERVER_SERVLETI_CONTEXTPATH: "/focalboard" # Optional if you want to change the context path
+      FOCALBOARD_DB_HOST: db
+      FOCALBOARD_DB_USERNAME: root
+      FOCALBOARD_DB_PASSWORD: yourdbpassword
+      FOCALBOARD_DB_DATABASE: focalboard
+      FOCALBOARD_DB_PORT_OFFSET: 3306 # Offset for the default port 3306 if you have other services using it
+    volumes:
+      - "./data:/docker-entrypoint-initdb.d"
+      - focalboard-data:/var/lib/focalboard
+      - focalboard-conf:/etc/focalboard
+    depends_on:
+      - db
+
+  postgresql:
+    image: postgres:13
+    container_name: db
+    environment:
+      POSTGRES_DB: focalboard
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: yourdbpassword
+    volumes:
+      - postgresql-data:/var/lib/postgresql
+    restart: unless-stopped
+
+volumes:
+  focalboard-data:
+  focalboard-conf:
+  postgresql-data:
+
+networks:
+  default:
+    driver: bridge

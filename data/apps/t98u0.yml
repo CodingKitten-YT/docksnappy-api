@@ -1,0 +1,52 @@
+version: '3.7'
+services:
+  crafty_controller:
+    image: craftycommerce/crafty_controller:latest
+    container_name: crafty_controller
+    ports:
+      - "8081:80" # HTTP endpoint, default is port 80
+    volumes:
+      - ./config:/opt/crafty/config # Mount your local config directory to the container's config directory
+      - ./storage:/opt/crafty/storage # Mount your local storage directory to the container's storage directory
+      - ./app/cache:/opt/crafty/cache # Mount your local cache directory to the container's cache directory (optional, but recommended)
+    environment:
+      CRAFTY_ENVIRONMENT: development # Use 'production' for production env
+      SECRET_KEY: your_secret_key # Replace with your Crafty secret key
+      DATABASE_HOST: db # The name of the database service if defined, or the direct connection string
+      DATABASE_PORT: 3306 # The port for the database (change if necessary)
+      DATABASE_USERNAME: root # Database username
+      DATABASE_PASSWORD: your_db_password # Database password
+      REDIS_HOST: redis # The name of the Redis service if defined, or the direct connection string
+      REDIS_PORT: 6379 # The port for Redis (default is 6379)
+    depends_on:
+      - crafty_database
+      - crafty_redis
+    networks:
+      - crafty_network
+
+  crafty_database:
+    image: mysql:5.7
+    container_name: crafty_database
+    environment:
+      MYSQL_DATABASE: crafty # Database name
+      MYSQL_USER: root
+      MYSQL_PASSWORD: your_db_password # Replace with your desired password
+      MYSQL_ROOT_PASSWORD: your_root_password # Only needed at first setup, then remove in subsequent runs
+    volumes:
+      - ./data/db:/var/lib/mysql # Mount your local database directory to the container's db directory
+    ports:
+      - "3306:3306"
+    networks:
+      - crafty_network
+
+  crafty_redis:
+    image: redis:5.0
+    container_name: crafty_redis
+    volumes:
+      - ./data/redis:/data # Mount your local Redis directory to the container's data directory
+    networks:
+      - crafty_network
+
+networks:
+  crafty_network:
+    driver: bridge

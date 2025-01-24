@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  immich:
+    image: immich/immich:latest
+    container_name: immich
+    restart: unless-stopped
+    environment:
+      - SECRET_KEY=secret_key_goes_here
+      - ALLOWED_HOSTS=localhost,127.0.0.1,[::1]
+      - BROKER_URL=redis://redis:6379
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+      - DATABASE_URL=postgres://postgres:password@database:5432/immich
+    volumes:
+      - immich-media:/var/lib/immich/media
+      - immich-config:/root/.local/share/immich
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+      - rabbitmq
+      - database
+      - filebrowser
+
+  database:
+    image: postgres:latest
+    container_name: immich_db
+    restart: unless-stopped
+    volumes:
+      - immich-db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=immich
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+
+  redis:
+    image: redis:latest
+    container_name: immich_redis
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3.8-management
+    container_name: immich_rabbitmq
+    ports:
+      - "5672:5672"
+      - "15674:15674"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USERNAME=user
+      - RABBITMQ_DEFAULT_PASSWORD=password
+
+  filebrowser:
+    image: immich/immich-filebrowser:latest
+    container_name: immich_filebrowser
+    restart: unless-stopped
+    volumes:
+      - immich-upload:/var/lib/immich-filebrowser/upload
+      - immich-config:/root/.local/share/immich-filebrowser
+    ports:
+      - "8080:80"
+
+volumes:
+  immich-media:
+  immich-db:
+    external: true
+  immich-upload:
+  rabbitmq-data:
+    external: true

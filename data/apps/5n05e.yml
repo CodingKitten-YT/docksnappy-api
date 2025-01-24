@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  koblas-web:
+    image: koblas/koblas-web:latest
+    ports:
+      - "80:80" # Map HTTP port 80 on the host to port 80 in the container
+    environment:
+      - DATABASE_HOST=db
+      - DATABASE_USERNAME=koblasuser
+      - DATABASE_PASSWORD=koblassword
+      # Add any other necessary environment variables here
+    depends_on:
+      - db
+    networks:
+      - koblas-net
+
+  koblas-db:
+    image: postgres:13
+    volumes:
+      - koblas-db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=koblasuser
+      - POSTGRES_PASSWORD=koblassword
+      - POSTGRES_DB=koblasdb
+    networks:
+      - koblas-net
+
+volumes:
+  koblas-db-data:
+    driver: local
+
+networks:
+  koblas-net:
+    driver: bridge

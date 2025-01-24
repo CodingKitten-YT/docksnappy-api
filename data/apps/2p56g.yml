@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  opensign_db:
+    image: postgres:12
+    container_name: opensign_db
+    environment:
+      POSTGRES_DB: opensign
+      POSTGRES_USER: opensign
+      POSTGRES_PASSWORD: your_password
+    volumes:
+      - opensign-db:/var/lib/postgresql/data
+    command: 'postgres'
+
+  php:
+    image: php:fpm-alpine
+    container_name: opensign_php
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./app:/var/www/html
+      - php:/var/www/html
+    depends_on:
+      - opensign_db
+    environment:
+      DB_HOST: opensign_db
+      DB_DATABASE: opensign
+      DB_USERNAME: opensign
+      DB_PASSWORD: your_password
+      APP_ENV: local
+      APP_DEBUG: true
+      APP_KEY: base64:your_application_key
+
+  nginx:
+    image: nginx:alpine
+    container_name: opensign_nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./app/public:/var/www/html/public
+      - nginx:/var/www/html/public
+    depends_on:
+      - php
+    environment:
+      DOMAIN: opensign.local
+      PHP_ID: php
+    networks:
+      - opensign-network
+
+volumes:
+  opensign-db:
+  php:
+  nginx:
+
+networks:
+  opensign-network:

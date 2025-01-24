@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  minio:
+    image: minio:latest # or use a specific version like minio:RELEASE.2022-06-01T16:35:07Z
+    ports:
+      - "9000:9000" # MinIO Access UI
+      - "9001:9001" # Secure MinIO Access UI (HTTPS)
+    environment:
+      MINIO_ACCESS_KEY: minio-access-key
+      MINIO_SECRET_KEY: minio-secret-key
+      MINIO_REALTIME_REPLICATION_ENABLED: "true" # Optional for realtime replication if needed
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - "minio-data:/data"
+    command: server /data --console-logger-level debug
+
+  minio-console:
+    image: minio-console:latest # or use a specific version like minio-console:RELEASE.2022-06-01T16:35:07Z
+    ports:
+      - "9000:9000"
+    depends_on:
+      - minio
+    environment:
+      SERVICE_HOST: minio
+      SERVICE_PORT: 9000
+
+volumes:
+  minio-data:

@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  web:
+    image: christmascommunity/web:latest
+    ports:
+      - "80:80" # HTTP
+      - "443:443" # HTTPS (if SSL is configured)
+    depends_on:
+      - db
+    environment:
+      SECRET_KEY: "${SECRET_KEY}"
+      DATABASE_URL: "postgres://db:db@db:5432/db"
+    volumes:
+      - ./web:/usr/src/app
+    networks:
+      - christmascommunity-net
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: christmascommunity
+      POSTGRES_USER: db
+      POSTGRES_PASSWORD: db
+    volumes:
+      - ./db:/var/lib/postgresql/data
+    networks:
+      - christmascommunity-net
+
+  redis:
+    image: redis:6
+    volumes:
+      - ./redis:/data
+    networks:
+      - christmascommunity-net
+
+  queue_worker:
+    image: python:3.9-slim
+    volumes:
+      - ./queue_worker:/usr/src/app
+      - redis:/var/lib/redis
+    command: python manage.py queue_worker
+    depends_on:
+      - db
+      - redis
+    networks:
+      - christmascommunity-net
+
+networks:
+  christmascommunity-net:
+    driver: bridge
+
+# Uncomment the following section if you need to use SSL for HTTPS
+# and have certificates ready.
+# volumes:
+#   letscryptestore:
+#     name: letdev/letsencrypt:storage
+# services:
+#   web:
+#     ports:
+#       - "443:443"
+#     environment:
+#       SECRET_KEY: "${SECRET_KEY}"
+#       DATABASE_URL: "postgres://db:db@db:5432/db"
+#       SSL_REDIR: "true"
+#       SSL_CertFile: "/etc/ssl/cert.pem"
+#       SSL_KeyFile: "/etc/ssl/key.pem"
+#       SSL_FullchainFile: "/etc/ssl/fullchain.pem"
+#     volumes:
+#       - ./web:/usr/src/app
+#       - letscryptestore:/etc/ssl

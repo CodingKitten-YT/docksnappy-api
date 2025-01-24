@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  jupyterhub:
+    image: jupyter/jupyterhub:latest
+    user: jovokus
+    ports:
+      - "8888:8888" # Notebook port
+    volumes:
+      - .jupyter:/home/jovoker/.local/share/jupyter/runtime
+      - ./notebooks:/home/jovoker/notebooks
+    depends_on:
+      - jupyterlab
+
+  jupyterlab:
+    image: jupyterhub/minimal-nbserver-no-notebook:latest # Optional, if you want to exclude notebook from the base image
+    user: jovokus
+    environment:
+      JUPYTERHUB_CONFIG: |
+        c.JupyterHub.executionTimeout_notebook: 600
+        c.JupyterHub.cookie_secure: False
+        c.JupyterHub.runtime_subprocesses:
+          jupyter-notebook:
+            command: /usr/local/bin/jupyter-notebook
+            memory: 1500 MB
+            cpu_affinity: 2
+    ports:
+      - "8000:8000" # JupyterLab port
+    volumes:
+      - .jupyter:/home/jovoker/.local/share/jupyter/runtime
+      - ./notebooks:/home/jovoker/notebooks
+    depends_on:
+      - jupyterhub
+
+  notebook-docker:
+    image: jupyter/database-links-extension:latest
+    depends_on:
+      - jupyterlab
+
+# Optional services for additional components like:
+# - mongodb: If you plan to use JupyterHub with MongoDB for user authentication.
+# - postgres: If you want a separate database service.
+# Uncomment the following lines and configure them as needed.
+# mongodb:
+#   image: mongo:latest
+#
+# postgres:
+#   image: postgres:latest
+
+# To use a specific version of JupyterHub, replace 'latest' with the desired tag.

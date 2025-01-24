@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  kresus-api:
+    image: kresus/kresus-api:latest
+    container_name: kresus-api
+    ports:
+      - "5000:5000"
+    networks:
+      - kresus-network
+    environment:
+      - ENV=production
+      # Optional: Uncomment and set the SECRET_KEY if needed for your application
+      # - SECRET_KEY=your_secret_key
+    volumes:
+      - ./kresus-api/data:/code/data
+      - ./kresus-api/logs:/code/logs
+
+  kresus-db:
+    image: postgres:13
+    container_name: kresus-db
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: kresus
+      POSTGRES_USER: kresus
+      POSTGRES_PASSWORD: kresuspassword
+    networks:
+      - kresus-network
+
+# Define named volumes
+volumes:
+  db-data:
+
+networks:
+  kresus-network:
+    driver: bridge

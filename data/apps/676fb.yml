@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  heyform_app:
+    image: 'heyform/heyform:latest' # Use the official HeyForm image from Docker Hub
+    ports:
+      - "8000:8000" # Expose HeyForm app on port 8000 of the host
+    environment:
+      HEYFORM_SECRET_KEY: "${HEYFORM_SECRET_KEY}" # Set your secret key for Django
+      HEYFORM_DB_URL: "postgres://db:5432/heyform" # Database URL (make sure to define this in the db service)
+      HEYFORM_EMAIL_BACKEND: "django.core.mail.backends.smtp.EmailBackend"
+      HEYFORM_EMAIL_HOST: "localhost"
+      HEYFORM_EMAIL_PORT: 1025
+      HEYFORM_EMAIL_USE_TLS: "true"
+      HEYFORM_STRIPE_PUBLISHABLE_KEY: "${STRIPE_PUBLISHABLE_KEY}" # Stripe publishable key if you're using payments (set this in the environment)
+      HEYFORM_AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}" # AWS access key ID if you're storing files on S3 (set this in the environment)
+      HEYFORM_AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}" # AWS secret access key (set this in the environment)
+    volumes:
+      - ./heyform_app/static:/code/heyform/heyform/heyform/static  # Map static files for HeyForm
+      - ./heyform_app/media:/code/heyform/heyform/heyform/media   # Map media files for HeyForm
+    depends_on:
+      - heyform_db
+      - heyform_worker
+
+  heyform_db:
+    image: 'postgres:13' # Use the official PostgreSQL image from Docker Hub
+    volumes:
+      - heyform_db_data:/var/lib/postgresql/data  # Persist database data
+    environment:
+      POSTGRES_DB: heyform
+      POSTGRES_USER: db
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}" # Set your database password for PostgreSQL
+
+  heyform_worker:
+    image: 'heyform/heyform:latest' # Use the official HeyForm worker image from Docker Hub
+    command: worker
+    environment:
+      HEYFORM_DB_URL: "postgres://db:5432/heyform" # Database URL (same as above)
+      HEYFORM_REDIS_URL: "redis://localhost:6379/0" # Redis URL if you're using Redis (set this accordingly)
+    depends_on:
+      - heyform_db
+
+volumes:
+  heyform_db_data:
+
+networks:
+  default:
+    driver: bridge

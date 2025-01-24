@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  mafl-web:
+    image: mafl/mafl-web:latest
+    ports:
+      - "5000:5000"
+    environment:
+      MAFL_CONFIG_FILE: /app/config/mafl.yaml
+      MAFL_DATABASE_HOST: db
+      MAFL_DATABASE_USERNAME: mafluser
+      MAFL_DATABASE_PASSWORD: maflpass
+      MAFL_DATABASE_NAME: mafl_db
+    depends_on:
+      - db
+    volumes:
+      - ./app/config:/app/config
+      - ./app/logs:/app/logs
+      - ./app/data:/app/data
+
+  mafl-db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: mafl_db
+      POSTGRES_USER: mafluser
+      POSTGRES_PASSWORD: maflpass
+    volumes:
+      - mafl-db-data:/var/lib/postgresql/data
+
+volumes:
+  mafl-db-data:

@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  app:
+    image: gonic/go-kubernetes-boilerplate:latest # Use the official Gonic image or your custom image
+    ports:
+      - "80:8080" # Map the web server port to host port 80 for HTTP access
+    environment:
+      GO_ENV: production # Set the environment variable for Go environment (e.g., development, staging, production)
+    depends_on:
+      - db
+
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: example_db # Database name
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - db-data:/var/lib/postgresql/#name# # Persist database data using a named volume
+
+  redis:
+    image: redis:latest
+
+volumes:
+  db-data:

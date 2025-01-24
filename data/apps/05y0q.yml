@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  onlyoffice-headless:
+    image: onlyoffice/documentserver:latest
+    ports:
+      - "127.0.0.1:8080:8080" # HTTP API access
+      - "127.0.0.1:8443:8443" # Secure API access (HTTPS)
+    command: --access.api.allow_ip_range=0.0.0.0/0 --log.level=info --report.maintenance_mode=false
+    volumes:
+      - onlyoffice-documents:/var/lib/onlyoffice-docs
+      - onlyoffice-logs:/var/log/onlyoffice-server
+      - onlyoffice-conf:/etc/onlyoffice-server
+
+  postgres:
+    image: postgres:13
+    volumes:
+      - onlyoffice-postgresql:/var/lib/postgresql
+    environment:
+      POSTGRES_DB: onlyoffice
+      POSTGRES_USER: onlyoffice
+      POSTGRES_PASSWORD: change_this_password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U onlyoffice"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nginx-proxy:
+    image: jwilder/nginx-proxy:stable
+    ports:
+      - "80:80" # NGINX HTTP access
+      - "443:443" # NGINX HTTPS access
+    volumes:
+      - ./letsencrypt:/etc/letsencrypt
+      - nginx-conf:/etc/nginx
+      - traefik_traefik_acme_certificates:/etc/nginx/ssl
+      - traefik_traefik_data:/var/lib/traefik
+    depends_on:
+      - onlyoffice-headless
+
+  traefik:
+    image: traefik:v2.5
+    ports:
+      - "8081:8081" # Traefik UI
+    volumes:
+      - traefik_traefik_acme_certificates:/var/lib/traefik/acme
+      - traefik_traefik_data:/var/lib/traefic
+      - nginx-conf:/etc/nginx
+    depends_on:
+      - onlyoffice-headless
+
+volumes:
+  onlyoffice-documents:
+  onlyoffice-logs:
+  onlyoffice-conf:
+  onlyoffice-postgresql:
+  nginx-conf:
+  traefik_traefik_acme_certificates:
+  traefic_traefik_data:

@@ -1,0 +1,56 @@
+version: '3'
+
+services:
+  etcd:
+    image: registry.k8s.io/etcd:3.5.0-lin
+    command: --advertise-client-urls=http://0.0.0.0:2379 --listen-client-urls=http://0.0.0.0:2379 --data-dir=/var/etcd
+    environment:
+      ETCD_NAME: 'etcd-0'
+      ETCD_LISTEN_CLIENT_URLS: '0.0.0.0:2379'
+      ETCD_ADVERTISE_CLIENT_URLS: '0.0.0.0:2379'
+    ports:
+      - "2379:2379"
+    volumes:
+      - etcd-data:/var/etcd
+
+  flannel:
+    image: flannel/flannel:v0.14.0-linux
+    command: -etcd -iface eth0
+    volumes:
+      - flannel-data:/run/flannel
+
+  swarm-manager:
+    image: swarmkit/swarm:v1.14.2-lin
+    environment:
+      SWARM_LOCAL_MANAGER_ADVERTENZE_SUBNETS: '10.244.0.0/16'
+      SWARM_HOST: 'manager:2379'
+    ports:
+      - "8300-8301:8300-8301"
+      - "8500:8500"
+
+  swarm-agent:
+    image: swarmkit/swarm:v1.14.2-lin
+    environment:
+      SWARM_MANAGER: 'manager:2379'
+      SWARM_LOCAL_AGENT_ADVERTENZE_SUBNETS: '10.244.0.0/16'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  swarm-worker:
+    image: swarmkit/swarm:v1.14.2-lin
+    environment:
+      SWARM_MANAGER: 'manager:2379'
+      SWARM_LOCAL_WORKER_ADVERTENZE_SUBNETS: '10.244.0.0/16'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  etcd-data:
+  flannel-data:
+
+networks:
+  default:
+    driver: overlay
+    ipam:
+      config:
+        - subnet: '10.244.0.1/24'

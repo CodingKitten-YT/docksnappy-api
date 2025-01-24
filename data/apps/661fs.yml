@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  invidious:
+    image: invidious/invidious:latest  # Use the official image or a specific tag
+    container_name: invidious
+    command: -tag_fallback false -skip_downloader true
+    ports:
+      - "80:8080"  # Expose Invidious on port 80 to use it behind a reverse proxy (e.g., Nginx)
+      - "8081:8081"  # Optional: Expose Invidious admin interface on port 8081 if you want to access it directly
+    volumes:
+      - "./config:/config/invidious"  # Mount your configuration directory here
+      - "./data:/datadir/invidious"   # Mount your data directory here (for database and media attachments)
+    environment:
+      - TZ="Europe/Paris"  # Set the timezone, change to your timezone
+      - VIRTUAL_HOST=yourdomain.com  # Set your domain or subdomain
+      - VIRTUAL_PORT=80  # The port you want to expose Invidious on (e.g., if using behind a reverse proxy)
+      - LEGAL_JURISDICTION=Europe  # Set your legal jurisdiction for GDPR compliance
+    networks:
+      - invidious_net
+    restart: unless-stopped
+
+  db:
+    image: postgres:13  # Use the official PostgreSQL image or a specific tag
+    container_name: invidious_db
+    command: >
+      postgres -c 'fsync=OFF' -c 'full_page_writes=ON' -c 'wal_level=minimal'
+    volumes:
+      - "./data/db:/var/lib/postgresql/data"  # Mount your database data directory here
+    environment:
+      - POSTGRES_USER=invidious
+      - POSTGRES_PASSWORD=change_this_password  # Change this to a strong password
+      - POSTGRES_DB=invidious
+    networks:
+      - invidious_net
+    restart: unless-stopped
+
+networks:
+  invidious_net:
+    driver: bridge

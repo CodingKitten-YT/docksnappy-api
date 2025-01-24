@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  lynx:
+    image: lynxloud/lynx:latest # Use the official Docker image for Lynx
+    container_name: lynx
+    ports:
+      - "5000:5000" # Expose the default port for Lynx API (if applicable)
+    volumes:
+      - ./data:/data # Mount a volume for data persistence
+      - ./lynx.yaml:/app/config.yml # Optionally override default config with a local one
+    environment:
+      - LOG_LEVEL=INFO # Set the log level (DEBUG, INFO, WARNING, ERROR)
+      - JWT_SECRET=your_jwt_secret # A secret key for JWT authentication (must be kept secure)
+      - POSTGRES_HOST=postgres # The service name of the PostgreSQL server if it's defined separately
+      - POSTGRES_DB=lynx # The database name to connect to
+      - POSTGRES_USER=lynx # The database user
+      - POSTGRES_PASSWORD=lynx # The database password
+    networks:
+      - lynx-network # Define a custom network for Lynx (optional)
+
+  postgres:
+    image: postgres:latest
+    environment:
+      - POSTGRES_DB=lynx
+      - POSTGRES_USER=lynx
+      - POSTGRES_PASSWORD=lynx
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data # Persist PostgreSQL data
+    networks:
+      - lynx-network
+
+networks:
+  lynx-network:
+    driver: bridge

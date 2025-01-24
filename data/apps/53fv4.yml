@@ -1,0 +1,39 @@
+version: '3.8'
+services:
+  app:
+    image: exbin/exbin:latest # Use the official ExBin image from Docker Hub
+    ports:
+      - "8080:8080" # Expose ExBin web interface on port 8080 of the host
+    volumes:
+      - "./logs:/var/log/exbin" # Optionally, map a local directory for logs
+      - "./data:/var/lib/exbin" # Optionally, map a local directory for data persistence
+    environment:
+      - TZ="Europe/London" # Set the timezone if needed (e.g., "America/New_York")
+      - JAVA_OPTS="-Xms512m -Xmx1024m" # Set Java heap size
+      - DB_HOST=db # The name of the database service defined below
+      - DB_USER=root # Database user
+      - DB_PASSWORD=password # Database password
+      - DB_DATABASE=exbin # Database name for ExBin
+    depends_on:
+      - db
+
+  db:
+    image: mysql:5.7 # Use a MySQL image as the database server
+    environment:
+      MYSQL_ROOT_PASSWORD: password # Set the root password for MySQL
+      MYSQL_DATABASE: exbin # Create the ExBin database upon container start
+      MYSQL_USER: user
+      MYSQL_PASSWORD: userpassword
+    volumes:
+      - "./db_data:/var/lib/mysql" # Optionally, map a local directory for database data persistence
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: "1" # Generate a random root password on the first run
+
+  redis:
+    image: redis:6.0-alpine # Use Redis as the cache server
+    volumes:
+      - "./redis_data:/data" # Optionally, map a local directory for Redis data persistence
+
+networks:
+  exbin_net:
+    driver: bridge

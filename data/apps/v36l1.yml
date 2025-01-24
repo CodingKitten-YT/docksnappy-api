@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  web:
+    image: 'justshortit/jsi-web:latest'
+    container_name: justshortit-web
+    build:
+      context: ./web
+    ports:
+      - "5000:5000"
+    depends_on:
+      - api
+    environment:
+      - API_HOST=api
+      - API_PORT=8000
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=your_secure_password
+    volumes:
+      - ./web:/usr/src/app
+
+  api:
+    image: 'justshortit/jsi-api:latest'
+    container_name: justshortit-api
+    build:
+      context: ./api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432
+      - DATABASE_USER=your_database_user
+      - DATABASE_PASSWORD=your_database_password
+      - DATABASE_DBNAME=your_database_name
+    volumes:
+      - ./api:/usr/src/app
+
+  db:
+    image: 'postgres:latest'
+    container_name: justshortit-db
+    environment:
+      - POSTGRES_USER=your_database_user
+      - POSTGRES_PASSWORD=your_database_password
+      - POSTGRES_DB=your_database_name
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: 'redis:latest'
+    container_name: justshortit-redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:

@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  # Mediacms service with persistent storage
+  mediacms:
+    image: mediacms/mediacms:latest
+    container_name: mediacms
+    volumes:
+      - ./media:/var/www/html
+      - ./media/cache:/var/cache/mediacms
+      - ./media/uploads:/var/uploads
+    ports:
+      - "8001:80"
+    environment:
+      MEDIACMS_DB_HOST: db
+      MEDIACMS_DB_NAME: mediacms
+      MEDIACMS_DB_USER: root
+      MEDIACMS_DB_PASSWORD: secret
+      MEDIACMS_ADMIN_EMAIL: admin@example.com
+      MEDIACMS_ADMIN_FIRSTNAME: Admin
+      MEDIACMS_ADMIN_LASTNAME: User
+      MEDIACMS_SITE_TITLE: "Example Site"
+      MEDIACMS_SITE_URL: "https://example.com"
+      MEDIACMS_MAILER_DRIVER: smtp
+      MEDIACMS_MAILER_HOST: mailhog
+      MEDIACMS_MAILER_PORT: 8025
+      MEDIACMS_MAILER_ENCRYPTION: none
+    depends_on:
+      - db
+      - mailhog
+    networks:
+      - mediacms-net
+
+  # Database service (MySQL)
+  db:
+    image: mysql:5.7
+    volumes:
+      - ./db:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: mediacms
+      MYSQL_USER: root
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: secret
+    networks:
+      - mediacms-net
+
+  # Nginx proxy service
+  nginx-proxy:
+    image: jwilder/nginx-proxy:stable
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - mediacms
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+    networks:
+      - mediacms-net
+
+  # Let's Encrypt client for automatic SSL certificate generation
+  letty:
+    image: certbot/certbot:latest
+    container_name: letty
+    volumes:
+      - ./letsencrypt:/etc/letsencrypt
+    depends_on:
+      - nginx-proxy
+
+  # Mailcatcher for testing emails
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mailhog
+    ports:
+      - "8025:8025"
+    environment:
+      MAILCATCHER_HOST_NAME: localhost
+    networks:
+      - mediacms-net
+
+networks:
+  mediacms-net:
+    driver: bridge

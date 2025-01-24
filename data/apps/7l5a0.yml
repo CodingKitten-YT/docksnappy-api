@@ -1,0 +1,54 @@
+version: '3.8'
+services:
+  beelzebub-web:
+    image: beelzebub/web:latest
+    ports:
+      - "80:80" # HTTP port mapping
+      - "443:443" # HTTPS port mapping (if applicable)
+    environment:
+      - NAME=Value # Example of an environment variable for configuration
+    depends_on:
+      - beelzebub-db
+    volumes:
+      - ./data/web:/var/www/html # Mapping a local directory to the web service container
+
+  beelzebub-db:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=beelzebub # Database name
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password # Replace with a secure password
+    volumes:
+      - ./data/db:/var/lib/postgresql/data # Mapping a local directory to the database data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  beelzebub-queue:
+    image: beelzebub/queue:latest
+    environment:
+      - QUEUE_BROKER=rabbitmq
+      # Additional environment variables for the queue service
+    depends_on:
+      - beelzebub-db
+      - beelzebub-web
+
+  rabbitmq:
+    image: rabbitmq:3.8-management
+    ports:
+      - "5672:5672" # RabbitMQ default port for AMQP
+      - "15672:15672" # RabbitMQ management console port
+    environment:
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASSWORD=password # Replace with a secure password
+
+  redis:
+    image: redis:6-alpine
+    ports:
+      - "6379:6379"
+
+networks:
+  beelzebub_net:
+    driver: bridge

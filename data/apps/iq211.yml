@@ -1,0 +1,123 @@
+version: '3.8'
+
+services:
+  ergo_node:
+    image: 'ergo/node:latest'
+    command: 'node --genesis false'
+    ports:
+      - "9071:9071" # RPC interface, change to your desired port if needed
+      - "8080:8080"  # Web interface (if enabled)
+    volumes:
+      - "./config/node.cfg:/etc/ergo/node.cfg" # Optional: custom configuration file
+      - "./data": "/root/.ergo" # Persistent storage for the node data
+    environment:
+      - "ERGO_NODE_SYNC=full" # Can be 'full' or 'light' (optional, for initial sync)
+      - "TZ_CLIENT_DEBUG=true" # Enables debug logging (optional)
+      - "TZ_CLIENT_LOGS=20" # Log level (verbose, info, warn, error, fatal), higher verbosity (optional)
+    networks:
+      - ergo_network
+
+  # Optional PostgreSQL service for the blockchain data storage
+  ergo_db:
+    image: 'postgres:13'
+    command: 'postgres -c "fsync=off" -c "full_page_writes=off"'
+    volumes:
+      - "./data/db": "/var/lib/postgresql/data" # Persistent storage for the PostgreSQL data
+    environment:
+      POSTGRES_DB: ergo
+      POSTGRES_USER: ergo
+      POSTGRES_PASSWORD: change-this-password # Change this to a strong password
+    networks:
+      - ergo_network
+
+  # Optional Redis service for message queue and caching if needed
+  redis:
+    image: 'redis:6'
+    volumes:
+      - "./data/redis": "/data" # Persistent storage for Redis data
+
+networks:
+  ergo_network:
+    driver: bridge
+
+# Optional Traefik stack as a reverse proxy and ingress controller
+traefik_dashboard:
+  image: 'traefik:v2.5'
+  ports:
+    - "80:80" # HTTP dashboard interface
+    - "8081:8081" # Traefik API interface (optional)
+  command: -"--api.insecure=true" # Use with caution, set to false in production
+  volumes:
+    - "./data/traefik": "/etc/traefik"
+
+traefik:
+  image: 'traefik:v2.5'
+  command: -"--providers.kubernetescrd.enabled=false" # Disable Kubernetes CRD provider
+  volumes:
+    - "./data/traefik": "/etc/traefik"
+  networks:
+    - ergo_network
+    depends_on:
+      - traefik_dashboard
+
+# Optional Prometheus and Grafana for monitoring
+prometheus:
+  image: 'prom/prometheus:v2.4.0'
+  volumes:
+    - "./data/prometheus": "/etc/prometheus"
+  networks:
+    - ergo_network
+
+grafana:
+  image: 'grafana/grafana:latest'
+  ports:
+    - "3000:3000" # Grafana UI interface
+  volumes:
+    - "./data/grafana": "/etc/grafana"
+  networks:
+    - ergo_network
+
+# Optional logs and monitoring setup using Loki and Promtail
+loki:
+  image: 'grafana/loki:v2.4.0'
+  command: '-config.file=/etc/loki/loki-config.yaml' # Path to the Loki configuration file
+  volumes:
+    - "./data/loki": "/etc/loki"
+  networks:
+    - ergo_network
+
+promtail:
+  image: 'grafana/promtail:v2.4.0'
+  command: '-config.file=/etc/promtail/promtail-config.yaml' # Path to the Promtail configuration file
+  volumes:
+    - "./data/promtail": "/etc/promtail"
+  networks:
+    - ergo_network
+
+# Optional portainer for managing containers and volumes
+portainer:
+  image: 'portainer/portainer:2.15.3-Alpine'
+  ports:
+    - "9000:9000" # Portainer UI interface
+  volumes:
+    - "./data/portainer": "/data"
+  networks:
+    - ergo_network
+    depends_on:
+      - ergo_node
+      - traefik
+
+# Optional Longhorn for persistent storage management
+longhorn:
+  image: 'longhorn/longhorn:v1.3.0'
+  command: '-unsafe-storage=true -data-dir="/etc/longhorn"' # Allow using local disk directly as data disk
+  volumes:
+    - "./data/longhorn": "/etc/longhorn"
+  networks:
+    - ergo_network
+
+# Optional backup solution (e.g., Restic)
+restic:
+  image: 'restic/restic:latest'
+  volumes:
+    - "./backup:/backup" # Your local backup repository directory

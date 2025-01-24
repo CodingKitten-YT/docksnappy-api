@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  aptabase_app:
+    image: aptabase/aptabase:latest
+    container_name: aptabase_app
+    environment:
+      APBASE_SECRET_KEY: 'your_secret_key'
+      APBASE_POSTGRES_DATABASE: 'your_database_name'
+      APBASE_POSTGRES_USERNAME: 'your_postgres_username'
+      APBASE_POSTGRES_PASSWORD: 'your_postgres_password'
+      # Uncomment the following line if you want to enable LDAP authentication
+      # APBASE_LDAP_ENABLED: 'true'
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/code/data
+    depends_on:
+      - aptabase_db
+    networks:
+      - aptabase_network
+
+  aptabase_db:
+    image: postgres:13
+    container_name: aptabase_db
+    environment:
+      POSTGRES_DB: 'your_database_name'
+      POSTGRES_USER: 'your_postgres_username'
+      POSTGRES_PASSWORD: 'your_postgres_password'
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    networks:
+      - aptabase_network
+
+networks:
+  aptabase_network:
+    driver: bridge

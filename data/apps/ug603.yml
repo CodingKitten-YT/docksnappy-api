@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  hasura:
+    image: hasura/graphql-engine:v2.0.69
+    container_name: hasura
+    command: /root/initdb && /entrypoint.sh init && /entrypoint.sh start
+    ports:
+      - "8080:8080" # GraphQL endpoint
+      - "5678:5678"  # Admin UI (Jupyter) endpoint
+      - "8983:8983"  # Postgres admin endpoint
+    volumes:
+      - hasura-db:/var/lib/postgresql
+      - ./data:/root
+    environment:
+      HASURA_GRAPHQL_DATA_DIR: /root/data
+      HASURA_DB_HOST: db
+      HASURA_DB_USER: hasura
+      HASURA_DB_PASSWORD: hasura
+      HASURA_DB_DATABASE: hasura
+      HASURA_DB_PORT: 5432
+      POSTGRES_USER: hasura
+      POSTGRES_PASSWORD: hasura
+      POSTGRES_DB: hasura
+    depends_on:
+      - db
+    networks:
+      - backend
+
+  postgres:
+    image: postgres:13.2
+    container_name: postgres
+    volumes:
+      - hasura-db:/var/lib/postgresql
+    environment:
+      POSTGRES_USER: hasura
+      POSTGRES_PASSWORD: hasura
+      POSTGRES_DB: hasura
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  hasura-db:

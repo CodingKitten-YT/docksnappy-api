@@ -1,0 +1,64 @@
+version: '3'
+
+services:
+  convos:
+    image: convosio/convos:latest
+    container_name: convos
+    command: -m https://matrix.example.com -t token -p 8080 -s r1 --use-existing
+    ports:
+      - "8080:8080" # Convos web UI
+      - "6667:6667" # IRC (can be any other port if 6667 is in use)
+      - "443:443"  # HTTPS (if you set up SSL/TLS, adjust according to your setup)
+    volumes:
+      - "./data:/data"
+      - "./letsencrypt:/etc/letsencrypt" # Optional, for Let's Encrypt certificates
+    environment:
+      - SELF_SIGNED_CERT=true  # Set to false if you have a valid SSL certificate
+      - DEFAULT_ADMIN_USERNAME=admin  # Default admin user
+      - DEFAULT_ADMIN_PASSWORD=password  # Default admin password
+      - MATRIX_HOME_SERVER=https://matrix.example.com  # Matrix homeserver URL
+    restart: unless-stopped
+
+  matrix_synapse:
+    image: matrix-docker-client/synapse:latest
+    container_name: synapse
+    command: -c /etc/synapse/homeserver.yaml --no-log-rotate
+    volumes:
+      - ./matrix:/etc/synapse
+    environment:
+      - HOMESERVER_CERTBOT_TOKEN=certbot  # Required for Certbot to register with the homeserver
+      - SERVICES_UNVERIFIED_REGISTRATIONS_ALLOWED=true  # Allow unverified registrations
+    ports:
+      - "8443:80" # Matrix SSL-encrypted port (if you set up SSL/TLS, adjust according to your setup)
+    depends_on:
+      - convos
+    restart: unless-stopped
+
+  certbot:
+    image: certbot/certbot:latest
+    container_name: certbot
+    volumes:
+      - ./letsencrypt:/etc/letsencrypt
+    entrypoint: '/bin/sh -c "\n' \
+                'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;"'
+    restart: unless-stopped
+
+networks:
+  default:
+    external:
+      name: mynetwork # Replace with the name of your existing network if you have one
+
+# Uncomment the matrix section if you want to run a Matrix homeserver (Synapse) alongside Convos
+# matrix:
+#   image: matrix-docker-client/synapse:latest
+#   container_name: synapse
+#   volumes:
+#     - ./matrix:/etc/synapsed
+#   environment:
+#     - HOSTNAME=matrix.example.com
+#     - SERVICES_UNVERIFIED_REGISTRATIONS_ALLOWED=true
+#   ports:
+#     - "8443:80"
+#   depends_on:
+#     - convos
+#   restart: unless-stopped

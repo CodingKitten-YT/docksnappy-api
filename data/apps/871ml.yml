@@ -1,0 +1,46 @@
+version: '3.8'
+services:
+  blackcandy_db:
+    image: postgres:12
+    command: 'postgres -c "fsync=OFF"'
+    volumes:
+      - db_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: blackcandy
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+
+  php:
+    image: php:7.4-fpm
+    volumes:
+      - source_to_target:/var/www/html
+    restart: unless-stopped
+    environment:
+      TIMEZONE: UTC
+      APP_ENV: local
+      APP_DEBUG: true
+      APP_KEY: 32-character-random-key
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: blackcandy
+      DB_USERNAME: user
+      DB_PASSWORD: password
+
+  nginx:
+    image: nginx:1.19.6-alpine
+    volumes:
+      - source_to_target:/usr/share/nginx/html
+      - nginx_sites:/etc/nginx/sites-enabled:ro
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - php
+
+volumes:
+  db_data:
+  source_to_target:
+  nginx_sites:

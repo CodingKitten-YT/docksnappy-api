@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  web:
+    image: dpaste/dpaste
+    ports:
+      - "80:80" # Expose HTTP on the host
+    command: web
+    environment:
+      - SERVICE_NAME=web
+      - SERVICE_ENV=production
+      - SERVICE_HOST=0.0.0.0
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  worker:
+    image: dpaste/dpaste
+    command: worker
+    environment:
+      - SERVICE_NAME=worker
+      - SERVICE_ENV=production
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+      - db
+    restart: unless-stopped
+
+  redis:
+    image: redis:6.0-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - "./data/redis:/data"  # Persist Redis data
+    environment:
+      - REDIS_URL=redis://localhost:6379
+    restart: unless-stopped
+
+  db:
+    image: postgres:12
+    volumes:
+      - "./data/db:/var/lib/postgresql"  # Persist PostgreSQL data
+    environment:
+      - POSTGRES_DB=dpaste
+      - POSTGRES_USER=dpaste
+      - POSTGRES_PASSWORD=secret
+    restart: unless-stopped
+
+networks:
+  default:
+    driver: bridge

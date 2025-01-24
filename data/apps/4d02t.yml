@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  dailytxt:
+    image: dailytxt/dailytxt:latest
+    ports:
+      - "5000:5000" # Expose the FastAPI app on port 5000 (web interface)
+    environment:
+      - TZ=Your/Timezone # Set your timezone, e.g., 'America/New_York'
+      - POSTGRES_DB=dailytxtdb # The name of the PostgreSQL database
+      - POSTGRES_USER=user
+      - POSTGES_PASSWORD=password
+    volumes:
+      - ./data:/data
+      - ./config:/code/config
+    depends_on:
+      - postgres
+    command: --log-level debug
+
+  postgres:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=dailytxtdb
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - dailytxt-db:/var/lib/postgresql/data
+
+volumes:
+  dailytxt-db:

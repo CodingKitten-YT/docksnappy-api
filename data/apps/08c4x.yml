@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  linkwarden_db:
+    image: postgres:12
+    container_name: linkwarden_db
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: linkwarden
+      POSTGRES_USER: linkwarden
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5432:5432"
+
+  linkwarden_redis:
+    image: redis:6
+    container_name: linkwarden_redis
+    volumes:
+      - ./data/redis:/data
+
+  linkwarden_api:
+    image: linkwarden/linkwarden-api:latest
+    container_name: linkwarden_api
+    depends_on:
+      - linkwarden_db
+      - linkwarden_redis
+    environment:
+      DB_HOST: linkwarden_db
+      DB_USERNAME: linkwarden
+      DB_PASSWORD: secret
+      REDIS_URL: redis://linkwarden_redis:6379/0
+      SECRET_KEY: super_secret_key
+    ports:
+      - "5000:5000"
+
+  linkwarden_worker:
+    image: linkwarden/linkwarden-worker:latest
+    container_name: linkwarden_worker
+    depends_on:
+      - linkwarden_db
+    environment:
+      DB_HOST: linkwarden_db
+      DB_USERNAME: linkwarden
+      DB_PASSWORD: secret
+      SECRET_KEY: super_secret_key
+
+  linkwarden_crawler:
+    image: linkwarden/linkwarden-crawler:latest
+    container_name: linkwarden_crawler
+    depends_on:
+      - linkwarden_db
+    environment:
+      DB_HOST: linkwarden_db
+      DB_USERNAME: linkwarden
+      DB_PASSWORD: secret
+      SECRET_KEY: super_secret_key
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  default:
+    name: linkwarden_net
+    driver: bridge

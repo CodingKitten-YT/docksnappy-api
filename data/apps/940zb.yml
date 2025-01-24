@@ -1,0 +1,78 @@
+version: '3.7'
+
+services:
+  db:
+    image: mysql:5.7
+    command: --default-storage-engine=InnoDB
+    restart: unless-stopped
+    volumes:
+      - db_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: fossbilling
+      MYSQL_USER: fossuser
+      MYSQL_PASSWORD: fosspass
+    networks:
+      - fossbilling_network
+
+  redis:
+    image: redis:6.0-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - fossbilling_network
+
+  frontend:
+    image: fossbilling/fossbilling-frontend:latest
+    depends_on:
+      - api
+    ports:
+      - "8081:80"
+    restart: unless-stopped
+    networks:
+      - fossbilling_network
+
+  api:
+    image: fossbilling/fossbilling-api:latest
+    depends_on:
+      - db
+      - redis
+    ports:
+      - "8082:80"
+    restart: unless-stopped
+    networks:
+      - fossbilling_network
+
+  event-sink:
+    image: fossbilling/fossbilling-event-sink:latest
+    depends_on:
+      - db
+    restart: unless-stopped
+    networks:
+      - fossbilling_network
+
+  queue-worker:
+    image: fossbilling/fossbilling-queue-worker:latest
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+    networks:
+      - fossbilling_network
+
+  webhook-receiver:
+    image: fossbilling/fossbilling-webhook-receiver:latest
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - fossbilling_network
+
+volumes:
+  db_data:
+  redis_data:
+
+networks:
+  fossbilling_network:
+    driver: bridge
