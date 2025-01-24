@@ -1,46 +1,41 @@
 version: '3.8'
+
 services:
-  scrobbler1:
-    image: scrobbler:latest
-    networks:
-      - music_network
-    environment:
-      - MUSIC_API_KEY=api-key-for-scrobbler1
-      - MUSIC_API_SECRET=secret-for-scrobbler1
-    volumes:
-      - scrobbler1-config:/etc/scrobbler
-    depends_on:
-      - music_service
-
-  scrobbler2:
-    image: scrobbler:latest
-    networks:
-      - music_network
-    environment:
-      - MUSIC_API_KEY=api-key-for-scrobbler2
-      - MUSIC_API_SECRET=secret-for-scrobbler2
-    volumes:
-      - scrobbler2-config:/etc/scrobbler
-    depends_on:
-      - music_service
-
-  music_service:
-    image: music-service:latest
-    networks:
-      - music_network
+  scrobbler-frontend:
+    image: scrobbler-frontend:latest
     ports:
-      - "8080:8080"
+      - "80:3000"
+    depends_on:
+      - scrobbler-api
+    networks:
+      - scrobbler-network
+
+  scrobbler-api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    depends_on:
+      - scrobbler-database
     environment:
-      - MUSIC_API_KEY=universal-api-key
-      - MUSIC_API_SECRET=universal-secret
+      API_SECRET: ${API_SECRET}
+    networks:
+      - scrobbler-network
+
+  scrobbler-database:
+    image: postgres:13
     volumes:
-      - music-service-data:/etc/music-service
+      - scrobbler-db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: scrobbler
+      POSTGRES_USER: scrobbler
+      POSTGRES_PASSWORD: scrobbler
+    networks:
+      - scrobbler-network
 
 volumes:
-  scrobbler1-config:
-  scrobbler2-config:
-  music-service-data:
+  scrobbler-db-data:
 
 networks:
-  music_network:
-    driver: bridge
+  scrobbler-network:

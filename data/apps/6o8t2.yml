@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  statping:
+    image: lord/statping:latest # Use the official Statping image from Docker Hub
+    container_name: statping
+    ports:
+      - "80:80" # Expose Statping UI on host port 80
+    volumes:
+      - "./config:/etc/statping" # Mount your configuration directory to the container
+      - "./data:/var/lib/statping" # Mount your data directory to persist checks and metrics
+      - "./public_keys.env:/etc/statping/.env" # Optional: Mount a file containing your monitoring public keys
+    restart: unless-stopped # Restart the service unless it has been explicitly stopped
+    environment:
+      - STATPING_HOST=0.0.0.0 # Bind Statping to all network interfaces
+      - STATPING_PORT=80 # Set the port Statping will run on inside the container
+      - STATPING_INVITATIONS=true # Enable public keys for invitation links (if you mounted the public_keys.env file)
+      # Additional environment variables can be set here
+    networks:
+      - statping_network
+
+networks:
+  statping_network:
+    driver: bridge

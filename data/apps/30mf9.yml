@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  server:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden_server
+    ports:
+      - "80:80" # HTTP
+      - "443:443" # HTTPS (Use with SSL certificates)
+    volumes:
+      - './data/config:/data/config'
+      - './data/jwt_auth:/data/jwt_auth'
+      - './data/appdata:/data/appdata'
+    environment:
+      - SERVICE_NAME=vaultwarden.local # Set the DNS name for this service, for automatic TLS certificate generation if using Docker EE with Let's Encrypt integration
+      - SECRETS_DOMAIN=example.com # The domain to generate secrets for
+      - SQLITE_DATA=/data/config/database.db # Database file path
+    networks:
+      - vaultwarden_network
+
+  db:
+    image: postgres:latest
+    container_name: vaultwarden_db
+    volumes:
+      - './data/db:/var/lib/postgresql/data'
+    environment:
+      - POSTGRES_DB=vaultwarden
+      - POSTGRES_USER=vaultwarden
+      - POSTGRES_PASSWORD=changeit
+    networks:
+      - vaultwarden_network
+
+  redis:
+    image: redis:latest
+    container_name: vaultwarden_redis
+    volumes:
+      - './data/redis:/data'
+    networks:
+      - vaultwarden_network
+
+networks:
+  vaultwarden_network:
+    driver: bridge
+
+# Optional - Uncomment to enable the Vaultwarden admin CLI tool for managing your Vaultwarden instance
+services:
+  cli:
+    image: vaultwarden/cli:latest
+    tty: true
+    volumes:
+      - './data/appdata:/data/appdata'
+    entrypoint: /bin/sh
+    command: -c "vaultwarden admin --server ./server:80"
+
+# Optional - Uncomment to set up a reverse proxy with Nginx
+services:
+  nginx-proxy:
+    image: jwilder/nginx-proxy:alpine
+    container_name: vaultwarden_nginx_proxy
+    ports:
+      - "80:80" # HTTP
+      - "443:443" # HTTPS (Use with SSL certificates)
+    volumes:
+      - './data/nginx-proxy/certs:/etc/nginx/ssl'
+      - './data/nginx-proxy/wasm:/etc/nginx/client_body_temp'
+      - './data/nginx-proxy/data:/var/lib/nginx-proxy'
+    networks:
+      - vaultwarden_network
+
+# Optional - Uncomment to use letsencrypt for automatic SSL certificates
+services:
+  letools:
+    image: jrcsob/letsencrypt-nginx-proxy-companion:latest
+    container_name: vaultwarden_letools
+    depends_on:
+      - nginx-proxy
+    volumes:
+      - './data/nginx-proxy/certs:/etc/letsencrypt'
+      - './data/nginx-proxy/acme.json:/etc/letsencrypt/acme.json'
+    environment:
+      - EMAIL=youremail@example.com # Set your email address for Let's Encrypt registration alerts
+    networks:
+      - vaultwarden_network

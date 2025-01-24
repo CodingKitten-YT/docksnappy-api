@@ -5,57 +5,23 @@ services:
     image: lycheeapp/lychee:latest
     container_name: lychee
     ports:
-      - "80:80" # HTTP port, configure as needed
-      - "443:443" # HTTPS port, configure with SSL certificate
+      - "80:80" # HTTP port
+      - "443:443" # HTTPS port (if using SSL)
     volumes:
-      - "./config:/var/www/html/app/config"
-      - "./data:/var/www/html/app/storage"
-      - "./uploads:/var/www/html/app/web/files"
+      - "./data:/var/www/html" # Local directory to store user uploads and application data
+      - "./config:/etc/lychee" # Optional, if you want to configure Lychee externally
+      - "/var/run/docker.sock:/var/run/docker.sock:ro" # Required for Docker in Docker (if necessary)
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Paris
-      - MYSQL_HOST=mysql # Use this if you have a separate MySQL service
-      - MYSQL_USER=root
-      - MYSQL_PASSWORD=yourpassword
-      - MYSQL_DB=lychee
+      - PUID=1000 # Replace with your user ID to allow the container to write to the host volume
+      - PGID=1000 # Replace with your group ID
+      - TZ=Europe/Paris # Set your timezone, e.g., Europe/London, America/New_York, etc.
+      - MYSQL_DATABASE=lychee # The database name for the initial setup
+      - MYSQL_USER=root # The database user for the initial setup
+      - MYSQL_PASSWORD=yourpassword # The database password for the initial setup
+    restart: unless-stopped
     networks:
-      - lychee-network
-
-  mysql:
-    image: mysql:5.7
-    container_name: mysql
-    volumes:
-      - "./mysql/dbdata:/var/lib/mysql"
-    environment:
-      - MYSQL_ROOT_PASSWORD=yourpassword
-      - MYSQL_USER=root
-      - MYSQL_PASSWORD=yourpassword
-      - MYSQL_DB=lychee
-    networks:
-      - lychee-network
-
-  nginx-proxy:
-    image: 'jwilder/nginx-proxy':'stable'
-    container_name: nginx-proxy
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - "./nginx/certs:/etc/nginx/ssl"
-      - "./nginx/data:/var/lib/nginx-proxy"
-      - "./nginx/conf.d:/etc/nginx/conf.d"
-    networks:
-      - lychee-network
-
-  redsight_redis:
-    image: redis:latest
-    container_name: redis
-    volumes:
-      - "./redis/data:/data"
-    networks:
-      - lychee-network
+      - lychee_network
 
 networks:
-  lychee-network:
+  lychee_network:
     driver: bridge

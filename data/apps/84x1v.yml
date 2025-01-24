@@ -1,0 +1,40 @@
+version: '3.8'
+services:
+  precis-api:
+    image: 'precisapp/precis-api:latest'
+    ports:
+      - '8080:8080' # Expose Precis API on port 8080 of the host
+    environment:
+      - PRECIS_HOST=0.0.0.0
+      - PRECIS_PORT=8080
+      - JAVA_OPTS=-Xms512m -Xmx1g
+    depends_on:
+      - postgres
+    command: >
+      java $-JAVA_OPTS $-Dspring.config.location=/app/conf,/app/conf-dev ${DOCKER_ENV:-} --contextPath='/api' -jar /app.jar
+
+  precis-db:
+    image: 'postgres:latest'
+    volumes:
+      - 'precis-db-data:/var/lib/postgresql/data'
+    environment:
+      - POSTGRES_DB=precis
+      - POSTGRES_USER=precis
+      - POSTGRES_PASSWORD=change_this_password # Replace with a secure password
+    exposer:
+      - '5432'
+
+  precis-worker:
+    image: 'precisapp/precis-worker:latest'
+    depends_on:
+      - precis-api
+    environment:
+      - PRECIS_API_URL=http://precis-api:8080 # Adjust if necessary
+      - WORKER_QUEUE=default
+      - WORKER_HOST=precis-api
+      - JAVA_OPTS=-Xms512m -Xmx1g
+    command: java $-JAVA_OPTS $-Dspring.config.location=/app/conf,/app/conf-dev ${DOCKER_ENV:-} --contextPath='/jobs' -jar /app.jar
+
+volumes:
+  precis-db-data:
+    driver: 'local'

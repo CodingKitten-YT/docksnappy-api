@@ -1,0 +1,31 @@
+version: '3.8'
+services:
+  warpgate_app:
+    image: 'warpgate/app:latest' # Use the official Warpgate application image
+    ports:
+      - "8080:8080" # Map the app port to the host for web access
+    environment:
+      - DJANGO_SETTINGS_MODULE=warpgate.settings.production  # Production settings module for Django
+      # Add other necessary environment variables here (e.g., SECRET_KEY, DATABASE_URL, etc.)
+    depends_on:
+      - db
+    volumes:
+      - .:/code  # Mount the current directory to /code in the container for code changes
+      - app/static:app/static  # Ensure static files are served correctly
+      - app/warpgate/db.sqlite:/code/warpgate/db.sqlite  # Persist the database file if using SQLite
+
+  db:
+    image: 'postgres:latest'  # Use the official PostgreSQL image
+    volumes:
+      - postgres_data:/var/lib/postgresql  # Persist database data
+    environment:
+      - POSTGRES_DB=warpgate_db  # Database name
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pass
+    expose:
+      - "5432"  # Expose the PostgreSQL port, even if not directly mapping it
+
+# Define named volumes for persistent data
+volumes:
+  postgres_data:
+  app_data:

@@ -1,136 +1,32 @@
-version: '3.7'
-
+version: '3.8'
 services:
-  manyfold-node:
-    image: hyperflyer/manyfold:latest
-    container_name: manyfold-node
-    environment:
-      - TF_CLI_HOME=./.terraformyspace
-      - NODE_NAME=ManyfoldNode
-      # Uncomment the following line if you want to run as a full node
-      # - CHAIN_ID=manyfold-3
-    volumes:
-      - ./chain-config:/root/.manyfold/config
-      - ./node_keys:/root/.manyfold/node_key
-      - ./.terraformyspace:/root/.terraformyspace
+  manyfold:
+    image: 'manyflow/manyfold:latest' # Use the official Manyfold image from Docker Hub
     ports:
-      - "26657:26657" # RPC
-      - "19080:19080" # Prometheus (optional, for monitoring)
-      - "9091:9091"  # gRPC-web (optional, for wallet UI or other gRPC-web clients)
-    command: shard-validator
-    restart: unless-stopped
-
-  manyfold-fullnode:
-    image: hyperflyer/manyfold:latest
-    container_name: manyfold-fullnode
+      - "4000:4000" # Expose the default Manyfold port for web access
     environment:
-      - TF_CLI_HOME=./.terraformyspace
-      - NODE_NAME=ManyfoldFullNode
-      # Uncomment the following line if you want to run as a full node
-      - CHAIN_ID=manyfold-3
+      MANYFOLD_DB_HOST: db # Reference the database service by name
+      MANYFOLD_DB_USERNAME: manyfold # Database user for Manyfold
+      MANYFOLD_DB_PASSWORD: verysecretpassword # Database password for Manyfold
+      MANYFOLD_DB_DATABASE: manyfold # Database name for Manyfold
+    depends_on:
+      - db
     volumes:
-      - ./chain-config:/root/.manyfold/config
-      - ./node_keys:/root/.manyfold/node_key
-      - ./.terraformyspace:/root/.terraformyspace
-    ports:
-      - "26657:26657" # RPC
-      - "19180:19180" # Prometheus (optional, for monitoring)
-      - "9091:9091"  # gRPC-web (optional, for wallet UI or other gRPC-web clients)
-    command: fullnode
-    restart: unless-stopped
+      - './data:/data' # Mount a volume to persist Manyfold data
+    networks:
+      - manyfold-network
 
-  manyfold-lightnode:
-    image: hyperflyer/manyfold:latest
-    container_name: manyfold-lightnode
+  postgres:
+    image: 'postgres:13' # Use PostgreSQL 13 as the database server
     environment:
-      - TF_CLI_HOME=./.terraformyspace
-      - NODE_NAME=ManyfoldLightNode
+      POSTGRES_USER: manyfold
+      POSTGRES_PASSWORD: verysecretpassword
+      POSTGRES_DB: manyfold
     volumes:
-      - ./chain-config:/root/.manyfold/config
-      - ./.terraformyspace:/root/.terraformyspace
-    command: lightnode
-    restart: unless-stopped
+      - './dbdata:/var/lib/postgresql/data' # Mount a volume to persist database data
+    networks:
+      - manyfold-network
 
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: prometheus
-    volumes:
-      - ./prometheus:/etc/prometheus
-    ports:
-      - "9090:9090"
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus/data'
-    depends_on:
-      - manyfold-node
-      - manyfold-fullnode
-      - manyfold-lightnode
-
-  grafana:
-    image: grafana/grafana:latest
-    container_name: grafana
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=secretpassword # Change 'secretpassword' to your desired admin password
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./grafana:/etc/grafana
-    depends_on:
-      - prometheus
-
-# Uncomment the following services if you want to enable additional monitoring and alerting.
-
-  alertmanager:
-    image: prom/alertmanager:latest
-    container_name: alertmanager
-    volumes:
-      - ./prometheus/alertming-data:/etc/alertmanager
-    ports:
-      - "9093:9093"
-    depends_on:
-      - prometheus
-
-  node_exporter:
-    image: prom/node-exporter:latest
-    container_name: node_exporter
-    volumes:
-      - /:/root
-    restart: always
-    command:
-      - '--path.rootFs=/'
-    depends_on:
-      - manyfold-node
-      - manyfold-fullnode
-      - manyfold-lightnode
-
-  promtail:
-    image: grafana/loki:latest
-    container_name: promtail
-    environment:
-      - LOGS_PATH=/var/log,/path/to/other/logs # Adjust the paths to your logging setup
-      - SERVICE_MEMORY=256 # Adjust memory as needed for your environment
-    volumes:
-      - ./promtail-config.yaml:/etc/promtail/config.yaml
-    command:
-      - '--config.file=/etc/promtail/config.yaml'
-      - '--config.receiveInterval=10s'
-      - '--graceful-failure-limit=5'
-    depends_on:
-      - manyfold-node
-      - manyfold-fullnode
-      - manyfold-lightnode
-
-# Loki stack for logs aggregation, includes promtail and grafana-loki.
-
-  grafana-loki:
-    image: grafana/loki:latest
-    container_name: grafana-loki
-    environment:
-      - LOCALSTORAGE__PATH=/promtail-data # Path to the data directory for Loki
-    ports:
-      - "3100:3100"
-    volumes:
-      - ./promtail-config.yaml:/etc/promtail/config.yaml
-      - ./promtail-data:/promtail-data
-    depends_on:
-      - promtail
+networks:
+  manyfold-network:
+    driver: bridge

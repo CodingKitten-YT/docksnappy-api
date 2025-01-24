@@ -1,43 +1,54 @@
 version: '3.8'
 
 services:
-  alerthub_api:
-    image: alerthub/alerthub-api:latest
+  alerthub:
+    image: prometheus-community/alertsender:v12.0.0
+    container_name: alerthub
     environment:
-      - APP_SECRET=secret_goes_here
-      - REDIS_URL=redis://${REDIS_HOST}:6379
-      - DATABASE_URL=postgres://${DB_HOST}/${DB_NAME}
-    depends_on:
-      - redis
-      - postgres
+      - SERVICE_NAME=alerter
+      # Optionally, configure the following if you have a specific setup or need to change defaults
+      - ALERTMANAGER_URL="http://alertmanager:9093"
+      - EMAIL_SMTP_SERVER="your-email-server.com"
+      - EMAIL_SMTP_FROM="noreply@example.com"
+      # You can add more environment variables here for other notification channels like Slack, PagerDuty, OpsGenie, etc.
     ports:
-      - "5000:5000"
-    networks:
-      - alerthub_network
+      - "8080:9090" # HTTP endpoint for AlertHub (optional)
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090/alertsender/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
 
-  redis:
-    image: redis:6.0-alpine
-    command: redis-server --appendonly yes
-    volumes:
-      - redis-data:/data
-    networks:
-      - alerthub_network
+  alertmanager:
+    image: prometheus-community/alertmanager:v12.0.0
+    container_name: alertmanager
+    ports:
+      - "9093:9093" # HTTP endpoint for Alertmanager
+      - "9094:9094" # Consistent gossip endpoint (used by the Alertmanager for clustering)
+    healthcheck:
+      test: ["TCP", ":9093"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
 
-  postgres:
-    image: postgres:13
-    environment:
-      - POSTGRES_DB=alerthub
-      - POSTGRES_USER=alerthub
-      - POSTGRES_PASSWORD=secret_db_goes_here
+  prometheus:
+    image: prom/prometheus:v12.0.0
+    container_name: prometheus
+    depends_on:
+      - alerthub
+      - alertmanager
+      - target... # Replace 'target...' with the names of your application containers or service discoverable by Prometheus
     volumes:
-      - postgres-data:/var/lib/postgresql/data
-    networks:
-      - alerthub_network
+      - ./prometheus:/etc/prometheus:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090" # HTTP endpoint for Prometheus
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9090/targets"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
 
 volumes:
-  redis-data:
-  postgres-data:
-
-networks:
-  alerthub_network:
-    driver: bridge
+  prometheus_data:
+    driver: local

@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  tamari_backend:
+    image: "tamari/tamari-backend:latest" # Use the official backend image from Tamari
+    command: backend
+    environment:
+      - TZ=Europe/London
+    ports:
+      - "8080:8080" # Expose the backend on port 8080
+    depends_on:
+      - tamari_db
+    volumes:
+      - ./backend:/app
+
+  tamari_db:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=tamari
+      - POSTGRES_PASSWORD=change_this_password
+      - POSTGRES_DB=tamari_test
+    volumes:
+      - tamari-db-data:/var/lib/postgresql/data
+
+  tamari_frontend:
+    image: "tamari/tamari-frontend:latest" # Use the official frontend image from Tamari
+    ports:
+      - "3000:3000" # Expose the frontend on port 3000
+    depends_on:
+      - tamari_backend
+    volumes:
+      - ./frontend:/app
+
+volumes:
+  tamari-db-data:

@@ -1,0 +1,55 @@
+version: '3.8'
+services:
+  penpot:
+    image: 'penpot/penpot-server:latest' # use a specific version if needed, e.g., 'penpot/penpot-server:v2.0.0'
+    ports:
+      - "5000:5000"
+    environment:
+      PENPOT_HOSTNAME: ${DOMAIN:-localhost}
+      JWT_SECRET: 'super_secret_key' # Change this to a secure, random token
+      LOG_LEVEL: INFO
+      DB_TYPE: PostgreSQL
+      DB_DSN: 'postgres://user:password@db:5432/penpot?tls_mode=disable'
+      REDIS_HOSTNAME: redis
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - './data:/data'
+      - './config:/config'
+    networks:
+      - penpot-network
+
+  db:
+    image: 'postgres:latest' # use a specific version if needed, e.g., 'postgres:13'
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: penpot
+    volumes:
+      - './db:/var/lib/postgresql/data'
+    networks:
+      - penpot-network
+
+  redis:
+    image: 'redis:latest' # use a specific version if needed, e.g., '6-alpine'
+    command: 'redis-server --appendonly yes'
+    volumes:
+      - './redis:/data'
+    networks:
+      - penpot-network
+
+  sentry:
+    image: 'penpot/sentry-server:latest' # use a specific version if needed
+    environment:
+      SENTRY_PENPOT_URL: 'http://penpot:5000'
+      SENTRY_HOSTNAME: ${DOMAIN:-localhost}
+      LOG_LEVEL: INFO
+    ports:
+      - "6000:6000"
+    depends_on:
+      - penpot
+
+networks:
+  penpot-network:
+    driver: bridge

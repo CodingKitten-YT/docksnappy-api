@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  # Database service
+  db:
+    image: postgres:12
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: sist2
+      POSTGRES_USER: sist2user
+      POSTGRES_PASSWORD: sist2password
+    ports:
+      - "5432:5432"
+
+  # Application server service (Tomcat)
+  appserver:
+    image: tomcat:9.0.18-jdk8-openjdk
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+    volumes:
+      - appserver-data:/usr/local/tomcat/webapps/ROOT.war
+      - appserver-logs:/usr/local/tomcat/logs
+    environment:
+      CATALINA_OPTS: "-Xms512M -Xmx1024M"
+      JAVA_OPTIONS: "-Djavax.xml.parsers.DocumentBuilderFactory=RLAX8N -Djavax.xml.stream.XMLStreamReaderFactory=RXPP"
+
+  # Web server service (Apache HTTP Server)
+  webserver:
+    image: httpd:2.4
+    depends_on:
+      - appserver
+    ports:
+      - "80:80"
+    volumes:
+      - webserver-data:/usr/local/apache2/htdocs
+    environment:
+      DOCUMENT_ROOT: "/usr/local/apache2/htdocs"
+
+  # Admin client service (for configuration and administration)
+  adminclient:
+    image: sist2:latest
+    depends_on:
+      - db
+      - appserver
+    ports:
+      - "9090:8081"
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/sist2
+      DB_USERNAME: sist2user
+      DB_PASSWORD: sist2password
+      SIS_SERVER_URL: http://appserver:8080/sis-web
+
+  # Additional volumes for data persistence
+  db-data:
+    driver_opts:
+      type: "bind"
+      o: "rw,sync"
+
+  appserver-data:
+    driver_opts:
+      type: "bind"
+      o: "rw,sync"
+
+  webserver-data:
+    driver_opts:
+      type: "bind"
+      o: "rw,sync"
+
+  appserver-logs:
+    driver_opts:
+      type: "bind"
+      o: "rw,sync"
+
+volumes:
+  db-data:
+  appserver-data:
+  webserver-data:
+  appserver-logs:

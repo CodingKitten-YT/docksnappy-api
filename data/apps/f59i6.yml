@@ -1,65 +1,26 @@
 version: '3.8'
-
 services:
-  db:
+  judge0-api:
+    image: judge0/judge0-ce:latest
+    ports:
+      - "4000:4000" # Admin UI (change the host port if needed)
+      - "8000:8000" # Public contest viewer (change the host port if needed)
+    environment:
+      - JUDGE0_API_SECRET=secret
+      - JUDGE0_API_DEBUG=true
+    volumes:
+      - ./data:/data
+    depends_on:
+      - postgres
+
+  postgres:
     image: postgres:13
-    command: 'postgres -c "fg_class = 'mock'"'
+    environment:
+      - POSTGRES_DB=judge0
+      - POSTGRES_USER=judge0
+      - POSTGRES_PASSWORD=judge0
     volumes:
       - judge0-db:/var/lib/postgresql/data
-    environment:
-      POSTGRES_USER: judge0
-      POSTGRES_PASSWORD: judge0
-      POSTGRES_DB: judge0
-    ports:
-      - "5432:5432"
-
-  web:
-    image: judge0/judge0-ce:latest
-    depends_on:
-      - db
-    ports:
-      - "8001:8000" # HTTP API
-      - "8000:8000" # Web UI
-    volumes:
-      - judge0-data:/var/task
-      - ./judge0.ini:/judge0.ini
-    environment:
-      JUDGE0_DB_HOST: db
-      JUDGE0_DB_USER: judge0
-      JUDGE0_DB_PASSWORD: judge0
-      JUDGE0_DB_NAME: judge0
-      JUDGE0_DB_TYPE: postgresql
-      SERVICE_NAME: web
-      REGISTRY_URL: "http://registry:5000" # Docker registry service (if used)
-      WORKERS_COUNT: 2 # Number of worker processes to run, defaults to 1
-    healthcheck:
-      test: ["CMD", "curl", "-f", "localhost:8000/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 7
-
-  redis:
-    image: redis:6-alpine
-    command: 'redis-server --appendonly yes'
-    volumes:
-      - judge0-redis:/data
-    ports:
-      - "6379:6379"
-
-  registry:
-    image: registry:2.8.1
-    container_name: judge0_registry
-    ports:
-      - "5000:5000"
-    volumes:
-      - judge0-registry-data:/var/lib/registry
 
 volumes:
   judge0-db:
-  judge0-data:
-  judge0-redis:
-  judge0-registry-data:
-
-networks:
-  default:
-    driver: bridge

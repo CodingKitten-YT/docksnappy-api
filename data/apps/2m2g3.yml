@@ -1,37 +1,31 @@
-version: '3.7'
-
+version: '3.8'
 services:
-  libretranslate:
-    image: 'libretranslate/libretranslate:latest' # or use a specific tag if needed
+  libret Translate:
+    image: 'librettranslate/librettranslate:latest' # use the latest tag or specify a particular version
     ports:
-      - "5000:5000" # Expose the API on port 5000 of the host
-    command: --backend.redis_db_url=redis://redis:6379/1 --server.secret_key='super_secret_key' --api.enabled=True --backend.model_urls={'en': 'distilroberta-base'} --frontend.host='0.0.0.0'
+      - "9993:9993" # HTTP API port
     environment:
-      - REDIS_URL=redis://redis:6379/1
-      - SECRET_KEY=super_secret_key
-      - ALLOWED_HOSTS=0.0.0.0
-    depends_on:
-      - redis
+      - ENABLE_API=true # Enable API for REST calls
+      - ENABLE_WEBGUI=false # Disable web GUI if not needed (for headless deployment)
+      - POSTMONGOHOST=true # Connect to MongoDB running on another host/service, set to false if MongoDB is in the same container
     volumes:
-      - type: bind
-        source: ./libretranslate-data
-        target: /var/lib/libretranslate
-        mode: "rw"
+      - "${HOME}/.local/share/librettranslate/:/data" # Mount for storing translations locally (optional)
+    networks:
+      - translate_network
 
-  redis:
-    image: 'redis:latest'
-    command: --save-mode no-save
+  mongodb:
+    image: 'mongo:latest'
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=yourpassword
     volumes:
-      - type: bind
-        source: ./redis-data
-        target: /data
-        mode: "rw"
-
-# Optional volume for data persistence
-volumes:
-  libretranslate-data:
-  redis-data:
+      - "librettranslate-mongodb:/data/db" # Use a named volume for persistent data (optional)
+    networks:
+      - translate_network
 
 networks:
-  default:
+  translate_network:
     driver: bridge
+
+volumes:
+  librettranslate-mongodb:

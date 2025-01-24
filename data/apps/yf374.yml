@@ -2,36 +2,34 @@ version: '3.8'
 
 services:
   fileshare_web:
-    image: fileshare/fileshare-web:latest
-    container_name: fileshare_web
+    image: filerobot/fileshare
     ports:
-      - "80:80" # HTTP on host
+      - "80:80" # HTTP
+    volumes:
+      - "./data:/usr/src/app/data"
     environment:
-      - SECRET_KEY=randomsecretkey # Replace with a real secret key for production
-      - DB_ENGINE=postgres
-      - DB_NAME=fileshare
-      - DB_USER=fileshareuser
-      - DB_PASSWORD=filesharedbpassword
-      - ALLOWED_HOSTS=localhost,127.0.0.1,[::1]
+      - TZ=Europe/London
+      - DEBUG=false
+      - POSTGRES_DB=fileshare
+      - POSTGRES_USER=fileshare
+      - POSTGRES_PASSWORD=changeit
     depends_on:
       - fileshare_db
-    volumes:
-      - ./data:/usr/src/app/data
 
   fileshare_db:
-    image: postgres:latest
-    container_name: fileshare_db
+    image: postgres:13
+    volumes:
+      - "./data/postgres:/var/lib/postgresql/data"
     environment:
       - POSTGRES_DB=fileshare
-      - POSTGRES_USER=fileshareuser
-      - POSTGRES_PASSWORD=filesharedbpassword
-      - POSTGRES_HOST=fileshare_db
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - POSTGRES_USER=fileshare
+      - POSTGRES_PASSWORD=changeit
 
-volumes:
-  postgres_data:
+  fileshare_redis:
+    image: redis:alpine
+    volumes:
+      - "./data/redis:/data"
 
 networks:
-  fileshare_net:
+  default:
     driver: bridge

@@ -1,50 +1,41 @@
-version: '3.8'
+version: '3.7'
 
 services:
   gotify:
-    image: 'gotify/server:latest' # Use a specific version if needed, e.g., 'gotify/server:v0.26.0'
+    image: 'gotify/server:latest'
+    command: 'server -config=/code/config.yaml'
     ports:
-      - '443:443'
-      - '80:80' # HTTP to redirect to HTTPS
+      - "8080:8080" # HTTP API
+      - "3000:3000" # Web UI
     volumes:
-      - './config:/config'
+      - './data:/data'
       - './letsencrypt:/etc/letsencrypt'
-      - './gotify-data:/data'
+      - './config.yaml:/code/config.yaml'  # Optional: use the default config and skip volume mount for it
     environment:
-      - GOTIFY_SERVER_HOSTNAME=example.com # Set your domain here
-      - GOTIFY_SERVER_PROTOCOL=https
-      - TZ=Europe/London
-      - MYSQL_DATABASE=gotify
-      - MYSQL_USER=gotify
-      - MYSQL_PASSWORD=your_mysql_password
-      - MYSQL_ROOT_PASSWORD=your_root_password # Optional, if you are using root access
-    depends_on:
-      - mysql
+      GOTIFY_SERVER_HOST: '0.0.0.0'
+      GOTIFY_SERVER_PROTOCOL: 'https'
+      GOTIFY_SERVER_SSL_YARN_CA_FILE: '/etc/letsencrypt/live/yourdomain.com/fullchain.pem'  # Update with your domain
+      GOTIFY_SERVER_SSL_YARN_KEY_FILE: '/etc/letsencrypt/live/yourdomain.com/privkey.pem'   # Update with your domain
+      GOTIFY_SERVER_SSL_YARN_TLS_FILE: '/etc/letsencrypt/live/yourdomain.com/cert.pem'    # Update with your domain
+    restart: 'unless-stopped'
     networks:
-      - gotify-net
+      - gotify_network
 
-  mysql:
-    image: 'mysql:5.7'
-    environment:
-      MYSQL_ROOT_PASSWORD: your_root_password
-      MYSQL_DATABASE=gotify
-      MYSQL_USER=gotify
-      MYSQL_PASSWORD=your_mysql_password
+  letsencrypt:
+    image: 'certbot/certbot'
     volumes:
-      - './mysql-data:/var/lib/mysql'
+      - './letsencrypt:/etc/letsencrypt'
+      - '/var/lib/docker/volumes/_data/:/etc/letsencrypt/'  # Docker default volume
+    command: certonly --standalone --email your-email@example.com --agree-tos --expire 82500 --non-interactive --name yourdomain.com --nginx -d yourdomain.com
+    depends_on:
+      - gotify
+    environment:
+      HTTP_PROXY: 'http://your-proxy.example.com:3128'
+      HTTPS_PROXY: 'https://your-proxy.example.com:3128'
+      NO_PROXY: 'localhost,127.0.0.1,.local'
     networks:
-      - gotify-net
+      - gotify_network
 
 networks:
-  gotify-net:
+  gotify_network:
     driver: bridge
-
-restart: unless.stopped
-
-# For Let's Encrypt to automate certificate issuance and renewal.
-services:
-  lego:
-    image: 'cert-bot/certbot:latest'
-    volumes:
-      - './letsencrypt:/etc/letsencrypt'
-    entrypoint: '/bin/sh -c "trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;"'

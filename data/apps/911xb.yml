@@ -1,48 +1,46 @@
 version: '3.8'
 services:
-  app:
-    image: azimutt/azimutt:latest
-    container_name: azimutt
+  db:
+    image: postgres:12
+    volumes:
+      - db_data:/var/lib/postgresql/data
     environment:
-      - DB_HOST=db
-      - DB_USERNAME=user
-      - DB_PASSWORD=password
-      - DB_DATABASE=azimutt
-      - DJANGO_SECRET_KEY=mysecretkey
-      - AZIMUTT_EMAIL_HOST=email-service
-      - AZIMUTT_EMAIL_PORT=587
-      - AZIMUTT_EMAIL_USER=your-email@example.com
-      - AZIMUTT_EMAIL_PASSWORD=youremailpassword
+      POSTGRES_DB: azimutt
+      POSTGRES_USER: azimutt
+      POSTGRES_PASSWORD: change_this_password
+    command: 'postgres -c "listen_addresses = 0.0.0.0'
     ports:
-      - "8000:8000"
+      - "5432:5432"
+
+  php:
+    image: azimutt/azimutt:latest
+    volumes:
+      - src:/var/www/html
+      - .env:/usr/local/www/html/.env:ro
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: azimutt
+      DB_USERNAME: azimutt
+      DB_PASSWORD: change_this_password
+      AZIMUTT_APP_SECRET: changeme
     depends_on:
       - db
-      - email-service
-    volumes:
-      - ./media:/code/media
-      - ./static:/code/static
-    restart: unless-stopped
-
-  db:
-    image: postgres:13
-    container_name: azimutt_db
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: azimutt
-    volumes:
-      - db-data:/var/lib/postgresql/data
-
-  email-service:
-    image: postfix:2.11
-    container_name: azimutt_email
-    environment:
-      TLS_MODE=none
-      MYDOMAIN=example.com
     ports:
-      - "25:25"
-      - "587:587"
-    restart: unless-stopped
+      - "8000:80"
 
 volumes:
-  db-data:
+  db_data:
+
+# Uncomment the following lines if you need to expose the port for the db container
+# db:
+#   ports:
+#     - "5432:5432"
+
+networks:
+  default:
+    driver: bridge
+
+# Uncomment the following line if you need a named volume for the php container
+# src:
+#   name: azimutt-src

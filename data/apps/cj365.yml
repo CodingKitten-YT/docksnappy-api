@@ -1,86 +1,54 @@
 version: '3.7'
-
 services:
-  casaos-node:
-    image: 'casaos/casaos-node:latest' # Use the latest tag or a specific release of CasaOS Node
-    container_name: casaos-node
-    restart: unless-stopped
+  casaos-app:
+    image: casaos/casaos-app:latest
+    container_name: casaos-app
     environment:
-      - NODE_NAME=casanode1
-      - DATA_DIR=/data
-      - RPC_ENABLED=false
-      - CASAOS_NODE_EXPOSED=true
+      - CASAOS__POSTGRES__DB=casaos_main
+      - CASAOS__POSTGRES__USER=casaos_admin
+      - CASAOS__POSTGRES__PASSWORD=change_this_password
     ports:
-      - "8336:8336" # CasaOS Node port for RPC (if enabled)
-      - "4001:4001" # CasaOS Node port for P2P
+      - "80:80" # HTTP
+      # Uncomment the next line if you want to expose the secure (HTTPS) port as well
+      # "- 443:443"
     volumes:
-      - casaos-node-data:/data
-      - ./casanode.key:/root/.casaos-node/config/casanode.key # Your node's key file
-      - ./casanode.cert:/root/.casaos-node/config/casanode.cert # Your node's certificate file (if applicable)
-    networks:
-      - casaos-network
-
-  casaos-wallet:
-    image: 'casaos/casaos-wallet:latest' # Use the latest tag or a specific release of CasaOS Wallet
-    container_name: casaos-wallet
-    restart: unless-stopped
-    environment:
-      - WALLET_NAME=casawallet1
-      - DATA_DIR=/data
-    volumes:
-      - casaos-wallet-data:/data
-      - ./wallet.key:/root/.casaos-wallet/config/wallet.key # Your wallet's key file
+      - ./data/casaos-app:/data/casaos-app
+      - casaos-app-letsencrypt:/etc/letsencrypt
     depends_on:
-      - casaos-node
+      - casaos-db
     networks:
-      - casaos-network
+      - casaos_network
 
-  casaos-gateway:
-    image: 'casaos/casaos-gateway:latest' # Use the latest tag or a specific release of CasaOS Gateway
-    container_name: casaos-gateway
-    restart: unless-stopped
+  casaos-db:
+    image: postgres:12
+    container_name: casaos-db
     environment:
-      - DATA_DIR=/data
+      - POSTGRES_DB=casaos_main
+      - POSTGRES_USER=casaos_admin
+      - POSTGRES_PASSWORD=change_this_password
     volumes:
-      - casaos-gateway-data:/data
+      - casaos-db-data:/var/lib/postgresql/data
     networks:
-      - casaos-network
+      - casaos_network
 
-  lnd:
-    image: 'lightningd/lnd:0.13.1-beta' # Use the appropriate tag for your version of LND
-    container_name: lnd
-    restart: unless-stopped
+  casaos-worker:
+    image: casaos/casaos-worker:latest
+    container_name: casaos-worker
     environment:
-      - LIGHTNINGD_NETWORK=testnet # Change to mainnet or testnet as needed
-      - LND_DB_DIR=/root/.lnd/data # LND data directory
-      - LND_LOG_LEVEL=info
+      - CASAOS__POSTGRES__DB=casaos_main
+      - CASAOS__POSTGRES__USER=casaos_admin
+      - CASAOS__POSTGRES__PASSWORD=change_this_password
     volumes:
-      - lnd-data:/root/.lnd
-    ports:
-      - "10009:10009" # LND gRPC API (if enabled)
-      - "lightning:9735:lightning" # LND Lightning socket
+      - ./data/casaos-worker:/data/casaos-worker
     depends_on:
-      - casaos-node
-
-  bitcoin-fullnode:
-    image: 'bitcoincore/bitcoin-core:23.0' # Use the appropriate tag for your desired Bitcoin Core version
-    container_name: bitcoin-fullnode
-    restart: unless-stopped
-    environment:
-      - BITCOINCORE_DATADIR=/root/.bitcoin
-      - BITCOINCORE_RPCAUTHTYPE=none # No authentication for RPC if not needed
-    volumes:
-      - bitcoin-fullnode-data:/root/.bitcoin
-    depends_on:
-      - casaos-node
-
-networks:
-  casaos-network:
-    driver: bridge
+      - casaos-db
+    networks:
+      - casaos_network
 
 volumes:
-  casaos-node-data:
-  casaos-wallet-data:
-  casaos-gateway-data:
-  lnd-data:
-  bitcoin-fullnode-data:
+  casaos-app-letsenccert:
+  casaos-db-data:
+
+networks:
+  casaos_network:
+    driver: bridge

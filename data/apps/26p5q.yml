@@ -1,34 +1,40 @@
 version: '3.8'
 services:
-  memos-api:
-    image: memos-api:latest
+  memos-backend:
+    image: memos-backend:latest
     build:
       context: .
-      dockerfile: Dockerfile.api
+      dockerfile: Dockerfile.backend
     ports:
-      - "5000:5000"
+      - "8080:8080"
     environment:
       - DB_HOST=db
+      - DB_USER=root
+      - DB_PASSWORD=secret
       - DB_NAME=memos
-      - DB_USER=user
-      - DB_PASSWORD=password
-      - DEBUG=True
     depends_on:
       - db
-    command: python manage.py runserver 0.0.0.0:5000
+    volumes:
+      - ./backend/data:/var/lib/postgresql/data
 
-  memos-db:
+  memos-frontend:
+    image: memos-frontend:latest
+    build:
+      context: frontend
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - memos-backend
+
+  db:
     image: postgres:13
     environment:
       - POSTGRES_DB=memos
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=secret
     volumes:
       - postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user"]
-      timeout: 10s
-      retries: 5
 
 volumes:
   postgres-data:

@@ -1,54 +1,37 @@
 version: '3.8'
 services:
-  beelzebub-web:
+  beelzebub_web:
     image: beelzebub/web:latest
     ports:
-      - "80:80" # HTTP port mapping
-      - "443:443" # HTTPS port mapping (if applicable)
-    environment:
-      - NAME=Value # Example of an environment variable for configuration
+      - "5001:80"
     depends_on:
-      - beelzebub-db
-    volumes:
-      - ./data/web:/var/www/html # Mapping a local directory to the web service container
-
-  beelzebub-db:
-    image: postgres:13
+      - beelzebub_db
+      - beelzebub_cache
     environment:
-      - POSTGRES_DB=beelzebub # Database name
+      - DB_HOST=beelzebub_db
+      - CACHE_HOST=beelzebub_cache
+      - ENVIRONMENT=production
+    networks:
+      - beelzebub_network
+
+  beelzebub_db:
+    image: postgres:12
+    environment:
+      - POSTGRES_DB=beelzebub_db
       - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password # Replace with a secure password
+      - POSTGRES_PASSWORD=password
     volumes:
-      - ./data/db:/var/lib/postgresql/data # Mapping a local directory to the database data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
-      interval: 10s
-      timeout: 5s
-      retries: 30
+      - beelzebub-db-data:/var/lib/postgresql/data
+    networks:
+      - beelzebub_network
 
-  beelzebub-queue:
-    image: beelzebub/queue:latest
-    environment:
-      - QUEUE_BROKER=rabbitmq
-      # Additional environment variables for the queue service
-    depends_on:
-      - beelzebub-db
-      - beelzebub-web
+  beelzebub_cache:
+    image: redis:6
+    networks:
+      - beelzebub_network
 
-  rabbitmq:
-    image: rabbitmq:3.8-management
-    ports:
-      - "5672:5672" # RabbitMQ default port for AMQP
-      - "15672:15672" # RabbitMQ management console port
-    environment:
-      - RABBITMQ_DEFAULT_USER=user
-      - RABBITMQ_DEFAULT_PASSWORD=password # Replace with a secure password
-
-  redis:
-    image: redis:6-alpine
-    ports:
-      - "6379:6379"
+volumes:
+  beelzebub-db-data:
 
 networks:
-  beelzebub_net:
-    driver: bridge
+  beelzebub_network:

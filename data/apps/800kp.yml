@@ -1,24 +1,24 @@
-version: '3.8'
-
+version: '3.7'
 services:
-  npm:
-    image: linuxserver/nginx-proxy-manager:latest
-    container_name: nginx_proxy_manager
+  nginx-proxy-manager:
+    image: nginxpm/nginx-proxy-manager:latest
+    container_name: nginx-proxy-manager
     ports:
-      - "80:80" # HTTP
-      - "443:443" # HTTPS (you will set up TLS in the next step)
-      - "81:81" # Admin UI (optional, but recommended for setup and troubleshooting)
+      - "80:80" # HTTP port
+      - "443:443" # HTTPS port
+      - "81:81" # Admin interface port
     volumes:
-      - "/path/to/nginx/proxy/manager/conf.d:/data/letencrypt:rw"  # Certbot configuration for TLS
-      - "/path/to/nginx/proxy/manager/certs:/etc/letsencrypt:rw"   # Let's Encrypt certificates
-      - "/path/to/nginx/proxy/manager/data:/data:rw"                # Main data directory for Nginx Proxy Manager
-      - "/path/to/nginx/proxy/manager/ssl:/etc/ssl:ro"              # SSL certificates (if you have existing ones)
+      - ./data:/etc/nginx-proxy-manager:ro
+      - ./letsencrypt:/etc/letsencrypt
+      - ./nginxpm_conf.yaml:/etc/nginx-proxy-manager/nginxpm_conf.yaml:ro # (optional) if you have a custom configuration file
+    networks:
+      - webnet
     restart: unless-stopped
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ="Europe/London"
-      - WEBPASSWORDCOM_nginx_proxy_manager_admin_users.user=root&password=YOURPASSWORD # Replace YOURPASSWORD with a secure password of your choice
+
+  letsencrypt:
+    image: certbot/certbot
+    volumes:
+      - ./letsencrypt:/etc/letsencrypt
     networks:
       - webnet
 

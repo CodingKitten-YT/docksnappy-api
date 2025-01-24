@@ -1,54 +1,30 @@
 version: '3.8'
 
 services:
-  chhotourl-server:
-    image: chhotourl/chhotourl-server:latest
+  chhoto_app:
+    image: chhoto/url:latest
     ports:
-      - "5000:5000"
-    depends_on:
-      - chhotourl-worker
+      - "5000:5000" # Expose the port where Chhoto URL service runs (default is 5000)
     environment:
-      - SERVICE_NAME=server
-      - WORKER_HOST=chhotourl-worker
-      - WORKER_PORT=8080
-      - DATABASE_URI="postgres://db:db@db:5432/db" # Replace with your actual database URI
-      - AUTH_SECRET=change_this_for_production # A secret key for authentication
-    volumes:
-      - ./data:/data
-
-  chhotourl-worker:
-    image: chhotourl/chhotourl-worker:latest
-    ports:
-      - "8080:8080"
+      # Set any necessary environment variables, e.g., for database connections or custom configurations
+      DB_HOST: db
+      DB_USER: chhoto_user
+      DB_PASSWORD: chhoto_password
+      DB_NAME: chhoto_dbname
     depends_on:
       - db
-    environment:
-      - SERVICE_NAME=worker
-      - WORKER_QUEUE_URI=amqp://guest:guest@rabbitmq:5672/
-      - DATABASE_URI="postgres://db:db@db:5432/db" # Replace with your actual database URI
-      - AUTH_SECRET=change_this_for_production # A secret key for authentication
     volumes:
-      - ./data:/data
+      - ./app:/app
 
-  db:
+  postgres:
     image: postgres:13
     environment:
-      POSTGRES_DB: chhotourl
-      POSTGRES_USER: db
-      POSTGRES_PASSWORD: db
+      POSTGRES_DB: chhoto_dbname
+      POSTGRES_USER: chhoto_user
+      POSTGRES_PASSWORD: chhoto_password
+      POSTGRES_HOST: chhoto_app
     volumes:
-      - db-data:/var/lib/postgresql/data
-
-  rabbitmq:
-    image: rabbitmq:3.8-management
-    ports:
-      - "5672:5672"
-      - "15674:15674"
-    volumes:
-      - rabbitmq-data:/var/lib/rabbitmq
+      - postgres_data:/var/lib/postgresql/data
 
 volumes:
-  db-data:
-    driver: local
-  rabbitmq-data:
-    driver: local
+  postgres_data:

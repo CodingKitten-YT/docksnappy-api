@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  plik:
+    image: 'plik/plik-fullsearch:latest' # Use the official image with full-text search enabled
+    ports:
+      - "8080:80" # Plik web interface
+    environment:
+      SECRET_KEY: "${SECRET_KEY}" # Set your secret key for Django
+      POSTGRES_DB: "${DB_NAME}"
+      POSTGRES_USER: "${DB_USER}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+    volumes:
+      - plik-media:/var/lib/plik/media # Mount for media files
+      - plik-db:/var/lib/postgres # Mount for PostgreSQL data (if persistence is needed)
+    depends_on:
+      - db
+      - cache
+    networks:
+      - plik-network
+
+  db:
+    image: postgres:13
+    volumes:
+      - plik-db:/var/lib/postgres # Use a named volume for PostgreSQL data (if persistence is needed)
+    environment:
+      POSTGRES_DB: "${DB_NAME}"
+      POSTGRES_USER: "${DB_USER}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+    networks:
+      - plik-network
+
+  cache:
+    image: redis:6.2
+    networks:
+      - plik-network
+
+volumes:
+  plik-media:
+  plik-db:
+
+networks:
+  plik-network:

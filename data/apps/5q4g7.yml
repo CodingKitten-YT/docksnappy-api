@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  radarr:
+    image: linuxserver/radarr
+    container_name: radarr
+    ports:
+      - "9672:9672" # HTTP API
+      - "9673:9672" # Web interface (HTTPS if you set up SSL)
+    volumes:
+      - "./config/radarr:/config" # Configuration files, backups, and database files
+      - "./media:/media" # For local media access
+      - "./downloads:/downloads" # For downloaded movies (optional)
+    environment:
+      - PUID=1000
+      - PUID_USERNAME="user"
+      - TZ="Europe/London"
+      - EULALSKY_APIKEY_READ=your_read_apikey
+      - EULALSKY_APIKEY_WRITE=your_write_apikey
+    restart: unless-stopped
+    networks:
+      - home-network
+
+  postgres:
+    image: postgres:13
+    container_name: radarr_postgres
+    environment:
+      - POSTGRES_DB=radarr
+      - POSTGRES_USER=radarr
+      - POSTGRES_PASSWORD=your_db_password
+    volumes:
+      - "./config/radarr/db:/var/lib/postgresql/data"
+    restart: unless-stopped
+    networks:
+      - home-network
+
+networks:
+  home-network:
+    driver: bridge

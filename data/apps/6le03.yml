@@ -1,46 +1,64 @@
 version: '3.8'
-
 services:
   lms:
-    image: 'openlms/openlms-core:latest' # or use a specific version like openlms/openlms-core:20210517.0.0
-    container_name: openlms
+    image: 'lms/lms:latest' # or a specific tag of your choice (e.g., 'lms/lms:2.9.1+docker')
+    container_name: lms
     ports:
-      - "8000:80" # Moodle port for web interface, adjust the host port as needed
+      - "8080:8080" # Web interface port
     volumes:
-      - ./lmsdata:/var/www/html
-      - type: bind
-        source: ./local-settings-example.php
-        target: /var/www/html/config-dist/config.php
-        mode: ro
+      - lms-data:/opt/moodle/filestorage  # Persistent storage for files and course data
+      - lms-config:/opt/moodle/config    # Persistent storage for configuration (optional, but recommended)
+      - lms-log:/opt/moodle/logs       # Persistent storage for logs (optional)
+    environment:
+      MOODLE_DATABASETYPE: mysql  # Database type (mysql, mariadb, or postgres)
+      MOODLE_DatabaseHost: db:3306  # Database host and port
+      MOODLE_DatabaseName: moodle   # Database name
+      MOODLE_DatabaseUser: root       # Database user
+      MOODLE_DatabasePwd: secret     # Database password
+      MOODLE_AdminGeneratedSecret: 'change_this_for_security'  # For secure cookies and password reset by email features
+      MOODLE_Language: en          # Default language, if you want to set it during installation
+      MOODLE_ServerId: server-id   # Unique identifier for your server, recommended by Moodle.org
     depends_on:
       - db
-    environment:
-      LMS_DATABASE_HOST: db
-      LMS_DATABASE_NAME: lmsdb
-      LMS_DATABASE_USER: lmsuser
-      LMS_DATABASE_PASSWORD: lmsdbpassword
-      LMS_ADMIN_USERNAME: admin
-      LMS_ADMIN_PASSWORD: adminpass
-      LMS_LANGUAGE_ID: 'en'
-    environment:
-      TZ: 'Europe/London' # Set the timezone as appropriate
+      # Uncomment the following line if you are using an SSL certificate
+      # command: /bin/sh -c 'until nc -z db 3306; do echo "Waiting for MySQL to start"; sleep 2; done; /usr/local/bin/docker-entrypoint.sh mysql'
+    networks:
+      - lms_network
 
   db:
-    image: 'postgres:latest' # or use a specific version like postgres:13-alpine
+    image: 'mysql:5.7'  # or another version you prefer (e.g., '5.7', '8.0')
+    command: --transaction-isolation=READ-COMMITTED
     volumes:
-      - openlms_db:/var/lib/postgresql/data
+      - db-data:/var/lib/mysql  # Persistent storage for MySQL data
     environment:
-      POSTGRES_DB: lmsdb
-      POSTGES_USER: lmsuser
-      POSTGRES_PASSWORD: lmsdbpassword
+      MYSQL_DATABASE: moodle     # Database name
+      MYSQL_USER: root           # Database user
+      MYSQL_PASSWORD: secret      # Database password
+      MYSQL_ROOT_PASSWORD: secret # Root password (if different from MYSQL_PASSWORD)
+    networks:
+      - lms_network
 
-  redis:
-    image: 'redis:latest' # or use a specific version like redis:6-alpine
-    command: 'redis-server --appendonly yes'
+  file:
+    image: 'jacobwilk/letsencrypt-nginx-proxy-companion:latest'
+    container_name: letscert
+    ports:
+      - "80:80"       # HTTP to HTTP
+      - "443:443"      # HTTP to HTTPS (redirect)
+    volumes:
+      - lms-data:/etc/letsencrypt  # Shared volume with LMS for certificates and configuration
+      - letsencrypt-webroot:/usr/share/nginx/html   # Webroot for Let's Encrypt challenge responses
+    depends_on:
+      - lms
+    networks:
+      - lms_network
 
 volumes:
-  openlms_db:
+  lms-data:
+  lms-config:
+  lms-log:
+  db-data:
+  letsencrypt-webroot:
 
 networks:
-  default:
+  lms_network:
     driver: bridge

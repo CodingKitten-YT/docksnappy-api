@@ -3,66 +3,56 @@ services:
   mikochi-gateway:
     image: mikochi/gateway:latest
     ports:
-      - "8080:8080"
-    environment:
-      MKCHI_TIER: gateway
-      MKCHI_ISTIO_SETUP: "IstioSidecarInjector,IstioSecurityPolicyInjector"
-    depends_on:
-      - mikochi-dashboard
-      - mikochi-auth
-      - mikochi-admin
-      - mikochi-api
-    command: >
-      sh -c 'trap "kill0" INT TERM EXIT; sleep infinity; while :; do echo -n "."; (curl -f -s -X HEAD http://mikochi-api:8081/health || sleep 1) & wait ${!}; done;'
+      - "8081:8080" # HTTP API
     networks:
-      - mikochi_net
+      - mikochi-network
+    environment:
+      GATEWAY_HOST: gateway.local
 
-  mikochi-dashboard:
-    image: mikochi/dashboard:latest
-    environment:
-      MKCHI_TIER: dashboard
-      MKCHI_ISTIO_SETUP: "IstioSidecarInjector"
+  mikochi-admin-ui:
+    image: mikochi/admin-ui:latest
     ports:
-      - "8082:9091"
+      - "8082:3000" # Admin UI
     depends_on:
-      - mikochi-api
+      - mikochi-gateway
     networks:
-      - mikochi_net
-
-  mikochi-auth:
-    image: mikochi/auth:latest
+      - mikochi-network
     environment:
-      MKCHI_TIER: auth
-      MKCHI_ISTIO_SETUP: "IstioSidecarInjector"
+      ADMIN_UI_HOST: adminui.local
+
+  mikochi-task-ui:
+    image: mikochi/task-ui:latest
     ports:
-      - "8083:9092"
+      - "8083:80" # Task UI
     depends_on:
-      - mikochi-api
+      - mikochi-gateway
     networks:
-      - mikochi_net
-
-  mikochi-admin:
-    image: mikochi/admin:latest
+      - mikochi-network
     environment:
-      MKCHI_TIER: admin
-      MKCHI_ISTIO_SETUP: "IstioSidecarInjector"
-    ports:
-      - "8084:9093"
+      TASK_UI_HOST: taskui.local
+
+  mikochi-worker:
+    image: mikochi/worker:latest
     depends_on:
-      - mikochi-api
+      - mikochi-gateway
     networks:
-      - mikochi_net
+      - mikochi-network
 
-  mikochi-api:
-    image: mikochi/api:latest
-    ports:
-      - "8081:8081"
+  postgres:
+    image: postgres:13
     environment:
-      MKCHI_TIER: api
-      MKCHI_ISTIO_SETUP: "IstioSidecarInjector,IstioSecurityPolicyInjector"
+      POSTGRES_DB: mikochi
+      POSTGRES_USER: mikochi
+      POSTGRES_PASSWORD: change_this_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
     networks:
-      - mikochi_net
+      - mikochi-network
+
+volumes:
+  postgres-data:
+    driver: local
 
 networks:
-  mikochi_net:
+  mikochi-network:
     driver: bridge

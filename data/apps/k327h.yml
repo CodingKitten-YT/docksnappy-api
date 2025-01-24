@@ -1,78 +1,100 @@
 version: '3.8'
 
 services:
-  postfix:
-    image: mailcow/mailcow-dockerized:latest
-    container_name: mailserver
-    environment:
-      - MC_DOMAIN=example.com
-      - MC_EMAILS_TLS=true
-      - TZ=Europe/Rome
-      - SERVICE_NAME=mailserver
-      - SERVICE_ENVIRONMENT=production
-      - MC_ADMIN_USERNAME=admin
-      - MC_ADMIN_PASSWORD=your_very_secure_password
+  mailhog:
+    image: mailhog/mailhog:v0.7.12-fresh
+    container_name: mailhog
     ports:
-      - "10000-10010:10000-10010"
-      - "80:80" # HTTP proxy
-      - "443:443" # HTTPS proxy
-    volumes:
-      - "./data:/var/mailcow"
-      - "./certs:/etc/letsencrypt"
-      - "./log:/var/log/mailcow"
-    networks:
-      - mailnetwork
-
-  mariadb:
-    image: mariadb:latest
-    container_name: mariadb
-    command: --transaction-isolation=RC
-    volumes:
-      - "./dbdata:/var/lib/mysql"
+      - "8025:25" # SMTP
+      - "1025:1025" # Submission (SMTPS)
+      - "8000:8000" # MailHog UI (Web Interface)
+      - "8026:26":
+        protocol: tcp
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATA_DIR: /var/lib/mysql
-      MYSQL_USER: mailcow
-      MYSQL_PASSWORD: mailcowpassword
-      MYSQL_DB: mailcow
-    networks:
-      - mailnetwork
-
-  redis:
-    image: redis:latest
-    container_name: redis
-    command: --save-mode no-swap-data pagefinder
-
-  nginxproxy:
-    image: nginxproxy/nginx-proxy:latest
-    container_name: nginxproxy
-    ports:
-      - "8080:80" # Admin UI
-      - "3000:3000" # Websocket Admin UI
-    volumes:
-      - "./nginx/data:/data"
-      - "./nginx/certs/letsencrypt.yaml:/etc/nginx_proxy/conf.d/letsencrypt.yaml"
+      EHO_URL: "http://localhost:8000"
+      MAILHOG_WEB_UI_REDIRECTS_TO_PARENT_PROXY: "true"
     depends_on:
       - mailserver
-    networks:
-      - mailnetwork
 
-  letsencrypt:
-    image: quay.io/jrcassius/letsencrypt:latest
-    container_name: letsencrypt
+  mailserver:
+    image: dewdrop/docker-mailserver:latest
+    container_name: mailserver
+    ports:
+      - "587:587" # SMTPS Submission
+      - "465:465" # SMTPS (SSL)
+      - "993:993" # IMAPSSL
+      - "995:995" # POP3SSL
     environment:
-      LE_EMAIL=your_email@example.com
-      LE_DOMAIN=example.com
-      LE_AGREE_TERMS=true
+      DOMAIN: example.com
+      EMAIL: admin@example.com
+      TIMEZONE: "Europe/London"
+      TZDB: "Etc/GMT+1"
+      ALLOW_SIMPLE_USERNAMES: "true"
+      POSTMASTER_USERNAME: postmaster
+      SMTP_INBOUND_AUTH_OPTIONS: "PLAIN,LOGIN"
+      IMAP_INBOUND_AUTH_OPTIONS: "PLAIN,LOGIN"
+      POP3_INBOUND_AUTH_OPTIONS: "APOP,LOGIN"
     volumes:
-      - "./dbdata:/etc/letsencrypt"
-      - "./nginx/certs:/etc/letsencrypt"
+      - "./data/mailserver:/data"
+      - "./certificates/mailserver.crt:/certs/mailserver.crt"
+      - "./certificates/mailserver.key:/certs/mailserver.key"
     depends_on:
-      - mariadb
-      - nginxproxy
-    networks:
-      - mailnetwork
+      - postfix
+      - dovecot
+      - mysql
+
+  postfix:
+    image: dewdrop/docker-mailserver:latest
+    container_name: postfix
+    depends_on:
+      - mysql
+    volumes:
+      - "./data/postfix:/etc/postfix"
+
+  dovecot:
+    image: dewdrop/docker-mailserver:latest
+    container_name: dovecot
+    depends_on:
+      - mysql
+    volumes:
+      - "./data/dovecot:/etc/dovecot"
+
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: mailserver
+      MYSQL_USER: mailuser
+      MYSQL_PASSWORD: mailpass
+    volumes:
+      - "./data/mysql:/var/lib/mysql"
+
+  redis:
+    image: redis:6-alpine
+    container_name: redis
+    command: --save-mode noauth-standalone-client
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80" # HTTP
+      - "443:443" # HTTPS
+    volumes:
+      - "./data/nginx:/etc/nginx"
+      - "./certificates/nginx.crt:/etc/nginx/ssl/nginx.crt"
+      - "./certificates/nginx.key:/etc/nginx/ssl/nginx.key"
+    depends_on:
+      - mailserver
+
+  spamassassin:
+    image: dewdrop/docker-mailserver:latest
+    container_name: spamassassin
+    depends_on:
+      - mailserver
 
 networks:
-  mailnetwork:
+  default:
     driver: bridge

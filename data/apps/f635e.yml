@@ -1,0 +1,25 @@
+version: '3.7'
+
+services:
+  wavelog_db:
+    image: postgres:12
+    environment:
+      POSTGRES_DB: wavelog
+      POSTGRES_USER: wavelog
+      POSTGRES_PASSWORD: change_this_password
+    volumes:
+      - wavelog-db-data:/var/lib/postgresql2
+    command: 'postgres -c "listen_addresses = '*'"'
+
+  wavelog_app:
+    image: wavelog/wavelog-api:latest
+    depends_on:
+      - wavelog_db
+    environment:
+      DATABASE_URL: postgres://wavelog:change_this_password@wavelog_db:5432/wavelog
+      JWT_SECRET: change_this
+    ports:
+      - "8000:8000"
+
+volumes:
+  wavelog-db-data:

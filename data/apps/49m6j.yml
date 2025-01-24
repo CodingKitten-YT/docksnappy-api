@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  rally:
+    image: 'rallybot/rally:latest' # Use the official Rallly Docker image
+    container_name: rally
+    ports:
+      - "5000:5000" # Expose Rallly's web server port (can be changed if needed)
+    volumes:
+      - './data:/app/data' # Mount a local directory for persistent storage
+      - './config.json:/app/config.json' # Mount your Rallly configuration file (optional, if you have one)
+    environment:
+      - "RALLY_BOT_TOKEN=your_discord_bot_token" # Set your Discord bot token
+      - "RALLY_PREFIX=!rally" # Set the command prefix (default is '!rally')
+      - "RALLY_ADMINS=owner_id,assistant_id" # Comma-separated list of admin user IDs (optional)
+      - "RALLY_DATABASE_URL=postgres://user:password@localhost/database_name" # Database connection string (if using a database)
+    restart: unless-stopped # Ensure Rallly restarts on any crash or stop
+
+  redis:
+    image: 'redis:latest'
+    volumes:
+      - './data/redis:/data' # Persist Redis data with a local directory (optional, but recommended for production)
+    environment:
+      - "REDIS_PASS=your_password" # Set a password for Redis if you have one (optional)
+    healthcheck:
+      test: ["CMD", "REDIS-SERVER", "ping"]
+      timeout: 5s
+      retries: 10
+      interval: 10s
+
+  postgres:
+    image: 'postgres:latest'
+    volumes:
+      - './data/db:/var/lib/postgresql/data' # Persist PostgreSQL data with a local directory (optional, but recommended for production)
+    environment:
+      - "POSTGRES_USER=user"
+      - "POSTGRES_PASSWORD=password"
+      - "POSTGRES_DB=rally_db"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rackspace"]
+      timeout: 5s
+      retries: 10
+      interval: 10s
+
+networks:
+  default:
+    driver: bridge

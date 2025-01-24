@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  plone:
+    image: plone/standalone6:latest  # or plone/plone7 for Plone 7
+    ports:
+      - "8080:8080"  # Expose port 8080 to access the Plone site
+    volumes:
+      - type: bind
+        source: ./data:/var/lib/plone
+        target: /var/lib/plone
+      - type: bind
+        source: ./parts:/parts
+        target: /parts
+      - type: bind
+        source: ./ssl-keys:/etc/ssl
+        target: /etc/ssl
+    environment:
+      - Zope_ZEO_storage_manager.address = zookeeper
+      - Zope_ZEO_storage_manager.storage_dir = /var/run/zoe
+    depends_on:
+      - zookeeper
+    networks:
+      - plone-network
+
+  zookeeper:
+    image: apache/zookeeper-server:latest
+    networks:
+      - plone-network
+
+  mariadb:
+    image: mysql:5.7
+    volumes:
+      - type: bind
+        source: ./mariadb-data:/var/lib/mysql
+        target: /var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword  # Replace with your desired password
+      MYSQL_USER: ploneuser
+      MYSQL_PASSWORD: plonepassword     # Replace with your desired password
+      MYSQL_DATABASE: plonedb         # Replace with your desired database name
+    networks:
+      - plone-network
+
+  nginx:
+    image: plone/nginx-caching:latest
+    ports:
+      - "80:80"  # Expose port 80 to access the Plone site via HTTP
+    depends_on:
+      - plone
+    volumes:
+      - type: bind
+        source: ./data:/var/lib/plone
+        target: /var/lib/plone
+      - type: bind
+        source: ./parts:/parts
+      - type: bind
+        source: ./ssl-keys:/etc/ssl
+        target: /etc/ssl
+    networks:
+      - plone-network
+    environment:
+      - Zope_ZEO_storage_manager.address = zookeeper
+      - PREFS_FILE=/parts/plone.conf
+      - PREF_VAR_ZODB_HOME=/var/lib/plone
+      - PREF_VAR_ZOOKEEPER__ADDRESS=zookeeper:2181
+
+networks:
+  plone-network:
+    driver: bridge

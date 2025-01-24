@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # Postfix (Stalwart Mail Server)
+  mail:
+    image: stalwart/mail:latest
+    container_name: stalwart-mail
+    environment:
+      STALWART_SERVER_DOMAIN: example.com
+      TZ: Europe/London
+    volumes:
+      - 'path/to/mail:/var/mail' # Replace with the path where you want to store emails
+      - 'path/to/conf.d:/etc/postfix' # Replace with a path on your host machine for custom Postfix configuration
+    ports:
+      - "110:110" # IMAP
+      - "143:143" # IMAPS (SSL/TLS)
+      - "587:587" # Submission (for sending mails, often with STARTTLS)
+      - "465:465" # SMTPS (SSL/TLS for sending mails)
+    networks:
+      - mailnet
+
+  # MySQL database server for PostgreSQL support in Postfix
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: stalwart_mail
+      MYSQL_USER: mailuser
+      MYQL_PASSWORD: mailpassword
+    volumes:
+      - 'path/to/db:/var/lib/mysql' # Replace with the path where you want to store database data
+    networks:
+      - mailnet
+
+  # Nginx as a reverse proxy for Postfix
+  nginx:
+    image: stalwart/nginx-stalwart-mail:latest
+    container_name: stalwart-nginx
+    environment:
+      SERVER_DOMAIN: example.com
+      SSL_CERT: /path/to/ssl.crt # Replace with the path to your SSL certificate
+      SSL_KEY: /path/to/ssl.key # Replace with the path to your SSL key
+    ports:
+      - "80:80" # HTTP
+      - "443:443" # HTTPS
+    depends_on:
+      - mail
+    volumes:
+      - 'path/to/nginx:/etc/nginx' # Replace with the path on your host machine for custom Nginx configuration
+    networks:
+      - mailnet
+
+networks:
+  mailnet:
+    driver: bridge

@@ -1,43 +1,86 @@
 version: '3.8'
 
 services:
-  lago-server:
-    image: "lagoapi/lago:latest" # Use a specific tag if needed
-    command: /run.sh
+  lago_primary:
+    image: lago/lago:latest
+    command: >
+      {
+        "init_db": true,
+        "replication": {
+          "primary": {
+            "hosts": [{"name": "lago", "ip": "0.0.0.0"}]
+          }
+        }
+      }
     ports:
-      - "5601:5601" # HTTP Basic Auth UI
-      - "9000:9000" # Lago API (WebSocket and REST)
+      - "5432:5432"
     environment:
-      LAGO_DB_TYPE: "postgresql"
-      LAGO_DB_HOST: "db"
-      LAGO_DB_PORT: "5432"
-      LAGO_DB_USER: "lago"
-      LAGO_DB_PASSWORD: "lago_password"
-      LAGO_DB_NAME: "lago"
-      LAGO_SERVER_HOST: "0.0.0.0"
-      LAGO_SERVER_PORT: "9000"
-      LAGO_SECRET_KEY: "secret_key" # Change this to a secure, random secret key
-      LAGO_ADMIN_USERNAME: "admin"
-      LAGO_ADMIN_PASSWORD: "admin_password"
-      LAGO_MAX_CLIENTS: "1000"
+      LAGO_SERVER_HOST: lago
+      POSTGRES_USER: lago
+      POSTGES_PASSWORD: change_this_password
+      POSTGRES_DB: lago
     volumes:
-      - "./data/lago:/var/lib/lago"
-    depends_on:
-      - lago-db
-    networks:
-      - lago-network
+      - lago-data:/var/lib/postgresql/data
+      - ./config/lago.conf:/etc/lago/lago.conf
 
-  lago-db:
-    image: "postgres:latest" # Use a specific tag if needed
+  lago_replica1:
+    image: lago/lago:latest
+    command: >
+      {
+        "init_db": true,
+        "replication": {
+          "replicas": [{"name": "lago_replica1"}]
+        }
+      }
+    ports:
+      - "5432:5432"
     environment:
-      POSTGRES_DB: "lago"
-      POSTGRES_USER: "lago"
-      POSTGRES_PASSWORD: "lago_password"
+      LAGO_SERVER_HOST: lago
+      POSTGRES_USER: lago
+      POSTGES_PASSWORD: change_this_password
+      POSTGRES_DB: lago
     volumes:
-      - "./data/lago-db:/var/lib/postgresql/data"
-    networks:
-      - lago-network
+      - lago-data:/var/lib/postgresql/data
+      - ./config/lago_replica1.conf:/etc/lago/lago_replica1.conf
 
-networks:
-  lago-network:
-    driver: bridge
+  lago_replica2:
+    image: lago/lago:latest
+    command: >
+      {
+        "init_db": true,
+        "replication": {
+          "replicas": [{"name": "lago_replica2"}]
+        }
+      }
+    ports:
+      - "5432:5432"
+    environment:
+      LAGO_SERVER_HOST: lago
+      POSTGRES_USER: lago
+      POSTGES_PASSWORD: change_this_password
+      POSTGRES_DB: lago
+    volumes:
+      - lago-data:/var/lib/postgresql/data
+      - ./config/lago_replica2.conf:/etc/lago/lago_replica2.conf
+
+  lago_monitor:
+    image: lago/lago-monitor:latest
+    environment:
+      LAGO_SERVER_HOST: lago_primary
+      MONITOR_USER: lago_monitor
+      MONITOR_PASSWORD: change_this_password
+      SERVICE_LAGO_WEBHOOK_URL: "http://lago-webhook:8080" # You need to create a service for this as well.
+    ports:
+      - "9000:9000"
+
+  lago_webhook:
+    image: lago/lago-webhook:latest
+    environment:
+      LAGO_SERVER_HOST: lago_primary
+      WEBHOOK_USER: lago_webhook
+      WEBHOOK_PASSWORD: change_this_password
+    ports:
+      - "8080:8080"
+
+volumes:
+  lago-data:

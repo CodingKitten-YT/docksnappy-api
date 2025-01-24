@@ -1,98 +1,43 @@
 version: '3.8'
 
 services:
-  # Ansible Tower (AAA) Service
-  tower_web:
-    image: ansible/ansible-tower:latest
-    container_name: tower_web
-    environment:
-      - ANSIBLE_TOWER_WEB_ALLOW_UNAUTHCITIZED_ACCESS=true
-      - POSTGRES_DB=postgres
-      - POSTGIS_DB=postgis
+  ansible:
+    image: ansible:latest
+    container_name: ansible_nas
+    user: root
+    volumes:
+      - ./ansible.yml:/etc/ansible/ansible.yml
+      - ansible-playbooks:/etc/ansible/playbooks
+      - ansible-inventory:/etc/ansibles/inventory
+      - ./ansible_key.pem:/root/.ssh/ansible_key.pem
+      - ./id_rsa:/root/.solaris/id_rsa
+      - nas-data:/mnt/nas
+    networks:
+      - nas_network
+
+  openmediavault:
+    image: linuxserver/openmediavault:latest
+    container_name: openmediavault_nas
     ports:
-      - "8080:8080" # HTTP API and UI
-      - "5672:5672"  # RabbitMQ for message broker
-      - "8300:8300"  # Redis (Optional, depending on your setup)
+      - "5000:5000" # Web interface (optional)
+      - "22:22"     # SSH
     volumes:
-      - type: bind
-        source: ./certificates/tower.crt
-        target: /var/lib/ansible-automation-platform/certs/tower.crt
-      - type: bind
-        source: ./certificates/tower.key
-        target: /var/lib/ansible-automation-platform/certs/wrapper.key
-      - type: bind
-        source: ./ansible_files
-        target: /etc/ansible/files
-    networks:
-      - ansible_nas_network
-
-  # PostgreSQL Service for Ansible Tower
-  postgresql:
-    image: postgres:latest
-    container_name: tower_postgres
-    volumes:
-      - type: bind
-        source: ./certificates/postgres.crt
-        target: /ca-certificates/postgres.crt
-      - type: volume
-        source: postgres_data
-        target: /var/lib/postgresql/data
+      - nas-data:/srv/eminent/data
+      - openmediavault-data:/data
     environment:
-      - POSTGRES_DB=ansible_tower
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=change_this_password
+      - TZ=Europe/London  # Set timezone, change to your preference
+      - USER=user       # OpenMediaVault user (default is 'omv')
+      - PASSWORD=password  # Set a password for the OpenMediaVault web UI
+    restart: unless-stopped
     networks:
-      - ansible_nas_network
-
-  # RabbitMQ Service for Ansible Tower
-  rabbitmq:
-    image: rabbitmq:3.8-management
-    container_name: tower_rabbitmq
-    ports:
-      - "5672:5672"  # RabbitMQ for message broker
-      - "15672:15672" # Management UI (Optional)
-    networks:
-      - ansible_nas_network
-
-  # Redis Service (Optional, depending on your setup)
-  redis:
-    image: redis:latest
-    container_name: tower_redis
-    ports:
-      - "6379:6379"
-    networks:
-      - ansible_nas_network
-
-  # NFS Service for NAS (Network Attached Storage)
-  nfs:
-    image: nfs-server-openfiler
-    container_name: nfs_server
-    volumes:
-      - type: bind
-        source: /path/to/your/nfs/data
-        target: /srv/nfs4/data
-    networks:
-      - ansible_nas_network
-
-  # NFS Client for Ansible Tower to access NAS
-  nfs-client:
-    image: vscode/docker-openfiler
-    container_name: nfs_client
-    volumes:
-      - type: bind
-        source: /path/to/your/nfs/data
-        target: /mnt/nfs
-    environment:
-      - NFS_SERVER=127.0.0.1(1)
-      - NFS_PATH=/srv/nfs4/data
-    depends_on:
-      - nfs
-    networks:
-      - ansible_nas_network
-
-networks:
-  ansible_nas_network:
-    driver: bridge
+      - nas_network
 
 volumes:
-  postgres_data:
+  ansible-playbooks:
+  ansible-inventory:
+  nas-data:
+    driver: local
+  openmediavault-data:
+
+networks:
+  nas_network:

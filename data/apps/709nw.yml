@@ -1,22 +1,38 @@
-version: '3.8'
+version: '3.7'
 
 services:
-  mainsail:
-    image: 'mainsailapp/mainsail:latest' # Use the latest tag or a specific release version like '1.40.5'
+  mainsail_app:
+    image: 'mainsailapp/mainsail:stable' # Use the stable tag or any other tag you prefer
     container_name: mainsail
+    environment:
+      - MS_WEB_SECRET=yoursecretkey # Set your own secret key for security
+      - MS_DB_HOST=db                  # Reference the database service
+      - MS_DB_USERNAME=user              # Database username
+      - MS_DB_PASSWORD=password         # Database password
+      - MS_DB_NAME=mainsail             # Database name
+      # Uncomment the following line if you're using PostgreSQL with encryption
+      # - MS_DB_SSLMODE=require
     ports:
-      - "3000:3000" # Expose Mainsail's default web interface port (host:container)
+      - "8080:80"                          # Web interface
+    depends_on:
+      - mainsail_db
     volumes:
-      - './data:/data' # Mount a local directory for persistent data
-      - './config:/config' # Mount a local directory for configuration files (optional, but recommended for backups and customization)
-      - './letters:/ihrdp/letsencrypt' # Mount a local directory for Let's Encrypt storage (optional, if you want to use it for SSL)
+      - './config:/code/config'         # Path to your local Mainsail configuration directory
+      - './data:/root/.local/share/mainsail' # Path to your local data directory (optional, for data persistence)
     networks:
       - mainsail_network
+
+  mainsail_db:
+    image: 'postgres:13'                   # PostgreSQL image version 13
+    container_name: mainsail-db
     environment:
-      - TZ=Europe/London  # Set the timezone as an example; adjust to your desired timezone
-      - MNS_WEB_SERVER_PORT=3000 # Set the web server port (if different from the default)
-      - MNS_SECRET_KEY=your_secret_key # Set a secret key for security purposes
-    restart: unless-stopped
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mainsail
+    volumes:
+      - './data/db:/var/lib/postgresql/data' # Path to your local database data directory (optional, for data persistence)
+    networks:
+      - mainsail_network
 
 networks:
   mainsail_network:

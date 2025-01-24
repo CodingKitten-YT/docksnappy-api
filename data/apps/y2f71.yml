@@ -1,41 +1,41 @@
 version: '3.8'
-
 services:
-  flyai-inference:
-    image: flyai/flyai-server:latest  # Use the official FlyAI Server Docker image
-    container_name: flyai-server
+  app:
+    image: "flyimg/app:latest" # Use the official Flyimg app image or a specific tag if needed
     ports:
-      - "80:80"  # Expose HTTP traffic from the container to the host on port 80
-      - "5000:5000"  # Expose the TensorFlow Serving API on port 5000
+      - "8080:8080" # Expose the port the application runs on (default is usually 8080)
+    environment:
+      - API_KEY=your_api_key # Set your Flyimg API key for authentication
+      - DATABASE_URL=postgres://user:password@db:5432/dbname # Database connection string
+      - REDIS_URL=redis://user:password@redis:6379/0 # Redis connection string if used
     volumes:
-      - "./models:/app/models"  # Mount your local models directory to the container's models directory
-      - "./logs:/app/logs"  # Optional: Mount a logs directory to store FlyAI logs locally
-    command: --model-path /app/models --port 5000 --log-dir /app/logs
-
-  nginx-reverse-proxy:
-    image: nginx:latest
-    container_name: nginx-proxy
-    ports:
-      - "80:80"  # Map HTTP to the host
-      - "443:443"  # Map HTTPS to the host (if using SSL)
-    volumes:
-      - "./nginx.conf:/etc/nginx/nginx.conf"  # Mount your custom nginx configuration file
+      - ./app:/app # Mount your local app directory to the container for code changes
+      - app-data:/data # Mount a named volume for persistent data (e.g., uploads, etc.)
     depends_on:
-      - flyai-inference
+      - db
+      - redis
+    networks:
+      - flyimg-network
+
+  db:
+    image: "postgres:latest" # Use the official PostgreSQL image
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=dbname
+    volumes:
+      - db-data:/var/lib/postgresql/data # Mount a named volume for persistent database data
+    networks:
+      - flyimg-network
+
+  redis:
+    image: "redis:latest" # Use the official Redis image
+    networks:
+      - flyimg-network
+
+volumes:
+  app-data:
+  db-data:
 
 networks:
-  default:
-    driver: bridge
-
-# Optional: Define a network for the services to communicate over if needed
-networks:
-  flyai-network:
-    driver: bridge
-
-services:
-  flyai-inference:
-    networks:
-      - flyai-network
-  nginx-reverse-proxy:
-    networks:
-      - flyai-network
+  flyimg-network:

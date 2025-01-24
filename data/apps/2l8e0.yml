@@ -2,19 +2,42 @@ version: '3.8'
 
 services:
   solr:
-    image: apache/solr:latest # Use a specific version if needed, e.g., 'apache/solr:8.5.0'
+    image: apache/solr:latest  # You can also specify a specific version like 'apache/solr:8.7.1'
     container_name: solr
     ports:
-      - "8983:8983" # Solr's default HTTP port
-      - "8984:8984" # Solr's default HTTPS port (uncomment if you want to enable SSL)
+      - "8983:8983"  # Expose Solr's default port for HTTP (8983) to host, usually 8080 in the container
     environment:
-      JETTY_OPTS: "-Xms1g -Xmx1g" # Initial and max memory allocation for Solr
-      SOLR_RESOURCESTORE_DIRS: '/tmp' # Set data directory to a volume or tmp for temporary storage
+      JAVA_OPTS: "-Djava.awt.headless=true -Xms1g -Xmx2g"
+      SOLR_HEAP_MEMORY_MB: "2048"
+      SOLR_JVM_MEMORY_INCREASE: "true"
     volumes:
-      - "${HOME}/.solr/data:/tmp" # Optional: Persist solr data to a host path
-    command: solr start -force
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8983/solr"]
-      timeout: 10
-      retries: 5
-    restart: on-failure
+      - solr-data:/opt/solr/server/solr/data
+      - solr-config:/opt/solr/server/solr/conf
+      - solr-logs:/opt/solr/server/solr/logs
+    depends_on:
+      - zk
+
+  zookeeper:
+    image: apache/zookeeper:latest  # You can also specify a specific version like 'apache/zookeeper:3.8.1'
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_SERVERS: "1"
+    volumes:
+      - zookeeper-data:/data
+
+config:
+  services:
+    solr:
+      user: "solr"  # (optional) Set a specific user for the Solr service if you want to run it as a non-root user.
+    zookeeper:
+      user: "zookeeper"  # (optional) Set a specific user for the Zookeeper service if you want to run it as a non-root user.
+
+volumes:
+  solr-data:
+    driver: local
+  solr-config:
+    driver: local
+  solr-logs:
+    driver: local
+  zookeeper-data:
+    driver: local

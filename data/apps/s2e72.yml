@@ -1,54 +1,74 @@
-version: '3.7'
-
+version: '3.8'
 services:
+  # AzuraCast Core Service
   azuracast:
-    image: azuracast/azuracast:latest
+    image: 'linuxserver.io/azuracast:latest' # Use the official image or a specific tag/version
     container_name: azuracast
     ports:
       - "80:80" # HTTP
-      - "443:443" # HTTPS (if you have SSL set up)
-      - "9090:9090" # Web Admin Interface
+      - "443:443" # HTTPS (requires SSL setup)
+      - "5349:5349" # Web Admin Interface
     volumes:
-      - azuracast-config:/etc/azuracast
-      - azuracast-data:/var/lib/azuracast
-      - azuracast-media:/srv/radio
+      - '/path/to/your/azuracast_data:/data' # Replace with your local path to persist data
+      - '/path/to/your/radiocast-cfg.json:/config/radiocast-cfg.json' # Optional: if you have a custom cfg.json
+      - '/path/to/your/radiocast-key.pem:/config/radiocat-key.pem' # Optional: if you have a custom key.pem for HTTPS
+      - '/path/to/your/radiocast-cert.pem:/config/radiocast-cert.pem' # Optional: if you have a custom cert.pem for HTTPS
     environment:
-      AZURACAST_DB_HOST: "db" # Assuming you will set up a DB service
-      AZURACST_DB_NAME: "azuracast"
-      AZURACAST_DB_USER: "azuracast"
-      AZURACAST_DB_PASSWORD: "yourdbpassword"
-      AZURACAST_ADMIN_EMAIL: "admin@example.com"
-      AZURACAST_ADMIN_PASSWORD: "youradminpassword"
-      # Uncomment the following line if you want to use a reverse proxy like Nginx or Traefik
-      # AZURACAST_FORCE_HTTPS: "true"
+      - 'TZ=Europe/London' # Set your timezone (change to your timezone)
+      - 'SERVER_PROTOCOL=https' # Use http or https based on your setup
+      - 'SERVER_HOSTNAME=yourdomain.com' # The domain name for your AzuraCast instance
+      - 'SERVER_EMAIL=admin@yourdomain.com' # Email to be used as admin contact
+      - 'SERVER_ADMINPASSWORD=very_secret_password' # Admin account password
+      - 'SERVER_DBTYPE=mysql' # Database type (mysql or postgres)
+      - 'SERVER_MYSQLHOSTNAME=mysql' # MySQL service name if using a separate container for the database
+      - 'SERVER_MYSQLUSER=azuracast' # MySQL username
+      - 'SERVER_MYSQLPASSWORD=db_secret_password' # MySQL password
+      - 'SERVER_MYSQLDATABASE=azuracast' # MySQL database name
     networks:
-      - azuracast_network
+      - azuracast-network
+    restart: unless-stopped
 
-  postgres:
-    image: postgres:latest
-    environment:
-      POSTGRES_DB: azuracast
-      POSTGRES_USER: azuracast
-      POSTGRES_PASSWORD: yourdbpassword
+  # MySQL Database (if not using an external database service)
+  mysql:
+    image: 'mysql:5.7'
+    container_name: mysql
     volumes:
-      - postgres-data:/var/lib/postgresql
+      - '/path/to/your/mysql_data:/var/lib/mysql' # Replace with your local path to persist data
+    environment:
+      - 'MYSQL_ROOT_PASSWORD=root_secret_password' # Root password for MySQL
+      - 'MYSQL_DATABASE=azuracast' # Database name (same as SERVER_MYSQLDATABASE in AzuraCast service)
+      - 'MYSQL_USER=azuracast' # MySQL username (same as SERVER_MYSQLUSER in AzuraCast service)
+      - 'MYSQL_PASSWORD=db_secret_password' # MySQL password (same as SERVER_MYSQLPASSWORD in AzuraCast service)
     networks:
-      - azuracast_network
+      - azuracast-network
+    restart: unless-stopped
 
-volumes:
-  azuracast-config:
-  azuracast-data:
-  azuracast-media:
-  postgres-data:
+# Optional NGINX Ingress Controller if using Docker Swarm with Kubernetes features
+nginx:
+  image: 'k8s.gcr.io/kubernetes-slash-nginx-slice/nginx-ingress-controller:stable-2.1.0'
+  ports:
+    - '80:80'
+    - '443:443'
+  annotations:
+    # Required for SSL on ingress
+    traefik.enable=true
+    traefik.ingressProgram.router.rule = "Host(`yourdomain.com`).tls"`
+  networks:
+    - azuracast-network
+
+# Optional Traefik Reverse Proxy if using Docker Swarm with Kubernetes features
+traefik:
+  image: 'traefik:v2.5'
+  ports:
+    - '80:80'
+    - '443:443'
+  volumes:
+    - '/var/run/docker.sock:/var/run/docker.sock:ro'
+    - '/path/to/your/traefik_acme.json:/acme.json' # Optional: if you want to persist ACME configuration
+  command: --api.insecure=true
+  networks:
+    - azuracast-network
 
 networks:
-  azuracast_network:
+  azuracast-network:
     driver: bridge
-
-# Optional: If you need a redis server for caching, you can add it like this:
-# redis:
-#   image: redis:latest
-#   networks:
-#     - azuracast_network
-
-# Note: If you are using SSL/TLS for HTTPS, make sure to also configure your ingress or reverse proxy accordingly.

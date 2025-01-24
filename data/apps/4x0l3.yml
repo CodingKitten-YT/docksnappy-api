@@ -1,37 +1,52 @@
-version: '3.8'
+iguana-compose.yml
+---------------------
+version: '3.7'
 
 services:
-  iguanadb:
-    image: 'iguana/db:latest' # Use the official IguanaDB Docker image
-    environment:
-      - IGUANA_LICENSE_ACCEPTED=true
-      - IGUANA_LICENSE_KEY=${IGUANA_LICENSE_KEY} # Set your license key as an environment variable or directly in the file (not recommended for security reasons)
+  iguana:
+    image: 'curoverse/ighur:latest' # Use the official Iguana image from Curoverse
     ports:
-      - "5432:5432" # Map the postgres port from the container to the host
+      - "8080:8080" # Port 8080 is commonly used for web UI access
+    environment:
+      IGUANA_SITE_SERVER_HOSTNAME: iguanadata # Set the server hostname within Iguana
+      JAVA_OPTS: "-Xms512m -Xmx1g" # Set Java heap size for Iguana
     volumes:
-      - iguanadb_data:/var/lib/postgresql/data:Z # Bind the database data to a named volume (persists data across container restarts)
-      - iguanadb_conf:/etc/iguana/conf.d:RO # Bind the configuration directory to read-only host
-      - iguanadb_log:/var/log/iguana:WO # Bind the log directory to write-only host for logging purposes
-    restart: unless-stopped # Ensure the container does not stop unless manually commanded to do so
+      - iguana-data:/data # Persist Iguana data to a named volume
+      - ./config:/config # Mount a directory with your configuration files into the Iguana container
 
-  webui:
-    image: 'iguana/webui:latest' # Use the official Iguana WebUI Docker image
-    ports:
-      - "8080:3000" # Map the webui port from the container to the host (you can change the port as needed)
+  mongodb:
+    image: 'mongo:latest' # Use the official MongoDB image
     environment:
-      - WEBUI_DBHOST=iguanadb # Define the database hostname or IP
-      - WEBUI_DBNAME=${DB_NAME} # Define the database name
-      - WEBUI_DBUSER=${DB_USER} # Define the database user
-      - WEBUI_DBPASSWORD=${DB_PASSWORD} # Define the database password
-    depends_on:
-      - iguanadb
-    restart: unless-stopped
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: your_password # Replace with your password
+    volumes:
+      - mongodb-data:/data/db # Persist MongoDB data to a named volume
+    ports:
+      - "27017:27017" # MongoDB default port
+
+  elasticsearch:
+    image: 'docker.elastic.co/elasticsearch/elasticsearch:latest' # Use the official Elasticsearch image
+    environment:
+      discovery.type: single-node # For testing purposes, use single-node configuration
+    ports:
+      - "9200:9200" # Elasticsearch default port for HTTP
+      - "9300:9300" # Elasticsearch default port for transport (internal coordination)
 
 volumes:
-  iguanadb_data:
-  iguanadb_conf:
-  iguanadb_log:
+  iguana-data:
+  mongodb-data:
 
 networks:
-  default:
+  iguananetwork:
     driver: bridge
+
+# Optional, if you want to define a custom network for your services
+networks:
+  iguananetwork:
+    driver: bridge
+
+# Note: This docker-compose.yml assumes that Iguana is configured to use MongoDB and Elasticsearch.
+# Make sure to replace 'your_password' with a secure password of your choice for MongoDB.
+# Also, the volume mount for './config' should point to a directory on your host machine where you have stored your Iguana configuration files.
+# The `discovery.type: single-node` setting for Elasticsearch is suitable for testing but not for production use.
+# For production, you would typically configure a proper Elasticsearch cluster with at least three nodes.

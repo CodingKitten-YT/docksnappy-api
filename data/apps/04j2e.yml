@@ -1,49 +1,23 @@
 version: '3.8'
+
 services:
-  imgproxy:
-    image: 'paperbirch/imgproxy:latest' # Use the official or desired tag
-    command: /imgproxy
+  imaging:
+    image: "impodb/imgproxy:latest" # Use the official image from Docker Hub
+    restart: "unless-stopped"       # Restart the container unless it has been explicitly stopped
     ports:
-      - "80:80" # Map HTTP port if you want to expose imgproxy to the host (optional)
-      - "443:443" # Map HTTPS port if you want to expose imgproxy with SSL (optional)
-    restart: unless-stopped # Automatically restart on failure
+      - "80:80"                     # Map port 80 on the host to port 80 in the container for HTTP traffic
+      - "443:443"                    # Map port 443 on the host to port 443 in the container for HTTPS traffic (if using SSL)
     environment:
-      - IMGPROXY_HOST=0.0.0.0 # Listen on all interfaces
-      # Additional environment variables can be set here
-    volumes:
-      - ./imgproxy.toml:/etc/imgproxy/config.toml # Mount your imgproxy configuration file
-      - ./imgproxy-certs:/etc/imgproxy/certs # Mount a directory for SSL certificates if using HTTPS (optional)
+      IMGPROXY_SECRET: "${IMGPROXY_SECRET}" # Secret for image processing (optional, for additional security)
+      TZ: "Europe/London"                # Set timezone (change to your desired timezone)
     healthcheck:
-      test: ["CMD", "curl", "--silent", "--head", --fail", "localhost:80"]
-      interval: 10s
-      timeout: 2s
-      retries: 3
+      test: ["CMD", "curl", "--fail", "<your-hostname>"]
+      timeout: 5s
+      interval: 30s
+      retries: 5
+    networks:
+      - imgproxy_network
 
-# If you're using a database like Redis for caching, define the service here:
-# caching-redis:
-#   image: 'redis:latest'
-#   command: redis-server /redis.conf
-#   volumes:
-#     - ./redis.conf:/redis.conf
-#   healthcheck:
-#     test: ["CMD", "redis-cli", "PING"]
-#     interval: 10s
-#     timeout: 2s
-#     retries: 3
-
-# If you're using a database like PostgreSQL for the proxy cache storage, define the service here:
-# imgproxy-db:
-#   image: 'postgres:latest'
-#   command: postgres -c 'user=imgproxy password=your_password dbname=imgproxy'
-#   volumes:
-#     - ./postgresql.conf:/etc/postgresql/main/postgresql.conf
-#     - ./pg_data:/var/lib/postgresql/data
-#   environment:
-#     POSTGRES_DB=imgproxy
-#     POSTGRES_USER=imgproxy
-#     POSTGRES_PASSWORD=your_password
-#   healthcheck:
-#     test: ["CMD-SHELL", "echo 'SELECT 1' | nc localhost 5432"]
-#     interval: 10s
-#     timeout: 2s
-#     retries: 3
+networks:
+  imgproxy_network:
+    driver: bridge

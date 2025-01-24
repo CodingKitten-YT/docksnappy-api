@@ -2,122 +2,102 @@ version: '3.8'
 
 services:
   formiojs:
-    image: formio/formio.js:latest
+    image: formio/formiojs:latest
+    container_name: formiojs
+    environment:
+      FORMIO_LICENSE_KEY: "YOUR_LICENSE_KEY" # Uncomment and set your Form.io license key if you have one
+      NODE_ENV: production
     ports:
-      - "3000:3000"
+      - "8081:3000"
     networks:
-      - formio_net
+      - formio-network
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
     environment:
-      - FORMIO_ANONYMOUS_SUBMIT=true
-      - FORMIO_API_CORS=*
-    command: >
-      ({
-        FROM_ENVIRONMENT: true;
-        initialEnv: {
-          NODE_ENV: 'development',
-          HOST: '0.0.0.0'
-        };
-      }) => import('@formio/react').default
-
-  formio-postgresql:
-    image: postgres:13
-    environment:
-      - POSTGRES_DB=formio
-      - POSTGRES_USER=formio
-      - POSTGRES_PASSWORD=formio
+      POSTGRES_DB: formio
+      POSTGRES_USER: formio
+      POSTGRES_PASSWORD: changeit
     volumes:
-      - formio-postgresql-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
     networks:
-      - formio_net
+      - formio-network
 
-  formio-redis:
-    image: redis:6-alpine
-    volumes:
-      - formio-redis-data:/data
+  rabbitmq:
+    image: rabbitmq:3.8-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
     networks:
-      - formio_net
-
-  formio-mongodb:
-    image: mongo:latest
-    command: --smallfiles
-    volumes:
-      - formio-mongodb-data:/data/db
-    networks:
-      - formio_net
+      - formio-network
 
   minio:
-    image: minIO:latest
+    image: minio:latest
+    container_name: minio
     ports:
       - "9000:9000"
-    command: server /data --console-address :9001
-    volumes:
-      - formio-minio-data:/data
     environment:
-      - MINIO_ACCESS_KEY=minioadmin
-      - MINIO_SECRET_KEY=minioadmin
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadminpass
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROBUST: true
+    volumes:
+      - minio-data:/data
     networks:
-      - formio_net
+      - formio-network
 
-  formio-task-queue-beanstalkd:
-    image: beanstalkd:latest
+  casbin-authz:
+    image: casbin/docker:v4.15.2-caddy
+    container_name: casbin-authz
+    ports:
+      - "8080:8080"
     networks:
-      - formio_net
+      - formio-network
+    depends_on:
+      - formiojs
 
-# The database service can be one of 'postgres', 'mongodb' or 'sqlite'.
-# Uncomment and modify the appropriate section below depending on your choice.
-# For example, to use PostgreSQL, uncomment the 'formio-db' section and modify as needed.
+  formio-formio-redis:
+    image: redis:latest
+    container_name: formio-redis
+    networks:
+      - formio-network
 
-# formio-db:
-#   build: .
-#   image: formio/formio-server:latest
-#   environment:
-#     FORMIO_DB_ADAPTER=postgresql
-#     FORMIO_DB_HOST=formio-postgresql
-#     FORMIO_DB_NAME=formio
-#     FORMIO_DB_USER=formio
-#     FORMIO_DB_PASSWORD=formio
-#   volumes:
-#     - .:/app
-#   networks:
-#     - formio_net
-#   depends_on:
-#     - formio-postgresql
+  formio-be:
+    image: formio/formio-be:latest
+    depends_on:
+      - formiojs
+      - postgres
+      - casbin-authz
+      - formio-formio-redis
+    networks:
+      - formio-network
 
-# For MongoDB, uncomment and modify the following section.
-# formio-db:
-#   build: .
-#   image: formio/formio-server:latest
-#   environment:
-#     FORMIO_DB_ADAPTER=mongodb
-#     FORMIO_DB_HOST=formio-mongodb
-#     FORMIO_DB_NAME=formio
-#     FORMIO_DB_USER=formio
-#     FORMIO_DB_PASSWORD=formio
-#   volumes:
-#     - .:/app
-#   networks:
-#     - formio_net
-#   depends_on:
-#     - formio-mongodb
+  formio-fe:
+    image: formio/formio-fe:latest
+    depends_on:
+      - formiojs
+    networks:
+      - formio-network
 
-# For SQLite, uncomment and modify the following section.
-# formio-db:
-#   build: .
-#   image: formio/formio-server:latest
-#   environment:
-#     FORMIO_DB_ADAPTER=sqlite
-#     FORMIO_DB_NAME=./formio.db
-#   volumes:
-#     - .:/app
-#   networks:
-#     - formio_net
+  kibana: # Optional Elasticsearch monitoring (if you have Elasticsearch set up)
+    image: elastic/kibana:7.10.2
+    container_name: kibana
+    environment:
+      ELASTIC_SECURITY_USER: "kibana"
+      ELASTIC_SECURITY_PASSWORD: "kibana"
+    ports:
+      - "5601:5601"
+    networks:
+      - formio-network
 
 volumes:
-  formio-postgresql-data:
-  formio-redis-data:
-  formio-mongodb-data:
-  formio-minio-data:
+  postgres-data:
+    driver: local
+  minio-data:
+    driver: local
 
 networks:
-  formio_net:
+  formio-network:
     driver: bridge

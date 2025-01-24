@@ -1,0 +1,61 @@
+version: '3.8'
+services:
+  yaade-db:
+    image: postgres:latest
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: yaade
+      POSTGRES_USER: yaade
+      POSTGRES_PASSWORD: change_this_password
+    env_file:
+      - .env.db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U yaade"]
+      timeout: 10s
+      retries: 5
+
+  yaade-worker:
+    image: python:3.9-slim
+    volumes:
+      - ./app:/code
+      - ./data/worker:/code/worker/data
+    environment:
+      WORKER_QUEUES: 'mail,notifications'
+      WORKER_DB_HOST: db
+      WORKER_DB_USER: yaade
+      WORKER_DB_PASSWORD: change_this_password
+      WORKER_DB_DATABASE: yaade
+      WORKER_SECRET_KEY: 'change_this_secret_key'
+      WORKER_ALLOWED_HOSTS: 'localhost,[::1]'
+    command: celery -A worker.app worker --loglevel=info
+    depends_on:
+      - yaade-db
+
+  yaade-api:
+    image: python:3.9-slim
+    volumes:
+      - ./app:/code
+      - ./data/api:/code/api/static
+    ports:
+      - "8001:8001"
+    environment:
+      API_DB_HOST: db
+      API_DB_USER: yaade
+      API_DB_PASSWORD: change_this_password
+      API_DB_DATABASE: yaade
+      API_SECRET_KEY: 'change_this_secret_key'
+      API_ALLOWED_HOSTS: 'localhost,[::1]'
+      GUNICORN_WORKERS: 3
+      GUNICORN_BIND: '0.0.0.0:8001'
+    depends_on:
+      - yaade-db
+      - yaade-worker
+    command: gunicorn -k gunicorn.workers.SyncWorker -b 0.0.0.0:8001 app.wsgi:application
+
+  redis:
+    image: redis:latest
+
+networks:
+  default:
+    driver: bridge

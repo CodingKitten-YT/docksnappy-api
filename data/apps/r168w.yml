@@ -2,42 +2,66 @@ version: '3.8'
 
 services:
   gitlab:
-    image: gitlab/gitlab-ee:latest # or gitlab/gitlab-ce for Community Edition
+    image: 'gitlab/gitlab-ce:latest' # or use a specific version like 'gitlab/gitlab-ce:14.6.0-ce.0'
     container_name: gitlab
     ports:
-      - '80:80'        # HTTP (unauthenticated) web access
-      - '8443:443'     # HTTPS (authenticated) web access
-      - '22:22'         # SSH Access for GitLab Runner and Git operations
+      - '80:80' # HTTP port
+      - '443:443' # HTTPS port
+      - '22:22' # SSH port
     volumes:
-      - '/path/to/gitlab/config:/etc/gitlab'  # Configuration files (optional, for configuration persistence)
-      - '/path/to/gitlab/logs:/var/log/gitlab'   # Logs (optional, for log persistence)
-      - '/path/to/gitlab/data:/var/opt/gitlab'  # Data (optional, for data persistence)
-      - '/path/to/gitlab/ssl:/etc/pki/gitlab'   # SSL certificates (optional, for SSL certs persistence)
+      - '/var/lib/gitlab/config:/etc/gitlab'
+      - '/var/log/gitlab:/var/log/gitlab'
+      - './gitlab-data:/var/opt/gitlab'
     environment:
-      GITLAB_OMNIBUS_CONFIG: |
-        gitlab_rails['lfs_enabled'] = true
-        external_url 'http://your-domain.com'  # Set the external URL of your GitLab instance
-        gitlab_rails['ssl_external_url'] = 'https://your-domain.com'  # The SSL external URL (if you use HTTPS)
-    dns:
-      - 'gitlab.example.com'  # Use a hostname to access your GitLab instance via DNS
+      GITLAB_OMNIBUS_CONFIG_TMPL: /etc/gitlab/gitlab.rb.tmpl
+      GITLAB_REGISTRATION_EMAIL: your@email.com
+      GITLAB_REGISTRATION_PASSWORD: a_strong_password
+      GITLAB_SECRETS_PASSWORD: another_strong_password # Optional, for GitLab Secret Manager
+      GITLAB_NODENAME: $(hostname -s)
+      TZ: Europe/London  # Set to your timezone, e.g., Europe/Paris, America/New_York, etc.
     depends_on:
       - postgres
     networks:
-      - gitlab_network
+      - gitlab-network
 
   postgres:
-    image: postgres:latest
+    image: 'postgres:latest' # or use a specific version like 'postgres:13'
     volumes:
-      - '/path/to/gitlab/data:/var/lib/postgresql'  # Data (optional, for data persistence)
+      - './gitlab-data/db:/var/lib/postgresql'
     environment:
       POSTGRES_DB: gitlabhq_maintenance
       POSTGRES_USER: gitlab
-      POSTGRES_PASSWORD: your_password  # Replace with a strong password
-    healthcheck:
-      timeout: 5s
-      retries: 10
-      test: ["exec", "pg_isready", "-U", "gitlab"]
+      POSTGRES_PASSWORD: root
+    networks:
+      - gitlab-network
+
+  redis:
+    image: 'redis:latest' # or use a specific version like 'redis:6-alpine'
+    volumes:
+      - './gitlab-data/redis:/data'
+    networks:
+      - gitlab-network
+
+  nginx:
+    image: 'gitlab/gitlab-nginx:latest' # or use a specific version like 'gitlab/gitlab-nginx:14.6.0-ce.0'
+    container_name: gitlab-nginx
+    ports:
+      - '80:80' # HTTP port for Nginx proxy
+      - '443:443' # HTTPS port for Nginx proxy, requires a SSL certificate
+    depends_on:
+      - gitlab
+    networks:
+      - gitlab-network
 
 networks:
-  gitlab_network:
+  gitlab-network:
     driver: bridge
+
+# Uncomment the following if you want to use Let's Encrypt for HTTPS.
+# services:
+#   nginx:
+#     labels:
+#       letencrypt-nginx-proxy-companion: "true"
+
+# To configure GitLab as described above, you need to create a .gitlab-rb file
+# in the ./gitlab-data directory, which is referenced by the volumes configuration.

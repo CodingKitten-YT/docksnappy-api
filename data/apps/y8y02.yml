@@ -1,52 +1,68 @@
 version: '3.8'
 
 services:
-  mistborn:
-    image: mistborn/mistborn:latest # Assuming the Docker image is available as 'mistborn/mistborn' on a registry
+  db:
+    image: postgres:12
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: mistborn
+      POSTGRES_USER: mistbornuser
+      POSTGRES_PASSWORD: yourpassword
     ports:
-      - "8080:8080" # Expose Mistborn service on host port 8080
+      - "5432:5432"
+
+  php:
+    image: php:8.0-fpm
+    volumes:
+      - .:/var/www/html
+    environment:
+      DB_HOST: db
+      DB_DATABASE: mistborn
+      DB_USERNAME: mistbornuser
+      DB_PASSWORD: yourpassword
+      APP_KEY: $(openssl rand -hex 32)
+    depends_on:
+      - db
+    user: "www-data"
+
+  nginx:
+    image: nginx:latest
+    volumes:
+      - .:/var/www/html
+      - php:/var/www/html/src
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - php
+    user: "nginx"
+
+  redis:
+    image: redis:6-alpine
+
+  queue_worker:
+    image: php:8.0-fpm
+    volumes:
+      - .:/var/www/html
+    environment:
+      DB_HOST: db
+      DB_DATABASE: mistborn
+      DB_USERNAME: mistbornuser
+      DB_PASSWORD: yourpassword
+      QUEUE_CONSUMER_TAG: default
+      RabbitMQServer__Hostname: rabbitmqserver
     depends_on:
       - db
       - redis
-    environment:
-      - DB_HOST=db
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-    env_file:
-      - .env # Load environment variables from a .env file if needed
-    restart: unless-stopped # Ensure the service restarts unless it's explicitly stopped
+      - php # This ensures that the PHP container for the queue worker will be started after the PHP FPM container for the web application is up.
 
-  db:
-    image: postgres:latest
-    environment:
-      - POSTGRES_USER=mistborn
-      - POSTGRES_PASSWORD=secret
-      - POSTGRES_DB=mistborn
-    volumes:
-      - postgres-data:/var/lib/postgresql # Persist database data
-    env_file: .env
-
-  redis:
-    image: redis:latest
+  rabbitmqserver:
+    image: rabbitmq:3-management
     ports:
-      - "6379:6379" # Expose Redis on host port 6379 for client access
-    volumes:
-      - redis-data:/data # Persist Redis data
-    env_file: .env
-
-  traefik:
-    image: traefik:latest
-    ports:
-      - "80:80" # HTTP port
-      - "443:443" # HTTPS port (requires SSL certificates)
-    command:
-      - "--api.insecure=true" # Run Traefik with the API accessible without authentication for ease of use
-    volumes:
-      - traefik-data:/traefik/data # Persist Traefik configuration and acme certificates if needed
-    depends_on:
-      - mistborn
+      - "15672:15672"
+      - "5672:5672"
+      - "15674:15674" # RabbitMQ Management UI port
 
 volumes:
-  postgres-data:
-  redis-data:
-  traefik-data:
+  postgres_data:

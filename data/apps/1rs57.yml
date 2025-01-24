@@ -1,0 +1,50 @@
+version: '3'
+
+services:
+  sshwifty-server:
+    image: sshwifty/sshwifty-web
+    container_name: sshwifty
+    restart: unless-stopped
+    environment:
+      SSHWIFTY_SERVER_HOSTNAME: example.com
+      SSHWIFTY_ADMIN_EMAIL: admin@example.com
+      SSHWIFTY_TLS_EMAIL: letsencrypt@example.com
+      SSHWIFTY_TLS_DOMAIN: example.com
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    depends_on:
+      - certbot-nginx
+
+  certbot-nginx:
+    image: jrcsbo/docker-certbot-nginx
+    container_name: certbot-nginx
+    restart: unless-stopped
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - letsencrypt
+
+  letsencrypt:
+    image: certbot/certbot
+    container_name: letsencrypt
+    restart: unless-stopped
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+
+volumes:
+  sshwifty-data:
+    driver: local
+
+networks:
+  default:
+    external:
+      name: my_network

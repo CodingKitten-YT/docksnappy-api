@@ -1,0 +1,63 @@
+version: '3.8'
+services:
+  roundup:
+    image: roundup/roundup:latest # Use the official Roundup image from Docker Hub
+    container_name: roundup
+    ports:
+      - "8000:8000" # Expose Roundup web UI on host port 8000
+    volumes:
+      - ./data:/var/lib/roundup # Mount a local data directory for persistent storage
+      - ./conf.ini:/etc/roundup.ini   # Optional: Mount a custom roundup.ini configuration file if you have one
+      - ./custom:/opt/custom    # Optional: Mount a directory with additional Python packages or modules if needed
+    environment:
+      ROUNDUP_LANGUAGES: "en" # Set the default language for the web interface (e.g., "en" for English)
+      MYSQL_DATABASE: "roundup"   # MySQL database name
+      MYSQL_USER: "roundup"     # MySQL user for Roundup
+      MYSQL_PASSWORD: "yourpassword"  # MySQL password for Roundup
+      MYSQL_HOST: "db"            # Host for the MySQL database (referencing the db service)
+    depends_on:
+      - db
+
+  db:
+    image: mysql:5.7
+    container_name: roundup_db
+    volumes:
+      - ./dbdata:/var/lib/mysql # Mount a local directory for persistent database storage
+    environment:
+      MYSQL_DATABASE: "roundup"   # Database name
+      MYSQL_USER: "roundup"     # Username for the database
+      MYSQL_PASSWORD: "yourpassword"  # Password for the database
+      MYSQL_ROOT_PASSWORD: "rootpassword"  # Root password for MySQL (optional, but recommended)
+    ports:
+      - "3306:3306" # Expose MySQL port on host for administrative access (if needed)
+
+  php-fpm:
+    image: roundup/php-fpm:latest # Use the official PHP-FPM image from Docker Hub
+    container_name: roundup_php
+    volumes:
+      - ./data:/var/lib/roundup # Share data volume with Roundup (if custom caching or session storage is needed)
+    depends_on:
+      - roundup
+    environment:
+      WEB_SERVER_HOST: "0.0.0.0" # Allow access from all interfaces
+      WEB_SERVER_PORT: "8000"   # The port that Roundup is accessible on
+      ROUNDUP_LANGUAGES: "en"    # Set the default language for the web interface (e.g., "en" for English)
+      INI_PATH: "/etc/php.ini"  # Path to the PHP configuration file
+
+  nginx-proxy:
+    image: nginx:stable-alpine
+    container_name: roundup_nginx
+    ports:
+      - "80:80"       # Map HTTP port 80 to the container (HTTP)
+      - "443:443"      # Map HTTPS port 443 to the container (HTTPS), if using Let's Encrypt or similar
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d     # Custom Nginx configuration files
+      - ./nginx/certs:/etc/nginx/certs     # SSL certificates, if applicable
+      - ./nginx/data:/var/lib/nginx       # Data for Nginx (if needed)
+    depends_on:
+      - roundup
+      - php-fpm
+
+networks:
+  default:
+    driver: bridge

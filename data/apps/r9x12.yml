@@ -1,34 +1,70 @@
 version: '3.8'
+
 services:
-  eda_notebook:
+  eda_notebook_service:
     image: puckel/dask-gateway
-    depends_on:
-      - eda_postgres
     environment:
-      - ENABLE_DASK_GATEWAY=True
-      - DASK_ Gateway_WORKER_CLASS=process-default.dask.cloudproxy.LocalProfilerServer
-      - JUPYTERHUB_CONFIG=jhub_config.py
-      - JUPYTERHUB_API_PASSWORD=change_it_now
+      - HAS_GAN=true
+      # Set the number of worker processes here (default is 4)
+      - NUM_WORKERS=4
+      # Optionally set a specific dask scheduler address if it's different from localhost
+      - LOCALROOT_HOSTNAME=localhost
     ports:
       - "8888:8888"
+    command: --allow-root
     volumes:
-      - .jupyter:/home/jovyan/.local/share/jupyter/hub
-      - ./dask-gateway.json:/etc/dask-gatework.json
+      - ./notebooks:/home/jovyan/.local/share/jupyter/notebooks
+      - ./data:/data
+    depends_on:
+      - eda_db_service
 
-  eda_postgres:
+  eda_db_service:
     image: postgres:13
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
     environment:
-      POSTGRES_DB: eda_db
-      POSTGRES_USER: eda_user
-      POSTGRES_PASSWORD: eda_password
+      POSTGRES_DB: eda
+      POSTGRES_USER: edauser
+      POSTGRES_PASSWORD: edapassword
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eda"]
+      timeout: 10s
+      retries: 5
 
-  eda_redis:
-    image: redis:6-alpine
+  timescale_service:
+    image: timescale/timescaledb:latest
+    depends_on:
+      - eda_db_service
+    environment:
+      POSTGRES_DB: eda
+      POSTGRES_USER: edauser
+      POSTGRES_PASSWORD: edapassword
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eda"]
+      timeout: 10s
+      retries: 5
 
-volumes:
-  postgres_data:
+  eda_app_service:
+    image: your-eda-application-image:latest
+    environment:
+      - EDA_DB_HOST=eda_db_service
+      - EDA_DB_USERNAME=edauser
+      - EDA_DB_PASSWORD=edapassword
+      - EDA_DB_NAME=eda
+    ports:
+      - "5000:5000"
+    depends_on:
+      - eda_db_service
+      - eda_notebook_service
+
+  eda_redis_service:
+    image: redis:latest
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -c ping"]
+      timeout: 10s
+      retries: 5
 
 networks:
   default:

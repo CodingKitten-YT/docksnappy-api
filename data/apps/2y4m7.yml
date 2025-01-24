@@ -1,31 +1,30 @@
-version: '3.8'
-
+version: '3'
 services:
-  mafl-web:
-    image: mafl/mafl-web:latest
+  mafl-libfuzzer:
+    image: duncancannon/mafl:latest
+    container_name: mafl_libfuzzer
     ports:
-      - "5000:5000"
+      - "8000:8000" # Expose MaFL's built-in server on port 8000 (host to container)
+    volumes:
+      - ./mafl:/mafl # Mount your local MAFL project directory into the container
+      - ${HOME}/libfuzzer_fuzzers:/opt/libfuzzer_fuzzers # Mount a directory with your libFuzzer fuzzers (optional, if you have existing fuzzers)
     environment:
-      MAFL_CONFIG_FILE: /app/config/mafl.yaml
-      MAFL_DATABASE_HOST: db
-      MAFL_DATABASE_USERNAME: mafluser
-      MAFL_DATABASE_PASSWORD: maflpass
-      MAFL_DATABASE_NAME: mafl_db
+      - MAFL_CONFIG_PATH=/mafl/config.yaml # Path to the MaFL configuration file within the volume
+      - MAFL_RESOURCES_PATH=/opt/libfuzzer_fuzzers # Set the resources path where MaFL will look for fuzzers
+      # Add any other environment variables required by your MAFL setup
     depends_on:
-      - db
-    volumes:
-      - ./app/config:/app/config
-      - ./app/logs:/app/logs
-      - ./app/data:/app/data
+      - mafl-postgres
 
-  mafl-db:
-    image: postgres:13
-    environment:
-      POSTGRES_DB: mafl_db
-      POSTGRES_USER: mafluser
-      POSTGRES_PASSWORD: maflpass
+  mafl-postgres:
+    image: postgres:latest
+    container_name: mafl_postgres
     volumes:
-      - mafl-db-data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data # Use a named volume for persistent storage of PostgreSQL data
+    environment:
+      - POSTGRES_DB=mafl # Database name as specified in MaFL's configuration
+      - POSTGRES_USER=mafl # Username for the database (change as needed)
+      - POSTGRES_PASSWORD=secret # Password for the database (change as needed)
 
 volumes:
-  mafl-db-data:
+  postgres_data:
+    driver: local

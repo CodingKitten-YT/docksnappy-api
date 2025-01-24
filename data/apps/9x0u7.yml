@@ -1,57 +1,68 @@
 version: '3.8'
-
 services:
-  bytebase:
-    image: bytebase/bytebase:latest # Use the official Bytebase image from Docker Hub
-    container_name: bytebase
-    command: /app/run-server --host=0.0.0.0
+  # Bytebase server service
+  bytebase-server:
+    image: bytebase/bytebase:v1.0.0  # Replace with the desired version tag
+    command: server
+    container_name: bytebase_server
     ports:
-      - "8080:8080" # Expose the Bytebase web UI on port 8080 of the host
+      - "9090:9090"  # Expose Bytebase web UI on host port 9090
     environment:
-      DB_TYPE: postgres # Replace with the database type you are using (default is PostgreSQL)
-      JWT_SECRET: your_jwt_secret # A secret key for JWT authentication, use `openssl rand-bytes 32` to generate one
+      JAVA_TOOL_OPTIONS: -Xms512M -Xmx512M
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: 9090
+      DATA_DIR: /data/db
     volumes:
-      - bytebase-data:/app/data
-      - bytebase-conf:/app/config
-      - bytebase-logs:/app/logs
+      - type: bind
+        source: ./data/db
+        target: /data/db
+        mode: ro
+      - type: bind
+        source: ./log
+        target: /var/log/bytebase
+        mode: decked
     depends_on:
-      - postgres # Bytebase depends on a PostgreSQL database
+      - bytebase-mysql  # Assuming you are using MySQL as the underlying database
+    restart: unless-stopped
 
-  postgres:
-    image: postgres:latest # Use the official PostgreSQL image from Docker Hub
-    container_name: postgres
+  # MySQL service (Bytebase backend database)
+  bytebase-mysql:
+    image: mysql:8.0.23  # Replace with the desired version tag
+    command: --default-authentication-plugin=mysql_native_password
+    container_name: bytebase_mysql
     environment:
-      POSTGRES_DB: bytebase # The default database name for Bytebase
-      POSTGRES_USER: bytebase # The default user for Bytebase
-      POSTGRES_PASSWORD: your_db_password # Set a strong password for the PostgreSQL database
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: bytebase
+      MYSQL_USER: bytebase
+      MYSQL_PASSWORD: bonepassword
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - type: bind
+        source: ./mysql/db
+        target: /var/lib/mysql
+        mode: decked
+    restart: unless-stopped
 
-  redis:
-    image: redis:latest # Use the official Redis image from Docker Hub
-    container_name: redis
-    command: Redis-server /redis.conf --appendonly yes
+  # Nginx service to proxy requests to Bytebase server
+  bytebase-proxy:
+    image: nginx:latest
+    command: -g 'daemon off;'
+    container_name: bytebase_proxy
+    ports:
+      - "80:80"   # Expose Nginx on host port 80 for HTTP traffic
+      - "443:443"  # Expose Nginx on host port 443 for HTTPS traffic (requires SSL configuration)
+    volumes:
+      - type: bind
+        source: ./nginx/conf.d
+        target: /etc/nginx/conf.d
+        mode: decked
+    depends_on:
+      - bytebase-server
+    networks:
+      default:
+        alias: bytebase_proxy
+    restart: unless-stopped
 
-volumes:
-  bytebase-data:
-  bytebase-conf:
-  bytebase-logs:
-  postgres-data:
-
+# Configure a custom network for docker containers if needed
 networks:
-  default:
-    driver: bridge
-
-# Optional: If you want to use a persistent volume for PostgreSQL data instead of an ephemeral container storage,
-# uncomment the following lines and set the desired driver and volume options.
-# postgres:
-#   volumes:
-#     - pg_data:/var/lib/postgresql/data
-#
-# volumes:
-#   pg_data:
-#     driver: local
-#     driver_opts:
-#       type: none
-#       o: bind
-#       device: /path/to/your/persistent-storage
+  stone:
+    external: true

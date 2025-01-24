@@ -1,42 +1,38 @@
-version: '3.8'
+version: '3'
 services:
-  jarr-api:
-    image: "jarr/jarr-api:latest" # Use the official JARR API Docker image from Docker Hub
+  registry:
+    image: jarr/jarr:latest
+    container_name: jarr-registry
     ports:
-      - "5001:5000" # Expose port 5000 where JARR API is hosted
-    environment:
-      TZ: "Europe/London" # Set timezone, change as necessary
-      POSTGRES_DB: "jarr" # Database name for PostgreSQL
-      POSTGRES_USER: "jarr" # Username for PostgreSQL
-      POSTGRES_PASSWORD: "jarrpassword" # Password for PostgreSQL
+      - "5000:5000" # Default port for JARR Registry
     volumes:
-      - "./data:/var/lib/postgresql" # Persist database data to a host directory
-      - "./conf:/app/conf" # Persist configuration files to a host directory
+      - "./data:/data" # Optional volume to persist data
+    environment:
+      REGISTRY_HTTP_TLS_SELF_SIGNED_CERTIFICATE: "false" # Set to 'true' if you want to use self-signed certificates
+      REGISTRY_COMMON_REALM: "auth" # Authentication is enabled
+      REGISTRY_AUTH_GITHUB_OAUTH_CLIENTID: "your_client_id" # If you enable GitHub login, set this
+      REGISTRY_AUTH_GITHUB_SECRET: "your_secret_token" # If you enable GitHub login, set this
+      REGISTRY_AUTH_ANONYMOUS_ enabled: "true" # Enable anonymous access without authentication
+    command: "-v /data -S -b 0.0.0.0/0" # Start JARR with persistent storage and global accessibility
+
+  # Optional logging service (if you want to keep logs)
+  logzilla:
+    image: logzilla/logzilla:latest
+    container_name: logzilla
+    volumes:
+      - "./data/logzilla":/var/spool/logzilla
+    command: "-f /dev/null" # Forward logs to Logzilla
+
+  # Optional logging to a remote service like Loki (requires Logzilla with Loki receiver)
+  loki-receiver:
+    image: logzilla/loki-receiver:latest
+    container_name: loki-receiver
     depends_on:
-      - postgres
-
-  postgres:
-    image: "postgres:13" # Use PostgreSQL version 13 for the database
+      - registry
     environment:
-      POSTGRES_DB: "jarr" # Database name for JARR
-      POSTGRES_USER: "jarr" # Username for JARR's database access
-      POSTGRES_PASSWORD: "jarrpassword" # Password for JARR's database access
-    volumes:
-      - "./data:/var/lib/postgresql" # Persist database data to a host directory
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U jarr"]
-      timeout: 5s
-      retries: 10
-
-  # Uncomment and configure the following services if you need Redis, Elasticsearch, or Logstash
-  # redis:
-  #   image: "redis:6-alpine"
-  #   command: redis-server --appendonly yes
-  # elasticsearch:
-  #   image: "docker.elastic.co/elasticsearch/elasticsearch:7.15.2"
-  # logstash:
-  #   image: "docker.elastic.co/logstash/logstash:7.15.2"
+      LOCAL_WORKER_SECRET: "secret" # Set this to a secret for secure communication with Loki
+    command: "-config.storage_path=/tmp/promtail -config.client_ssl_config={} -address 0" # Listen on all interfaces and forward logs to Loki
 
 networks:
-  default:
+  jarr-network:
     driver: bridge

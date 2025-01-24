@@ -1,68 +1,60 @@
-version: '3.7'
+version: '3.8'
 
 services:
+  bitcart-db:
+    image: postgres:13
+    command: 'postgres -c "listen_addresses = '0.0.0.0'" -U bitcart
+    environment:
+      POSTGRES_DB: bitcart
+      POSTGRES_USER: bitcart
+      POSTGRES_PASSWORD: yourpassword
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bitcart"]
+      timeout: 10s
+      retries: 5
+
   bitcart-api:
-    image: "bitcart/bitcart-api:latest" # Replace with the official Bitcart API Docker image tag
+    image: bitcart/bitcart-backend:latest
+    environment:
+      DATABASE_URL: postgres://bitcart:yourpassword@db-data:5432/bitcart
+      JWT_SECRET: yourjwtsecret
     ports:
-      - "8000:8000" # Adjust the host and container port as needed
-    environment:
-      # Set necessary environment variables for the Bitcart API
-      BITCART_SECRET_KEY: "${BITCART_SECRET_KEY}"
-      BITCART_DATABASE_URL: "postgres://db:5432/bitcart"
-      # Add other required environment variables
+      - "8000:8000"
     depends_on:
-      - db
-    volumes:
-      - "./config:/etc/bitcart" # Mount your config directory to the container for configuration files
-    networks:
-      - bitcart-network
+      - bitcart-db
+    healthcheck:
+      test: ["TCP", "0.0.0.0:8000"]
+      timeout: 10s
+      retries: 5
 
-  postgres:
-    image: "postgres:13" # Replace with the official PostgreSQL Docker image tag
-    volumes:
-      - "db:/var/lib/postgres" # Use a named volume for persistent database storage
+  bitcart-frontend:
+    image: bitcart/bitcart-frontend:latest
+    ports:
+      - "3000:3000"
+    depends_on:
+      - bitcart-api
+
+  bitcart-worker:
+    image: bitcart/bitcart-worker:latest
+    command: python worker.py
     environment:
-      POSTGRES_DB: "bitcart"
-      POSTGRES_USER: "db"
-      POSTGRES_PASSWORD: "dbpassword" # Make sure to change this to a secure password
-    networks:
-      - bitcart-network
+      BROKER_URL: redis://redis:6379/0
+      JWT_SECRET: yourjwtsecret
+    depends_on:
+      - bitcart-api
 
   redis:
-    image: "redis:6-alpine" # Replace with the official Redis Docker image tag
-    networks:
-      - bitcart-network
+    image: redis:6
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -c ping"]
+      timeout: 10s
+      retries: 5
 
-# Optional services like Nginx, Celery, etc., if your Bitcart setup requires them
-bitcart-webserver:
-  image: "bitcart/bitcart-webserver:latest" # Replace with the official Bitcart Webserver Docker image tag
-  ports:
-    - "80:80" # Adjust the host and container port as needed
-  depends_on:
-    - bitcart-api
-  networks:
-    - bitcart-network
+volumes:
+  db-data:
 
-# If you're using a worker service, e.g., Gunicorn with Bitcart
-bitcart-worker:
-  image: "bitcart/bitcart-worker:latest" # Replace with the official Bitcart Worker Docker image tag
-  depends_on:
-    - bitcart-api
-  networks:
-    - bitcart-network
-
-# Define the network for the services to communicate with each other
 networks:
-  bitcart-network:
+  bitcart-net:
     driver: bridge
-
-# Optionally, you can define a custom healthcheck if not already implemented in the service images
-healthcheck:
-  test: ["CMD-SHELL", "curl --fail http://bitcart-api:8000/health || exit 1"]
-  timeout: 10s
-  retries: 3
-
-# If you need to use external tools like Redis, you can define them here
-services_external_tools:
-  redis:
-    image: "redis:6-alpine" # Use the same image as the Redis service above

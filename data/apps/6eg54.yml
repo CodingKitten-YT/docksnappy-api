@@ -1,43 +1,63 @@
 version: '3.8'
 services:
-  geeftlist-frontend:
-    image: geeftlist/geeftlist-frontend:latest
-    container_name: geeftlist_frontend
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - REACT_APP_BACKEND_URL=http://geeftlist-backend:5000
-    depends_on:
-      - geeftlist-backend
-    restart: unless-stopped
-
-  geeftlist-backend:
-    image: geeftlist/geeftlist-backend:latest
-    container_name: geeftlist_backend
-    ports:
-      - "5000:5000"
-    environment:
-      - DB_HOST=mongodb
-      - DB_NAME=geeftlist
-      - DB_USER=geeftlist_user
-      - DB_PASSWORD=geeftlist_password
-    depends_on:
-      - mongodb
-    restart: unless-stopped
-
-  mongodb:
-    image: mongo:latest
-    container_name: geeftlist_mongodb
+  db:
+    image: postgres:12
     volumes:
-      - mongodata:/data/db
+      - db_data:/var/lib/postgresql/data
     environment:
-      MONGO_INITDB_ROOT_USERNAME:geeftlist_user
-      MONGO_INITDB_ROOT_PASSWORD:geeftlist_password
-      MONGO_INITDB_DATABASE:geeftlist
+      POSTGRES_DB: geeftlist
+      POSTGRES_USER: geeftlist
+      POSTGRES_PASSWORD: very_secure_password
     ports:
-      - "27017:27017"
+      - "5432:5432"
+
+  redis:
+    image: redis:6-alpine
+    volumes:
+      - redis_data:/data
+
+  geeftlist_webapp:
+    build: .
+    container_name: geeftlist_webapp
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgres://geeftlist:very_secure_password@db:5432/geeftlist
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: 'your_secret_key'
+    depends_on:
+      - db
+      - redis
+      - worker
+
+  geeftlist_worker:
+    image: python:3.9-slim
+    container_name: geeftlist_worker
+    command: python manage.py run_worker --settings=geeftlist.local_settings
+    volumes:
+      - .:/code
+    environment:
+      DATABASE_URL: postgres://geeftlist:very_secure_password@db:5432/geeftlist
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: 'your_secret_key'
+    depends_on:
+      - db
+      - redis
+
+  geeftlist_admin:
+    image: python:3.9-slim
+    container_name: geeftlist_admin
+    command: python manage.py shell --settings=geeftlist.local_settings
+    volumes:
+      - .:/code
+    environment:
+      DATABASE_URL: postgres://geeftlist:very_secure_password@db:5432/geeftlist
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: 'your_secret_key'
+    depends_on:
+      - db
+      - redis
 
 volumes:
-  mongodata:
-    driver: local
+  db_data:
+  redis_data:

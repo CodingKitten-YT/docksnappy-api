@@ -1,37 +1,69 @@
 version: '3.8'
 
 services:
+  # Novu service with dependencies (PostgreSQL, RabbitMQ)
   novu:
-    image: novu/novu:latest  # Use the official Novu image
+    image: novu/novu:latest
     container_name: novu
-    command: /entrypoint.sh -c /app/config/local.env  # Ensure Novu uses local environment variables for configuration
     ports:
-      - "8000:80"  # Expose the Novu web interface on port 8000 of the host
+      - "4200:4200" # Web interface and API
+      - "8081:8081" # Admin interface (optional)
     volumes:
-      - ./app:/var/www/packages  # Map your project directory to the Novu packages directory for code and uploads
-      - ./app/config:/app/config  # Map your project's config directory to the Novu config directory
-      - novu_logs:/var/log/novu  # Create a volume for logging
-
-  mysql:
-    image: mysql:latest
-    container_name: novu_mysql
-    command: --default-authentication-plugin=mysql_native_password
-    volumes:
-      - db_data:/var/lib/mysql
+      - "./app/src:/var/www/novu/app" # Your application source code
+      - "./app/.env:/var/www/novu/.env" # Your .env file for config overrides
+      - novu_data:/var/www/novu/data
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword  # Replace 'rootpassword' with your desired password
-      MYSQL_DATABASE: novu  # The database name for Novu
-      MYSQL_USER: novu
-      MYSQL_PASSWORD: novupassword  # Replace 'novupassword' with your desired password
+      NODE_ENV: development
+      DEBUG: true
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      POSTGRES_DB: novu
+      POSTGRES_USER: novu
+      POSTGRES_PASSWORD: change_this_password
+      SMTP_TRANSPORT: smtp://mailhog:1025
+      SECRET_KEY: a_very_secret_key # Replace with your secret key
+      FORCE_COLOR_SCHEME: light
+    depends_on:
+      - db
+      - rabbitmq
+      - mailhog
+    restart: unless-stopped
 
-  redis:
-    image: redis:latest
-    container_name: novu_redis
+  # PostgreSQL service
+  db:
+    image: postgres:latest
+    command: 'postgres -c "fsync=OFF"'
+    volumes:
+      - novu_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: novu
+      POSTGRES_USER: novu
+      POSTGRES_PASSWORD: change_this_password
+    restart: unless-stopped
+
+  # RabbitMQ service
+  rabbitmq:
+    image: rabbitmq:3.8-management
+    ports:
+      - "5672:5672" # RabbitMQ admin interface (optional)
+      - "15674:15674" # RabbitMQ stmp (optional)
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASSWORD: password
+    restart: unless-stopped
+
+  # MailHog service (for email testing)
+  mailhog:
+    image: mailhog/mailhog:latest
+    ports:
+      - "8025:8025" # SMTP interface
+      - "9000:9000" # Web interface
+    volumes:
+      - mailhog_data:/var/lib/mailhog/data
+    restart: unless-stopped
 
 volumes:
-  novu_logs:
-  db_data:
-
-networks:
-  default:
-    driver: bridge
+  novu_data:
+  rabbitmq_data:
+  mailhog_data:

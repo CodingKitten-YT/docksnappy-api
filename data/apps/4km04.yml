@@ -1,49 +1,54 @@
 version: '3.8'
 
 services:
-  jelu_web:
-    image: jelu/jelu:latest
+  nginx:
+    image: nginx:latest
+    container_name: jelu_nginx
     ports:
-      - "8080:80" # Adjust the host port as needed
-    environment:
-      JELU_SECRET_KEY: secret_key # Replace with a real secret key for production
-      JELU_DATABASE_URL: postgres://user:password@db:5432/dbname # Replace with your database connection string
-      JELU_EMAIL_HOST: email-service # This should correspond to the service name of your email service
-      JELU_EMAIL_PORT: '1025' # Email service port
-      JELU_EMAIL_USER: your_email@example.com # Your email address for sending emails
-      JELU_EMAIL_PASSWORD: your_email_password # The password for the above email account
-    depends_on:
-      - jelu_db
-      - jelu_worker
-      - jelu_mailhog
+      - "80:80"
+      - "443:443"
     volumes:
-      - ./data:/var/www/html/storage  # Mount your local data directory to store files, if needed
-
-  jelu_db:
-    image: postgres:13
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: dbname
-    volumes:
-      - jelu_db_data:/var/lib/postgresql/data
-
-  jelu_worker:
-    image: jelu/jelu-worker:latest
-    environment:
-      JELU_QUEUES: default
-      # Set other necessary worker environment variables here
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/html:/usr/share/nginx/html
+      - ./nginx/ssl:/etc/nginx/ssl
     depends_on:
-      - jelu_db
+      - php
+    networks:
+      - jelu-network
 
-  jelu_mailhog:
-    image: mailhog/mailhog
-    ports:
-      - "8025:8025" # Access MailHog UI on http://localhost:8025
+  php:
+    image: php:fpm-alpine
+    container_name: jelu_php
+    volumes:
+      - ./src:/var/www/html
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/html:/usr/share/nginx/html
+      - ./db_data:/var/lib/mysql
     environment:
-      MAILHOG_USER: admin
-      MAILHOG_PASSWORD: password
-      MAILHOG_ADMIN_LOGIN: true
+      - DB_HOST=mysql
+      - DB_USER=jelu_user
+      - DB_PASSWORD=jelu_password
+      - DB_NAME=jelu_database
+    depends_on:
+      - mysql
+    networks:
+      - jelu-network
+
+  mysql:
+    image: mysql:5.7
+    container_name: jelu_mysql
+    volumes:
+      - db_data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root_password
+      - MYSQL_DATABASE=jelu_database
+      - MYSQL_USER=jelu_user
+      - MYSQL_PASSWORD=jelu_password
+    networks:
+      - jelu-network
 
 volumes:
-  jelu_db_data:
+  db_data:
+
+networks:
+  jelu-network:

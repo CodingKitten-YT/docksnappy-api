@@ -1,62 +1,32 @@
-version: '3.7'
-
+version: '3.8'
 services:
   asciinema:
-    image: asciny/asciinema:latest
-    command: /bin/sh -c "trap exit TERM; while :; do sleep infinity & wait $${!}; done && /usr/local/bin/asciinema server"
-    volumes:
-      - ./recordings:/data
-      - ./ascicast-receiver.service:/etc/systemd/system/ascicast-receiver.service
-      - ./ascicast-server.conf:/etc/asciinema/asciicast-server.conf
+    image: asciinema/asciinema:latest
+    container_name: asciinema
     ports:
-      - "8080:80"
-    user: "1000"  # Replace with the appropriate user ID on your host system
-    healthcheck:
-      test: ["CMD-SHELL", "pgrep asciny/asciinema || true"]
-      interval: 30s
-      timeout: 5s
-      retries: 120
-
-  asciicast-receiver:
-    image: asciny/asciicast-receiver:latest
-    command: /usr/local/bin/asciicast-receiver --config-file /etc/asciinema/asciicast-server.conf
+      - "80:4000" # Expose the recording server on host port 80 (adjust as needed)
     volumes:
-      - ./recordings:/data
-      - ./ascicast-receiver.service:/etc/systemd/system/ascicast-receiver.service
-    ports:
-      - "5000:5000"
-    user: "1000"  # Replace with the appropriate user ID on your host system
-    healthcheck:
-      test: ["CMD-SHELL", "pgrep asciny/asciicast-receiver || true"]
-      interval: 30s
-      timeout: 5s
-      retries: 120
+      - "./recordings:/recordings" # Path to store recordings on the host machine
+      - "/var/run/docker.sock:/var/run/docker.sock" # Required for Docker access from inside the container
+    environment:
+      - ASCIINIMA_RECORDINGS="/recordings"
+      - NODE_ENV=production
+    command: record
 
-  nginx:
-    image: nginx:latest
-    command: /usr/local/bin/nginx
+  redis:
+    image: redis:latest
     volumes:
-      - ./ascicast-server.conf:/etc/asciinema/asciicast-server.conf
-      - ./public_html:/usr/share/nginx/html
-    ports:
-      - "80:80"
-      - "443:443"  # If you want to use HTTPS, you'll need to provide an SSL certificates
-    depends_on:
-      - asciinema
-    healthcheck:
-      test: ["TCP", "0.0.0.0:80"]
-      interval: 10s
-      timeout: 2s
-      retries: 60
+      - "./data/redis:/data/redis" # Path to persist Redis data on the host machine (optional but recommended for data persistence)
 
-# If you want to enable HTTPS, you can use a Let's Encrypt certificate with the following service:
-# letencrypt-certbot:
-#   image: certbot/certbot:latest
-#   command: certonly --standalone -f /etc/letsencrypt/renewal/mydomain.com.conf --agree-tos --email your-email@example.com
-#   volumes:
-#     - ./letencrypt:/etc/letsencrypt
-#     - ./ascicast-server.conf:/etc/asciinema/asciicast-server.conf
-#   ports:
-#     - "80:80"
-#     - "443:443"
-#   entrypoint: /bin/sh -c "trap exit TERM; while :; do sleep infinity & wait $${!}; done && /usr/local/bin/certbot certonly --standalone -f /etc/letsencrypt/renewal/mydomain.com.conf --agree-tos --email your-email@example.com;"
+  postgres:
+    image: postgres:latest
+    volumes:
+      - "./data/postgres:/var/lib/postgresql/data" # Path to persist Postgres data on the host machine (optional but recommended for data persistence)
+    environment:
+      POSTGRES_DB: asciinema
+      POSTGRES_USER: asciinema
+      POSTGRES_PASSWORD: change_this_password # Set an appropriate password
+
+networks:
+  default:
+    driver: bridge

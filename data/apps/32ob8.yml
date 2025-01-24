@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  tiledesk_frontend:
+    image: tiledesk/tiledesk-react:latest
+    ports:
+      - "3001:3000" # Frontend app runs on port 3000 inside the container, exposed to host on port 3001
+    environment:
+      TILEDSEK_API_URL: http://tiledesk_backend:5000/api
+      NODE_ENV: production
+    depends_on:
+      - tiledesk_backend
+    volumes:
+      - ./tiledesk-frontend:/usr/src/app
+
+  tiledesk_backend:
+    image: tiledesk/tiledesk-api:latest
+    ports:
+      - "5001:5000" # Backend API runs on port 5000 inside the container, exposed to host on port 5001
+    environment:
+      DB_HOST: tiledesk_db:5432
+      DB_DATABASE: tiledesk
+      DB_USERNAME: tiledesk
+      DB_PASSWORD: tiledesk
+      ADMINS_EMAILS: "admin@example.com"
+    depends_on:
+      - tiledesk_db
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  tiledesk_db:
+    image: postgres:13
+    volumes:
+      - db_data
+    environment:
+      POSTGRES_DB: tiledesk
+      POSTGRES_USER: tiledesk
+      POSTGRES_PASSWORD: tiledesk
+
+volumes:
+  db_data:

@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  passwordpusher_app:
+    image: 'passwordpusher/passwordpusher:latest' # Use the official Password Pusher image
+    ports:
+      - "5000:5000" # Expose the port where the Flask app runs (default is 5000)
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/.credentials # If using Google Sheets as the backend
+    volumes:
+      - './data:/app/data' # Persist data to the local directory
+      - './passwords.json:/app/config/passwords.json' # Load custom passwords from a local file (optional)
+    depends_on:
+      - passwordpusher_db
+
+  passwordpusher_db:
+    image: 'postgres:latest' # Use the official PostgreSQL image
+    volumes:
+      - './docker/db:/var/lib/postgresql/data' # Persist database to a local directory (for data persistence)
+    environment:
+      - POSTGRES_USER=passwordpusher
+      - POSTGRES_PASSWORD=change_this_passw0rd # Change this to a secure password
+      - POSTGRES_DB=passwordpusher
+
+  redis:
+    image: 'redis:latest'
+    volumes:
+      - './docker/redis:/data' # Persist Redis data to a local directory (optional, for high availability)
+
+networks:
+  default:
+    driver: bridge

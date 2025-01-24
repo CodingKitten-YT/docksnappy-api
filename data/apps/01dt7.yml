@@ -1,68 +1,43 @@
 version: '3.8'
-
 services:
-  lowdefy-api:
-    image: lowdefy/lowdefy-api:latest
-    container_name: lowdefy-api
+  lowdefy-app:
+    image: lowdefy/platform:latest
+    container_name: lowdefy-platform
+    command: -c ./config
     ports:
-      - "8081:8080" # default port for Lowdefy API, adjust if needed
-    command: /run.sh api
+      - "4200:4200" # Default HTTP port of Lowdefy
+      - "8080:8080" # Admin UI on port 8080 (optional)
+    volumes:
+      - ./app:/var/task # Bind your application directory to the container
+      - ./config:/config # Bind your configuration directory to the container
+      - ./public:/public # Bind your public directory to serve static files
+      - ./node_modules:/node_modules # Optional, bind node modules if you want to update them without rebuilding the image
+    environment:
+      - NODE_ENV=production
+      - LOG_LEVEL=INFO
     depends_on:
       - postgres
-    environment:
-      LOWDEFY_LICENSE_KEY: your_license_key_here
-      JWT_SECRET: a_very_secret_string
-      POSTGRES_DB: lowdefy
-      POSTGRES_USER: lowdefy
-      POSTGRES_PASSWORD: your_database_password_here
-    volumes:
-      - ./lowdefy-api.env:/opt/lowdefy/conf/env/api.env # optional, for environment variables overrides
-    networks:
-      - lowdefy-network
 
   postgres:
-    image: postgres:latest
-    container_name: postgres
+    image: postgres:13
+    command: 'postgres -c "fsync=off"'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: lowdefy
       POSTGRES_USER: lowdefy
-      POSTGRES_PASSWORD: your_database_password_here
-    volumes:
-      - db-data:/var/lib/postgresql/data
-    networks:
-      - lowdefy-network
+      POSTGRES_PASSWORD: change_this_password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lowdefy"]
+      timeout: 10s
+      retries: 5
 
-  nginx-proxy:
-    image: jwilder/nginx-proxy:stable
-    container_name: nginx-proxy
-    ports:
-      - "80:80" # NGINX Proxy HTTP port
-      - "443:443" # NGINX Proxy HTTPS port (requires Let's Encrypt or similar)
-    depends_on:
-      - cert-manager
-      - lowdefy-api
+  redis:
+    image: redis:6.2-alpine
+    command: RedisD
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d:ro # optional, for custom NGINX configuration
-      - letscertificates:/etc/letsencrypt
-      - db-data:/var/lib/postgresql/data
-    networks:
-      - lowdefy-network
-
-  cert-manager:
-    image: jetstack/cert-manager-ca:v1.7.1
-    container_name: cert-manager
-    volumes:
-      - letscertificates:
-        driver: local
+      - redis-data:/data
 
 volumes:
-  db-data:
-  letscertificates:
-
-networks:
-  lowdefy-network:
-    driver: bridge
-
-# Note: This docker-compose.yml assumes you want to set up Lowdefy with a PostgreSQL database and NGINX Proxy for routing and SSL termination.
-# You need to replace `your_license_key_here` and `your_database_password_here` with your actual license key and a secure password.
-# Additionally, for Let's Encrypt to work, you need to have DNS records set up for your domain and use cert-manager to issue certificates.
+  postgres-data:
+  redis-data:

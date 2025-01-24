@@ -1,69 +1,66 @@
-version: '3.8'
-
-services:
-  # Node1 of the OpenSearch cluster (single-node mode by default)
-  opensearch:
-    image: opensearch:8.4.3
-    container_name: opensearch
-    environment:
-      OPENSEARCH_MEMORY_LOCKS_Total_MB: "512"
-      OPENSEARCH_JVM_OPTS: "-Xms512m -Xmx512m"
-      DISABLE_OPENSearch_SECURITY: "true" # Use 'false' to enable default security features
-      EULA_ACCEPTED: "true"             # Required for all licenses, including the free one
-    ulimits:
-      memlock:
-        soft: -1
-        hard: 2048m
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    networks:
-      - opensearch_network
-    volumes:
-      - ${OPENSEARCH_DATA:/docker/opensearch/data}
-
-# Nodes for the discovery-type cluster transport (optional)
-  # Useful when running OpenSearch on cloud providers where EC2 metadata is not accessible.
-  opensearch-discovery1:
-    image: opensearch:8.4.3
-    container_name: opensearch-discovery
-    environment:
-      OPENSEARCH_JVM_OPTS: "-Xms512m -Xmx512m"
-      DISABLE_OPENSearch_REST_API: "true" # Set to 'false' to enable the REST API
-    networks:
-      - opensearch_network
-    volumes:
-      - ${OPENSEARCH_DATA:/docker/opensearch/data}
-
-# Nodes for the cluster transport (optional)
-  # Useful when running OpenSearch on cloud providers where EC2 metadata is not accessible.
-  # At least two instances are required for a multi-node cluster.
-  opensearch-transport1:
-    image: opensearch:8.4.3
-    container_name: opensearch-transport
-    environment:
-      OPENSEARCH_JVM_OPTS: "-Xms512m -Xmx512m"
-      DISABLE_OPENSearch_REST_API: "true" # Set to 'false' to enable the REST API
-    networks:
-      - opensearch_network
-    volumes:
-      - ${OPENSEARCH_DATA:/docker/opensearch/data}
-
-# Load Balancer for OpenSearch (optional)
-  # Useful when exposing OpenSearch to a public network or scaling.
-  loadbalancer:
-    image: openzipkin/istio-proxyv2:latest
-    container_name: opensearch-loadbalancer
-    networks:
-      - opensearch_network
-    ports:
-      - "9000-9100:9000-9100" # Configure the range of ports that the load balancer will listen on.
-
-networks:
-  opensearch_network:
-    driver: bridge
-
-# Optional volumes for data persistence (Uncomment and configure paths as needed)
-volumes:
-  opensearch-data:
-    driver: local
+1 version: '3.7'
+2 services:
+3   opensearch:
+4     image: docker.elastic.co/opensearch/opensearch-full:8.0.0
+5     container_name: opensearch
+6     ports:
+7       - "9200:9200"
+8       - "9300:9300"
+9     environment:
+10     OPENSEARCH_JVM_OPTS: "-Xms5gb -Xmx5gb"
+11     DISCOVER_SEED_HOSTS: "opensearch"
+12     network.host: 0
+13     ulimit -n: 65536
+14     resources:
+15       memory: 8g
+16   opensearch-dedicated-1:
+17     image: docker.elastic.co/opensearch/opensearch-dedicated-pipelines:8.0.0
+18     depends_on:
+19       - opensearch
+20     environment:
+21       OPENSEARCH_NODE_NAME: "opensearch-dedicated-1"
+22       OPENSEARCH_CLUSTER_NAME: "opensearch-cluster"
+23       OPENSEARCH_BOOTSTRAP_SERVERS: "opensearch:9300"
+24       OPENSEARCH_JVM_OPTS: "-Xms2g -Xmx2g"
+25     resources:
+26       memory: 4g
+26   opensearch-dedicated-2:
+27     image: docker.elastic.co/opensearch/opensearch-dedicated-pipelines:8.0.0
+28     depends_on:
+29       - opensearch
+30     environment:
+31       OPENSEARCH_NODE_NAME: "opensearch-dedicated-2"
+32       OPENSEARCH_CLUSTER_NAME: "opensearch-cluster"
+33       OPENSEARCH_BOOTSTRAP_SERVERS: "opensearch:9300"
+34       OPENSEARCH_JVM_OPTS: "-Xms2g -Xmx2g"
+35     resources:
+36       memory: 4g
+37   opensearch-dedicated-3:
+38     image: docker.elastic.co/opensearch/opensearch-dedicated-pipelines:8.0.0
+39     depends_on:
+40       - opensearch
+41     environment:
+42       OPENSEARCH_NODE_NAME: "opensearch-dedicated-3"
+43       OPENSEARCH_CLUSTER_NAME: "opensearch-cluster"
+44       OPENSEARCH_BOOTSTRAP_SERVERS: "opensearch:9300"
+45       OPENSEARCH_JVM_OPTS: "-Xms2g -Xmx2g"
+46     resources:
+47       memory: 4g
+48 # Optional configuration for OpenDistro for Elasticsearch (ODE) if you want to enable it.
+49 # opensearch-ode:
+50 #   image: docker.elastic.co/opensearch-plugin-euwest1.eledtric.docker.elastic.co/opendistro-for-opensearch/ode:8.0.0
+51 #   depends_on:
+52 #     - opensearch
+53 #   environment:
+54 #     OPENSEARCH_PLUGIN_TAG: "8.0.0"
+55 #   volumes:
+56 #     - ./opendistro-for-opensearch/conf:/usr/share/opendistro-for-opensearch/conf:ro
+57 #     - ./opendistro-for-opensearch/data:/usr/share/opendistro-for-opensearch/data
+58 #   environment:
+59 #     OPENSEARCH_CLUSTER_NAME: "opensearch-cluster"
+60 #     OPENSEARCH_BOOTSTRAP_SERVERS: "opensearch:9200"
+61 #     OPENSEARCH_JVM_OPTS: "-Xms2g -Xmx2g"
+62 #   resources:
+63 #     memory: 4g
+64 # Note: For a production setup, you should configure proper networking, security (SSL/TLS), and resource management.
+65# Note: You might want to configure log shipping or monitoring (Elastic Stack Ingest Pipelines) depending on your needs.

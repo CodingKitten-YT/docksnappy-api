@@ -1,61 +1,121 @@
 version: '3.8'
 
 services:
-  killbill_api:
-    image: killbill/killbill-core:latest
-    container_name: killbill_api
+  h2:
+    image: tutuid/h2:1.4.200
+    environment:
+      H2_BASE_DIR: /h2db
+      H2_ZOOKEEPER_PORT_ Packages: "5432"
+      H2_WEB_CONSOLE: true
+      JDBC_URL: jdbc:h2:mem:killbill;DB_CLOSE_DELAY=-1
     ports:
-      - "8080:8080" # HTTP API on host and container
-    depends_on:
-      - killbill_events
-      - killbill_cassandra
-      - killbill_h2
-    environment:
-      KILLBILL_API_LISTEN_ADDRESS: localhost:8080
-      KILLBILL_SECURITY_MODE: RBAC
-      JVM_OPTS: "-Xms2g -Xmx4g"
-      SERVICE_OVERRIDES: "api={},events={},account=localhost:18130,pluginregistry=localhost:18131,accountservice=localhost:18132,categoryservice=localhost:18133,paymentservice=localhost:18134,notificationservice=localhost:18135,callhome=localhost:18136"
-      KILLBILL_API_ADMIN_USERNAME: admin
-      KILLBILL_API_ADMIN_PASSWORD: password
-
-  killbill_events:
-    image: killbill/killbill-events:latest
-    container_name: killbill_events
-    depends_on:
-      - killbill_cassandra
-    environment:
-      KILLBILL_EVENTS_LISTEN_ADDRESS: localhost:7070
-      SERVICE_OVERRIDES: "api=localhost:8080,account=localhost:18130,pluginregistry=localhost:18131,accountservice=localhost:18132,categoryservice=localhost:18133"
-
-  killbill_cassandra:
-    image: cassandra:latest
-    container_name: killbill_cassandra
-    ports:
-      - "9042:9042" # For Cassandra CQLSH
-      - "9142:RPC"   # For Cassandra RPC (Internal)
-    environment:
-      CASSANDRA_CLUSTER_NAME: KillBillCluster
-      CASSANDRA_SEEDS: killbill_cassandra
-
-  killbill_h2:
-    image: h2database/h2:1.4.205
-    container_name: killbill_h2
-    ports:
-      - "8081:8081" # H2 Database Web Console
-    environment:
-      H2_CONSOLE_ENABLED: true
-      H2_CONSOLE_PATH: /h2-console
+      - "8082:8082" # H2 Web Console
     volumes:
-      - h2db:/h2
+      - h2db:/h2db
 
-  killbill_elasticsearch:
-    image: killbill/killbill-elasticsearch:latest
-    container_name: killbill_elasticsearch
-    ports:
-      - "9200:9200" # Elasticsearch HTTP interface on host and container
-      - "9300:9300" # Elasticsearch TCP port for cluster coordination
+  killbill-core:
+    image: killbill/killbill-core:9.0.2-ubuntu18
     environment:
-      ELASTIC_PASSWORD: change_me
+      KILLBILL_BASE_DIR: /var/lib/killbill/killbill
+      KILLBILL_MODE: PRODUCTION
+      JAVA_OPTS: -Xmx512m -Xms512m
+    depends_on:
+      - h2
+      - killbill-config
+      - postgres
+    ports:
+      - "8081:8080" # Kill Bill Core API
+
+  killbill-config:
+    image: killbill/killbill-config:9.0.2-ubuntu18
+    environment:
+      KILLBILL_BASE_DIR: /var/lib/killbill/configuration
+      KILLBILL_MODE: PRODUCTION
+    depends_on:
+      - h2
+    volumes:
+      - killbill-config-data:/var/lib/killbill/configuration
+
+  postgres:
+    image: postgres:13.1
+    environment:
+      POSTGRES_DB: killbill
+      POSTGRES_USER: killbill
+      POSTGRES_PASSWORD: killbill
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  karn:
+    image: killbill/killbill-karn:9.0.2-ubuntu18
+    environment:
+      KILLBILL_BASE_DIR: /var/lib/killbill/karn
+      KILLBILL_MODE: PRODUCTION
+    depends_on:
+      - killbill-core
+      - postgres
+    ports:
+      - "8083:8083" # Kill Bill Karn UI
+
+  account-service:
+    image: killbill/killbill-account:9.0.2-ubuntu18
+    environment:
+      KILLBILL_BASE_DIR: /var/lib/killbill/account
+      KILLBILL_MODE: PRODUCTION
+      ACCESS_TOKEN_SECRET: secret
+    depends_on:
+      - killbill-core
+    ports:
+      - "8084:8084" # Account Service API
+
+  catalog-service:
+    image: killbill/killbill-catalog:9.0.2-ubuntu18
+    environment:
+      KILLBILL_BASE_DIR: /var/lib/killbill/catalog
+      KILLBILL_MODE: PRODUCTION
+    depends_on:
+      - killbill-core
+    ports:
+      - "8085:8085" # Catalog Service API
+
+  tenant-api:
+    image: killbill/killbill-tenant-api:9.0.2-ubuntu18
+    environment:
+      KILLBILL_BASE_DIR: /var/lib/killbill/tenant
+      KILLBILL_MODE: PRODUCTION
+      TENANT_API__ACCESS_TOKEN_SECRET: secret
+    depends_on:
+      - killbill-core
+      - killbill-config
+      - account-service
+      - catalog-service
+    ports:
+      - "8086:8086" # Tenant API
+
+  papi:
+    image: killbill/killbill-papi:9.0.2-ubuntu18
+    environment:
+      KILLBILL_BASE_DIR: /var/lib/killbill/papi
+      KILLBILL_MODE: PRODUCTION
+    depends_on:
+      - killbill-core
+    ports:
+      - "8087:8087" # Payment API
 
 volumes:
   h2db:
+    driver_opts:
+      type: "bind"
+      device: "/tmp/h2db"
+      oid: 1
+
+  killbill-config-data:
+    driver_opts:
+      type: "bind"
+      device: "/tmp/killbill-config-data"
+      oid: 1
+
+  postgres-data:
+    driver_opts:
+      type: "bind"
+      device: "/tmp/postgres-data"
+      oid: 1

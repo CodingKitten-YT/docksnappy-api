@@ -1,23 +1,26 @@
 version: '3.8'
 
 services:
-  adguard-home:
-    image: 'adguard/adguard-home:latest'
+  adguardhome:
+    image: 'adg/adguardhome:latest' # use a specific tag if needed
     container_name: adguard-home
     ports:
-      - "8080:8080" # HTTP web interface
-      - "3000:3000" # Admin API (change adminapi_port in AdGuard Home settings if needed)
-      - "5182:5182" # DNS port (optional, only if you want to use AdGuard Home as your DNS server)
+      - "8080:8123" # AdGuard Home web UI on host port 8080 (HTTP) and 3000 (HTTPS)
+      - "5180:5180"  # Management API (for DNS adblocking)
     volumes:
-      - "./AdGuardHome/config.yaml:/etc/adguard/config.yaml"
-      - "./AdGuardHome/logs:/var/log/adguard-home"
-      - "./AdGuardHome/storage:/var/lib/adguard-home"
+      - "./AdGuardHome/:/etc/adguardhome/" # Configuration files, use relative paths from the directory containing docker-compose.yml
+      - "./adguard.yaml:/etc/adguardhome/adguard.yaml" # AdGuard Home configuration file
     environment:
-      TZ: "Europe/Moscow" # Replace with your timezone, e.g., "America/New_York"
-    restart: 'unless-stopped'
-    networks:
-      - adguard-network
+      AGH_LOGLEVEL: "info" # Set the desired log level (debug, info, warn, error)
+      TZ: "Europe/Moscow" # Set your timezone accordingly
+    restart: unless-stopped # Automatically restart on failure
 
 networks:
-  adguard-network:
+  adguard_home_net:
     driver: bridge
+
+# Optional: If you want to use a custom DNS server, uncomment and update the following lines:
+# networks:
+#   adguard_home_net:
+#     external:
+#       name: user-defined-dns-network

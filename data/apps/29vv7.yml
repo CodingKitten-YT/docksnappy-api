@@ -2,76 +2,52 @@ version: '3.8'
 
 services:
   jellyfin:
-    image: jellyfin/jellyfin-docker-regular:latest  # or use jellyfin/jellyfin-docker if you want the full set of plugins and addons
+    image: linuxserver/jellyfin:latest
     container_name: jellyfin
     ports:
-      - "8090:8090"  # Web interface
-      - "8091:8091"  # Server (for remote access)
-      - "8092:8092"  # Transcoder (optional, if you want to enable transcoding on the host)
-    environment:
-      TZ: "Europe/London"  # Set your timezone, e.g., "America/New_York"
-      JULLYFIN_WEB_UI_CORS: "*"  # Allows CORS for web UI, remove asterisk to restrict sources
+      - "8090:8090" # HTTP
+      - "8091:8091" # WebUI (HTTPS) with certificate-support container
     volumes:
-      - jellyfin-data:/data  # User data like media files, configurations, etc.
-      - jellyfin-config:/config  # Configuration files and plugins, if any
+      - "/path/to/your/data:/data" # Replace with the path to your data volume
+      - "/path/to/your/config:/config" # Replace with the path to your configuration volume
+      - "/path/to/your/media:/media" # Replace with the path to your media volume
+    environment:
+      - TZ=Your/Timezone # Example: "America/New_York"
+      - PUID=1000
+      - PGUID=1000
+      - TAUTOMOUNT=1
+      - INSTALL_MYSQL=0
+      - EMBEDDED_DB=true # Use this if you want to use the built-in SQLite db
     restart: unless-stopped
     networks:
-      - jellyfin_network
-
-  jellyfin-sqlite:
-    image: jellyfin/jellyfin-docker-regular:latest
-    container_name: jellyfin_sqlite
-    volumes:
-      - jellyfin-data:/data  # Use this service if you want to use SQLite instead of a persistent database
-    environment:
-      JULLYFIN_DEFAULT_DATABASE: "SQLite"
-      TZ: "Europe/London"
-    restart: unless-stopped
-    networks:
-      - jellyfin_network
+      - jellyfin_net
 
   database:
     image: postgres:13
-    container_name: jellyfin_database
+    container_name: jellyfin_db
     volumes:
-      - jellyfin-dbdata:/var/lib/postgresql/data:rw  # Persistent database storage
+      - "/path/to/your/db_data:/var/lib/postgresql" # Replace with the path to your database data volume
     environment:
-      POSTGRES_USER: "jellyfin"
-      POSTGRES_PASSWORD: "jellyfinc0mplexyz"  # You should change this to a strong password
-      POSTGRES_DB: "jellyfin"
+      - DB_USER=jellyfin
+      - DB_PASSWORD=jellyfin_password # Change this to a strong password
+      - DB_NAME=jellyfin
     restart: unless-stopped
     networks:
-      - jellyfin_network
+      - jellyfin_net
 
-# Optional services (you can add more as needed, like Nginx reverse proxy, etc.)
-  nginx-proxy:
-    image: jpillora/nginx-proxy:alpine
-    container_name: nginx_proxy
-    ports:
-      - "80:80"  # Expose HTTP port to route external traffic
-      - "443:443"  # Expose HTTPS port (requires Let's Encrypt, Certbot, etc.)
+  monitor:
+    image: linuxserver/monitoring_elk:latest
+    container_name: jellyfin_monitor
     volumes:
-      - ./letsencrypt:/etc/letsencrypt  # Optional Let's Encrypt data directory
-      - nginx-proxy_data:/data  # Data for Nginx Proxy Controller
-    networks:
-      - jellyfin_network
+      - "/path/to/your/log:/var/log/jellyfin" # Replace with the path to your log volume
+    environment:
+      - LOGSTASH_PASSWORD=logstash_password # Change this to a strong password
+      - ELASTICSEARCH_USERNAME=admin
+      - ELASTICSEARCH_PASSWORD=search_password # Change this to a strong password
     depends_on:
       - jellyfin
-
-  letsencrypt:
-    image: certbot/certbot:latest
-    container_name: letsencrypt
-    volumes:
-      - ./letsencrypt:/etc/letsencrypt
     networks:
-      - jellyfin_network
+      - jellyfin_net
 
 networks:
-  jellyfin_network:
-    driver: bridge
-
-volumes:
-  jellyfin-data:
-  jellyfin-config:
-  jellyfin-dbdata:
-  nginx-proxy_data:
+  jellyfin_net:

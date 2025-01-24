@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  puter_web:
+    image: puter/web:latest
+    ports:
+      - "8080:80" # Expose web interface on host port 8080
+    environment:
+      - PUTER_API_HOST=puter_api
+      - PUTER_BACKEND_PATH=/path/to/backend/files
+    volumes:
+      - ./data:/data # Mount local data directory to the container for data persistence
+      - ./frontend:/app/src/main/resources/static # Mount local frontend code into the container
+      - ./backend:/path/to/backend/files # Mount local backend files into the container (if not using a Docker volume for backend)
+    depends_on:
+      - puter_api
+
+  puter_api:
+    image: puter/api:latest
+    ports:
+      - "8081:80" # Expose API on host port 8081
+    volumes:
+      - ./api:/app/src/main/kotlin # Mount local API code into the container
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=puter
+      - POSTGRES_PASSWORD=puter_password
+      - POSTGREES_DB=puterdb
+    volumes:
+      - puter_db:/var/lib/postgresql # Use a named volume for data persistence
+
+volumes:
+  puter_db:

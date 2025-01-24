@@ -1,82 +1,71 @@
 version: '3.8'
 
 services:
-  liteshop:
-    image: litecart/litecart:latest # You can also specify a specific version like litecart/litecart:15.9 if you want a stable release
+  litecart:
+    image: 'litemage/litecart:latest' # Use the official LiteCart Docker image
     ports:
-      - "80:80"
-      - "443:443"
-      - "21:21" # FTP port, if used by LiteCart
-      - "22:22" # SSH port, for maintenance and management (optional)
+      - "80:80" # Map HTTP port 80 on host to container
+      - "443:443" # Map HTTPS port 443 on host to container (optional, if you want to use SSL)
     volumes:
-      - liteshop-data:/var/www/html
-      - liteshop-logs:/var/log/liteshop
-    restart: unless-stopped
-    environment:
-      LC_USE_SSL.1: "1" # Enable SSL (HTTPS)
+      - ./litecart/conf:/var/www/htdocs/config
+      - ./litecart/logs:/var/log/litecart
+      - ./litecart/cache:/var/cache/litecart
+      - ./litecart/var:/var/www/htdocs/var
+      - ./litecart/ssl:/var/www/htdocs/apps/secure.shop/data/ssl # (optional, if you want to use SSL)
     depends_on:
-      - php
       - mysql
-      - redis
-
-  php:
-    image: litecart/litecart-php:latest # You can also specify a specific version like litecart/litecart-php:15.9
-    volumes:
-      - liteshop-data:/var/www/html
-    restart: unless-stopped
-    environment:
-      JAVA_HOME: /usr/bin/java # Use this only if you need to specify JAVA_HOME, otherwise it's set automatically by the image
+    networks:
+      default:
+        alias: litecart
 
   mysql:
-    image: mariadb:10.5
-    command: --transaction-isolation=READ-COMMITTED
+    image: 'mysql:5.7'
     volumes:
-      - liteshop-db:/var/lib/mysql
+      - litecart_dbdata:/var/lib/mysql
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword # Replace 'rootpassword' with your actual password
-      MYSQL_DATA: /var/lib/mysql
-      MYSQL_USER: lcuser
-      MYSQL_PASSWORD: lcpasswd # Replace 'lcpasswd' with your actual password
-      MYSQL_DATABASE: liteshop
-    restart: unless-stopped
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: litecart
+      MYSQL_USER: litecartuser
+      MYSQL_PASSWORD: litecartpassword
+    networks:
+      default:
+        alias: database
 
-  redis:
-    image: redis:6.0-alpine
+  php-fpm:
+    image: 'litemage/litecart-php74-fpm:latest' # Use the official PHP FPM Docker image for LiteCart
     volumes:
-      - liteshop-redis:/data
-    healthcheck:
-      test: ["CMD", "REDIS-CLI", "PING"]
-      timeout: 5s
-      retries: 10
-    restart: unless-stopped
+      - ./litecart/conf:/var/www/htdocs/config
+      - ./litecart/logs:/var/log/litecart
+      - ./litecart/cache:/var/cache/litecart
+      - ./litecart/var:/var/www/htdocs/var
+      - ./litecart/web:/var/www/htdocs/apps/code/upload # (optional, if you want to map the web directory)
+    depends_on:
+      - litecart
+      - mysql
+    networks:
+      default:
+        alias: php-fpm
 
   nginx-proxy:
-    image: 'nginxproxy/nginx-proxy:alpine'
-    depends_on:
-      - liteshop
-      - php
+    image: 'jwilder/nginx-proxy':latest
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - liteshop-data:/usr/share/nginx/html
-      - nginx-conf.d:/etc/nginx/conf.d
-      - letssl-data:/etc/letsencrypt
-    restart: unless-stopped
-
-  lettuce:
-    image: letsencrypt/lettuce:latest
-    volumes:
-      - liteshop-db:/var/lib/mysql
-      - letssl-data:/etc/letsencrypt
+      - ./litecart/nginx/conf.d:/etc/nginx/conf.d
+      - ./litecart/nginx/certs:/etc/nginx/ssl
+      - ./litecart/nginx/data:/var/lib/nginx-proxy
     depends_on:
-      - mysql
-    restart: unless-stopped
+      - litecart
+      - php-fpm
+    networks:
+      default:
+        alias: nginx-proxy
+
+networks:
+  default:
+    external: true
 
 volumes:
-  liteshop-data:
-  liteshop-logs:
-  liteshop-db:
-  liteshop-redis:
-  nginx-conf.d:
-  letssl-data:
+  litecart_dbdata:
+    driver: local

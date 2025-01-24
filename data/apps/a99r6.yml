@@ -1,40 +1,53 @@
-version: '3.8'
-services:
-  akkoma_app:
-    image: akkoma/akkoma-app:latest
-    ports:
-      - "8080:8080" # HTTP API port
-    environment:
-      - AKKOMA__POSTRHUB_API_KEY=your_api_key # Posthub API key
-      - AKKOMA__DB_HOST=db  # Database service name
-      - AKKOMA__DB_USERNAME=db_user  # Database username
-      - AKKOMA__DB_PASSWORD=db_password  # Database password
-      - AKKOMA__DB_NAME=akkoma_db  # Database name
-      - AKKOMA__RABBITMQ_HOST=rabbitmq  # RabbitMQ service name
-      - AKKOMA__RABBITMQ_USERNAME=user  # RabbitMQ username
-      - AKKOMA__RABBITMQ_PASSWORD=password  # RabbitMQ password
-    depends_on:
-      - db
-      - rabbitmq
-    command: --dbhost={DB_HOST} start
+version: '3.7'
 
-  akkoma_db:
+services:
+  akkoma-rabbitmq:
+    image: rabbitmq:3.8-management
+    ports:
+      - "15672:5672" # RabbitMQ server port
+      - "15673:5672" # RabbitMQ management UI port
+    environment:
+      RABBITMQ_DEFAULT_USER: akkoma
+      RABBITMQ_DEFAULT_PASS: password
+      RABBITMQ_USER: user
+      RABBITMQ_PASS: pass
+      RABBITMQ_VHOST: /akkoma
+
+  akkoma-redis:
+    image: redis:6
+
+  akkoma-postgresql:
     image: postgres:13
     environment:
-      POSTGRES_USER: db_user
-      POSTGRES_PASSWORD: db_password
-      POSTGRES_DB: akkoma_db
+      POSTGRES_DB: akkoma
+      POSTGRES_USER: akkoma
+      POSTGRES_PASSWORD: password
     volumes:
-      - akkoma-db-data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
 
-  rabbitmq:
-    image: rabbitmq:3.8-management
+  akkoma-cluster:
+    image: akkoma/akkoma-actor
     environment:
-      RABBITMQ_USER: user
-      RABBITMQ_PASSWORD: password
-    volumes:
-      - rabbitmq-data:/var/lib/rabbitmq
+      AKKOMA_CLUSTER_NODES: 3
+      AKKOMA_AKKA_HOME: /tmp/akka
+      AKKOMA_LOGGER_OPTS: "-Dorg.jboss.logging.level.com.typesafe.config=DEBUG"
+      AKKOMA_EVENT_STORE_TYPE: postgresql
+      AKKOMA_EVENT_STORE_DATABASE_URL: jdbc:postgresql://akkoma-postgresql:5432/akkoma
+      AKKOMA_EVENT_STORE_USERNAME: akkoma
+      AKKOMA_EVENT_STORE_PASSWORD: password
+      AKKOMA_EVENT_STORE_SCHEMA_OBJECTS_UPDATE: true
+      AKKOMA_MESSAGE_BROKER_URI: amqp://akkoma-rabbitmq:5672/akkoma
+      AKKOMA_SHARDING_SPAN_FACTOR: 1
+      AKKOMA_CLUSTER_NODES: 3
+    depends_on:
+      - akkoma-postgresql
+      - akkoma-rabbitmq
+      - akkoma-redis
+    networks:
+      - akkoma_network
 
 volumes:
-  akkoma-db-data:
-  rabbitmq-data:
+  postgres_data:
+
+networks:
+  akkoma_network:

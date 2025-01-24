@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  picsur:
+    image: picsur/picsur-full:latest  # Use the full image which includes both server and client.
+    container_name: picsur
+    ports:
+      - "80:80"  # Expose Picsur on port 80 of the host for HTTP access.
+    volumes:
+      - ./picsur-data:/data  # Mount a volume to persist uploaded files and thumbnails.
+      - ./picsur-config:/etc/picsur  # Mount a volume for custom configuration files.
+    environment:
+      - TZ=Europe/London  # Set the timezone if needed (replace with your timezone).
+    depends_on:
+      - picsur-db
+    restart: unless-stopped  # Restart the container unless it has been manually stopped.
+
+  picsur-db:
+    image: postgres:13  # Use PostgreSQL version 13 as the database server.
+    container_name: picsur-db
+    volumes:
+      - ./picsur-data/db:/var/lib/postgresql/data  # Mount a volume for persistent database storage.
+    environment:
+      - POSTGRES_DB=picsur  # Database name.
+      - POSTGRES_USER=picsur  # Database user.
+      - POSTGRES_PASSWORD=changeit  # Database password (change it to your choice).
+    restart: unless-stopped  # Restart the container unless it has been manually stopped.
+
+  redis:
+    image: redis:6-alpine  # Use Redis version 6 in an Alpine-based image for caching.
+    container_name: redis
+    volumes:
+      - ./picsur-data/redis:/data  # Mount a volume for persistent Redis data.
+    restart: unless-stopped  # Restart the container unless it has been manually stopped.
+
+networks:
+  default:
+    driver: bridge

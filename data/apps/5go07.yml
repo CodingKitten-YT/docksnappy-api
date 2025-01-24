@@ -1,31 +1,42 @@
-version: '3.8'
+version: '3.7'
 
 services:
-  web:
-    image: habitrpg/habitica:latest
+  habitica:
+    image: 'habitica/game-server'
+    command: server --dev --debug
+    container_name: habitica_game_server
     ports:
-      - "8080:80" # HTTP port, can be changed if you prefer a different host port
-    environment:
-      - TZ=Your/Timezone
-      - DEBUG=True # Set to True for debugging, False otherwise
-    depends_on:
-      - db
+      - "8085:8080" # Game Server
+      - "3000:3000"  # WebSocket (optional, needed if you have clients connected via websockets)
     volumes:
-      - "./habitica/:/data" # Mount for persisting data on the host
-
-  db:
-    image: postgres:12
+      - './configs/game:/code/game'
+      - './data/habitica:/code/storage/habitica'
+      - './data/logs:/code/storage/log'
     environment:
-      - POSTGRES_DB=habitica
-      - POSTGRES_USER=habitica
-      - POSTGRES_PASSWORD=change_this_password # Change this password!
+      - TZ=Your/Timezone # Set your timezone, e.g., "Europe/London" or "America/New_York"
+      - SERVICE_BIND=0.0.0.0 # To allow connections from outside the docker network
+      - SERVER_NAME=HabiticaServer # Server name for players to connect
+      - ENABLE_ADVENTURES=true # Whether to enable adventures (dungeons)
+      - DB_TYPE=postgresql # Database type, use 'sqlite3' for a single player game
+      - POSTGRES_HOST=postgres # If using a separate postgres service
+      - POSTGRES_USER=habitica # If using a separate postgres service
+      - POSTGRES_PASSWORD=secret # If using a separate postgres service
+      - POSTGRES_DB=habitica # If using a separate postgres service
+    networks:
+      - habitica_network
+
+  postgres:
+    image: 'postgres:13'
+    container_name: habitica_db
     volumes:
-      - habitica-db:/var/lib/postgresql/data # Named volume for persisting database data
+      - './data/postgres:/var/lib/postgresql/data'
+    environment:
+      POSTGRES_USER: habitica
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: habitica
+    networks:
+      - habitica_network
 
-  redis:
-    image: redis:6
-    ports:
-      - "6379:6379" # Redis port, can be changed if you prefer a different host port
-
-volumes:
-  habitica-db:
+networks:
+  habitica_network:
+    driver: bridge

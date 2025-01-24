@@ -2,40 +2,40 @@ version: '3.8'
 
 services:
   fluidd:
-    image: fluidd/fluidd:latest
+    image: fluidd/fluidd:latest # Use the official Fluidd image from Docker Hub
     container_name: fluidd
     ports:
-      - "6666:6666" # Fluidd's default RPC port (host:guest)
+      - "6061:6061" # HTTP API
+      - "6062:6062" # WebUI (optional, if you want to access it from the host)
     volumes:
-      - "${HOME}/.fluidd:/data"
-      - "/var/run/docker.sock:/var/run/docker.sock" # Required for Docker API client
+      - "./fluidd.db:/data/fluidd.db" # Persist the Fluidd database
+      - "./config:/config" # Persist the Fluidd configuration directory
+      - "./plugins:/plugins" # Persist user plugins if you want to use them
     environment:
-      - FLUIDD_ALLOW_NONE=true # Allow connections without authentication (not recommended for production)
-      - TZ="Europe/London" # Set your timezone, e.g., America/New_York for US Eastern Time
-    restart: unless-stopped
-    command: --rpc.address 0.0.0.0 --rpc.http.addr 127.0.0.1 --log.level DEBUG
-
-  redis:
-    image: redis:6-alpine
-    volumes:
-      - "redis-data:/data"
-    environment:
-      - REDIS_PORT=6379
-    command: --appendonly yes
+      FLUIDD_API_VK_LISTEN: "all" # Listen for API calls from all interfaces
+      FLUIDD_API_HTTP_LISTEN: "0.0.0.0:6061" # HTTP API listen address (optional, if you want to change it)
+      FLUIDD_WEB_UI_LISTEN: "0.0.0.0:6062" # Web UI listen address (optional, if you want to change it)
+      TZ: "Europe/London" # Set the timezone (change to your preferred timezone)
+    restart: unless-stopped # Restart the service unless it's been explicitly stopped
 
   postgres:
-    image: postgres:13
-    volumes:
-      - "postgres-data:/var/lib/postgresql/data"
+    image: postgres:latest # Use the official PostgreSQL image from Docker Hub
     environment:
-      - POSTGRES_DB=fluiddb
-      - POSTGRES_USER=fluidd
-      - POSTGRES_PASSWORD=fluiddpass
+      POSTGRES_USER: fluidd
+      POSTGRES_PASSWORD: fluiddpasswd
+      POSTGRES_DB: fluidd
+    volumes:
+      - "./fluidd.db:/var/lib/postgresql/data/fluidd.db" # Persist the PostgreSQL database (optional, if you want to use a persistent volume for the DB)
+    environment:
+      POSTGRES_DB: fluidd
+      POSTGRES_USER: fluidd
+      POSTGRES_PASSWORD: fluiddpasswd
 
-volumes:
-  redis-data:
-  postgres-data:
+  redis:
+    image: redis:latest # Use the official Redis image from Docker Hub
+    volumes:
+      - "./redis.conf:/etc/redis/redis.conf" # Persist Redis configuration (optional, if you want to customize it)
 
 networks:
-  fluidd_overseer_net:
+  fluidd_net:
     driver: bridge

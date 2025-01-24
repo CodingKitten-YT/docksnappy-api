@@ -1,23 +1,30 @@
 version: '3.8'
+
 services:
   meilisearch:
     image: meilisearch/meilisearch:latest
     container_name: meilisearch
     ports:
-      - "7701:7701" # HTTP API
-      - "7543:7543" # Dashboard
-    command: /run.sh dockerized
+      - "7701:7701" # HTTP API port
+      - "7702:7702" # Dashboard port
+    command: >
+      sh -c
+      "trap exit TERM;
+      while :; do
+        MeiliSearch create --config.plugins='graph_dashboard,search' || true;
+        sleep 1;
+      done;"
     volumes:
-      - ./data:/data
-      - ./logs:/log
+      - "./data:/app/data" # Persist data by mounting a volume or bind it to a specific path on the host machine
     environment:
-      MEILISEARCH_HOST: '0'
-      MEILISEARCH_PORT: '7701'
+      MEILISEARCH_HOST: "0.0.0.0"
+      MEILISEARCH_PORT: "7701"
+      SERVICE_ENVIRONMENT: "production" # Optional, can be set to "development" if you want a different setup
     resources:
       limits:
-        memory: 2G
-      reservations:
         memory: 512M
+      reservations:
+        memory: 256M
     networks:
       - meilinet
 

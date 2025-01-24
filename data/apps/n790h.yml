@@ -1,52 +1,21 @@
-version: '3'
+version: '3.8'
+
 services:
   handbrake-web:
-    image: handbrake/handbrake-cli:latest
-    container_name: handbrake-web
+    image: handbrake/handbrake-web:latest  # Use the official HandBrake Web image
     ports:
-      - "5000:5000" # HandBrake Web default port for the API
+      - "8080:80"  # Map HTTP port 80 to port 80 on the container for web access
     volumes:
-      - ./handbrake-web:/code # Bind your local handbrake-web directory to the app code in the container
-      - ./handbrake-web/data:/data     # Bind a volume for HandBrake to store its tasks and logs
-      - ./handbrake-web/config.json:/code/config.json # Bind your local config.json to the container (if you have one)
+      - "./upload:/usr/src/app/upload"  # Mount a local directory for file uploads (adjust the path as needed)
+      - "./handbrake.json:/usr/src/app/handbrake.json:ro"  # Optionally mount a custom handbrake.json configuration file (read-only)
     environment:
-      - TZ=Europe/London  # Set the Timezone (change to your timezone)
-      - PG_HOST=db       # PostgreSQL hostname inside the network
-      - PG_DB=handbrake   # Database name for HandBrake Web
-      - PG_USER=user       # Database user for HandBrake Web
-      - PG_PASSWORD=pass    # Database password for HandBrake Web
-    depends_on:
-      - db
-    networks:
-      - handbrake-network
+      - TZ="Europe/London"  # Set the timezone (change to your desired timezone)
+    restart: unless-stopped  # Ensure the container restarts on failure
 
-  postgres:
-    image: postgres:latest
-    container_name: db
+  redis:
+    image: redis:6-alpine  # Redis cache for HandBrake Web tasks
     volumes:
-      - postgres-data:/var/lib/postgresql/data # Bind a volume for PostgreSQL data persistence
-    environment:
-      - POSTGRES_DB=handbrake   # Database name
-      - POSTGRES_USER=user       # Database user
-      - POSTGRES_PASSWORD=pass    # Database password
-    networks:
-      - handbrake-network
-
-  nginx:
-    image: nginx:latest
-    container_name: nginx
-    ports:
-      - "80:80"        # Serve HandBrake Web on port 80
-      - "443:443"       # (Optional) If you want to use HTTPS, map port 443 as well
-    volumes:
-      - ./handbrake-web/nginx.conf:/etc/nginx/conf.d/default.conf  # Bind your local nginx.conf (if custom)
-    depends_on:
-      - handbrake-web
-    networks:
-      - handbrake-network
+      - redistoragedata:redisdata  # Persist Redis data (optional, recommended for production)
 
 volumes:
-  postgres-data:
-
-networks:
-  handbrake-network:
+  redistoragedata:

@@ -1,39 +1,35 @@
 version: '3.8'
+
 services:
   app:
-    image: exbin/exbin:latest # Use the official ExBin image from Docker Hub
+    image: exbin/exbin:latest # Use the official or specific tag as needed
     ports:
-      - "8080:8080" # Expose ExBin web interface on port 8080 of the host
-    volumes:
-      - "./logs:/var/log/exbin" # Optionally, map a local directory for logs
-      - "./data:/var/lib/exbin" # Optionally, map a local directory for data persistence
+      - "8080:8080" # Expose the port ExBin runs on if it's not meant to be accessed internally only
     environment:
-      - TZ="Europe/London" # Set the timezone if needed (e.g., "America/New_York")
-      - JAVA_OPTS="-Xms512m -Xmx1024m" # Set Java heap size
-      - DB_HOST=db # The name of the database service defined below
-      - DB_USER=root # Database user
-      - DB_PASSWORD=password # Database password
-      - DB_DATABASE=exbin # Database name for ExBin
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/google-credentials.json # If using Google services
+      # Add other necessary environment variables for your configuration
+    volumes:
+      - ./exbin:/app # Mount the current directory to the container's working directory
+      - typeform-data:/typeform-data # A named volume for Typeform data uploads, if needed
     depends_on:
       - db
+    networks:
+      - exbin-network
 
   db:
-    image: mysql:5.7 # Use a MySQL image as the database server
-    environment:
-      MYSQL_ROOT_PASSWORD: password # Set the root password for MySQL
-      MYSQL_DATABASE: exbin # Create the ExBin database upon container start
-      MYSQL_USER: user
-      MYSQL_PASSWORD: userpassword
+    image: postgres:latest # Use the official PostgreSQL image or a specific tag
     volumes:
-      - "./db_data:/var/lib/mysql" # Optionally, map a local directory for database data persistence
+      - postgres-data:/var/lib/postgresql/data # Persist database data
     environment:
-      MYSQL_RANDOM_ROOT_PASSWORD: "1" # Generate a random root password on the first run
+      - POSTGRES_DB=exbin # The name of the default database
+      - POSTGRES_USER=exbin # The default PostgreSQL username
+      - POSTGRES_PASSWORD=password # The default PostgreSQL password
+    networks:
+      - exbin-network
 
-  redis:
-    image: redis:6.0-alpine # Use Redis as the cache server
-    volumes:
-      - "./redis_data:/data" # Optionally, map a local directory for Redis data persistence
+volumes:
+  typeform-data:
+  postgres-data:
 
 networks:
-  exbin_net:
-    driver: bridge
+  exbin-network:

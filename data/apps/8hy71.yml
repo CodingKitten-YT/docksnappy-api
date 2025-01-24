@@ -1,82 +1,35 @@
 version: '3.8'
 
 services:
-  # PostgreSQL database service
-  db:
-    image: postgres:12
-    command: 'postgres -c "listen_addresses = '*'"'
-    volumes:
-      - ./dbdata:/var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: changedetection
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: changeit
+  web:
+    image: changedetectionio/changedetection.io:latest
+    container_name: changedetection.io
     ports:
-      - "5432:5432"
+      - "5000:5000" # Expose the flask app on port 5000
+    environment:
+      - APIKEY="your_api_key_here" # Set your API key as an environment variable for authentication
+    volumes:
+      - "./data:/root/.config/changedetection.io" # Mount a volume to persist detections and settings
+    restart: unless-stopped
 
-  # Redis cache service (optional, but recommended for performance)
+  db:
+    image: postgres:13
+    container_name: changedetection_db
+    volumes:
+      - "./db:/var/lib/postgresql/data" # Mount a volume to persist the database data
+    environment:
+      POSTGRES_USER: "changedetection"
+      POSTGRES_PASSWORD: "your_password_here"
+      POSTGRES_DB: "changedetection"
+    restart: unless-stopped
+
   redis:
     image: redis:6-alpine
-    command: redis-server --appendonly yes
+    container_name: changedetection_redis
     volumes:
-      - ./redisdata:/data
-    ports:
-      - "6379:6379"
-
-  # Web application service
-  web:
-    image: changedetection/changedetection.io:latest
-    depends_on:
-      - db
-      # Uncomment the following line if you want to use Redis for caching
-      #depends_on:
-      #  - redis
-    ports:
-      - "8000:8000"
-    environment:
-      DATABASE_URL: postgres://admin:changeit@db/changedetection
-      REDIS_URL: redis://redis:6379
-      SECRET_KEY: changeit
-      # Optional environment variables for additional configurations
-      # ALLOWED_HOSTS=localhost,127.0.0.1,[::1]
-      # DEBUG=True
-      # EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
-      # EMAIL_HOST=smtp.example.com
-      # EMAIL_PORT=587
-      # EMAIL_USE_TLS=True
-      # DEFAULT_FROM_EMAIL=your-email@example.com
-
-  # Celery worker service for scheduled tasks and periodic workflows
-  celery:
-    image: changedetection/changedetection.io:latest
-    depends_on:
-      - db
-    command: celery -A changedetection worker --loglevel=info
-    environment:
-      DATABASE_URL: postgres://admin:changeit@db/changedetection
-      REDIS_URL: redis://redis:6379
-      CELERY_RESULT_BACKEND: database
-      SECRET_KEY: changeit
-    ports:
-      - "8001:8001"
-
-  # Celery Beat service for scheduling tasks in Celery
-  celery_beat:
-    image: changedetection/changedetection.io:latest
-    depends_on:
-      - db
-    command: celery -A changedetection beat --loglevel=info
-    environment:
-      DATABASE_URL: postgres://admin:changeit@db/changedetection
-      REDIS_URL: redis://redis:6379
-      SECRET_KEY: changeit
-    ports:
-      - "8002:8002"
-
-volumes:
-  dbdata:
-  redisdata:
+      - "./redis:/data" # Mount a volume to persist Redis data
+    restart: unless-stopped
 
 networks:
   default:
-    driver: bridge
+    name: gd_default

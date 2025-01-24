@@ -1,47 +1,39 @@
 version: '3.8'
 
 services:
-  algernon-web:
+  algernon_web:
     image: algernon/algernon-web:latest
     ports:
-      - "80:80" # Expose the web app on port 80 of the host
-    depends_on:
-      - algernon-db
-      - algernon-redis
+      - "5000:5000"
     environment:
-      DATABASE_URL: "postgres://algernon-db:5432"
-      REDIS_URL: "redis://algernon-redis:6379"
-      SECRET_KEY: 'your_secret_key' # Replace with your actual secret key
-    volumes:
-      - .:/code # Bind the current directory to the container for code changes
-      - algernon-web-data:/data/db # Persistent storage for the web app data
-      - algernon-web-redis:/data/redis # Persistent storage for Redis data (if needed)
+      - SERVICE_ENV=development
+    depends_on:
+      - algernon_database
 
-  algernon-db:
+  algernon_api:
+    image: algernon/algernon-api:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - SERVICE_ENV=development
+      - DATABASE_URL=postgres://algernon_user:algernon_password@algernon_database:5432/algernon_dbname
+    depends_on:
+      - algernon_database
+
+  algernon_database:
     image: postgres:13
     volumes:
-      - algernon-db-data:/var/lib/postgresql/data # Persistent storage for the database data
+      - ./data/postgres-init.sql:/docker-entrypoint-initdb.d/postgres-init.sql
     environment:
-      POSTGRES_DB: algernon # Database name
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password # Replace with your actual password
+      - POSTGRES_USER=algernon_user
+      - POSTGRES_PASSWORD=algernon_password
+      - POSTGRES_DB=algernon_dbname
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user"]
-      interval: 10s
-      timeout: 5s
+      test: ["CMD-SHELL", "pg_isready -U algernon_user"]
+      timeout: 10s
       retries: 5
 
-  algernon-redis:
-    image: redis:6
-    volumes:
-      - algernon-redis-data:/data # Persistent storage for Redis data (if needed)
-
+# Optional volume for data persistence
 volumes:
-  algernon-web-data:
-  algernon-db-data:
-  algernon-web-redis:
-  algernon-redis-data:
-
-networks:
-  default:
-    driver: bridge
+  algernon_data:
+    driver: local

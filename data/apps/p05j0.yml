@@ -1,54 +1,26 @@
-version: '3'
+version: '3.7'
 
 services:
   appwrite:
-    image: appwrite/echo
-    container_name: appwrite
+    image: appwrite/ecksbot
+      version: '2.5.4' # Use the latest version or the specific one you need
     ports:
-      - "8080:8080" # Admin Interface (Echo UI)
-      - "9000:9000" # Realtime Subscriptions
-      - "80:80"     # HTTP API (Configurable via environment variable APPWRITE_HTTP_PORT)
-    volumes:
-      - "./appwrite-config:/appwrite/config"
-      - "./appwrite-data:/appwrite/data"
+      - "80/tcp" # HTTP endpoint
+      - "3000/tcp" # Appsync endpoint (optional, if you want to use Appwrite with a UI like Appwrite Console)
     environment:
-      - APPWRITE_CLUSTER=true
-      - APPWRITE_REDIS_HOST=redis
-      - APPWRITE_DB_ENDPOINT=postgres
-      - APPWRITE_DB_USERNAME=appwrite
-      - APPWRITE_DB_PASSWORD=appwrite
-      # Optionally, you can set the HTTP_PORT environment variable to customize the port for the Appwrite HTTP API
-    depends_on:
-      - redis
-      - postgres
-    command: sh -c "trap exit TERM; while :; do sleep 1 & wait $${!}; done; exec appwrite-ectd"
-
-  redis:
-    image: redis:6.0-alpine
-    command: redis-server --appendonly yes
-    volumes:
-      - "./appwrite-data/redis:/data"
-
-  postgres:
-    image: postgres:13
-    environment:
-      - POSTGRES_DB=appwrite
-      - POSTGRES_USER=appwrite
-      - POSTGRES_PASSWORD=appwrite
-    volumes:
-      - "./appwrite-data/postgres:/var/lib/postgresql/data"
-
-  mongodb:
-    image: mongo:4.4
-    volumes:
-      - "./appwrite-data/mongodb:/data/db"
-
-  filesystem-storage:
-    image: appwrite/filesystem-storage
-    container_name: appwrite_filesystem_storage
-    volumes:
-      - "./appwrite-data/filesystem-storage:/appwrite/data"
+      - APPWRITE_BIND_ADDR=0.0.0.0
+      - APPWRITE_CORS_ORIGINS=*
+      - APPWRITE_PROJECT_ID=your-project-id # Replace with your project ID
+      - APPWRITE_REGION=global # Use 'global' for a globally distributed setup, or choose a specific region like 'us-east-1'
+      - APPWRITE_LOGS_LEVEL=info # Set the logging level (debug, info, warn, error)
+    command: ecksbot --bind * --http-addr 0.0.0.0 --log-level info --project-id your-project-id --region global
+    networks:
+      - appwrite-net
 
 networks:
-  default:
+  appwrite-net:
     driver: bridge
+
+volumes:
+  appwrite_data:
+    driver: local

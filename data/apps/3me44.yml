@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  web:
+    image: traduora/web:latest
+    ports:
+      - "8000:8000" # Expose the default port for Traduora web interface
+    depends_on:
+      - db
+      - worker
+    environment:
+      - TRADUORA_SECRET_KEY=<your_secret_key>
+      - TRADUORA_POSTGRES_DB=db
+      - TRADUORA_POSTGRES_USER=traduora
+      - TRADUORA_POSTGRES_PASSWORD=<your_password>
+      - TRADUORA_CELERY_RESULT_BACKEND=rpc://rabbitmq
+      - TRADUORA_CELERY_BROKER_URL=amqp://rabbitmq
+    env_file:
+      - .env
+
+  worker:
+    image: traduora/worker:latest
+    environment:
+      - TRADUORA_SECRET_KEY=<your_secret_key>
+      - TRADUORA_POSTGRES_DB=db
+      - TRADUORA_POSTGRES_USER=traduora
+      - TRADUORA_POSTGRES_PASSWORD=<your_password>
+      - TRADUORA_CELERY_RESULT_BACKEND=rpc://rabbitmq
+      - TRADUORA_CELERY_BROKER_URL=amqp://rabbitmq
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+
+  redis:
+    image: redis:6-alpine
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:3.8-management
+    ports:
+      - "5672:5672" # Expose the default port for RabbitMQ
+      - "15674:15674" # Expose the management interface
+    environment:
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASSWORD=password
+
+  db:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=traduora
+      - POSTGRES_USER=traduora
+      - POSTGRES_PASSWORD=<your_db_password>
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data:

@@ -1,15 +1,48 @@
-version: '3.8'
+version: '3.7'
 
 services:
   apprise:
-    image: apprisecasts/apprise:latest # Use the official Apprise image from Docker Hub
+    image: linuxserver/apprise:latest
     container_name: apprise
     ports:
-      - "9001:9001" # Expose the default Apprise port for incoming events
+      - "8080:8080" # Web UI
+      - "9123:9123" # TCP
+      - "9124:9124" # UDP
     volumes:
-      - ./apprise.config.yaml:/code/apprise.config.yaml # Mount your local Apprise configuration file if you have one
-      - apprise-data:/code/data # Volume for data storage (optional, but recommended)
-    restart: unless-stopped # Restart policy to keep the service running
+      - "./config:/config" # Configuration files
+      - "./apprise-data:/data" # Data storage
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ="Europe/London"
+    sysctls:
+      - net.ipv4.ip_forward=1
+    restart: unless-stopped
 
-volumes:
-  apprise-data: {} # Define a named volume for storing Apprise data persistently
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    command: --smallfiles
+    volumes:
+      - "./apprise-db:/data/db" # MongoDB data volume (optional, see notes)
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=rootpassword
+    sysctls:
+      - net.ipv4.ip_forward=1
+    restart: unless-stopped
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - "./apprise-redis:/data" # Optional, for data persistence
+    sysctls:
+      - net.ipv4.ip_forward=1
+    restart: unless-stopped
+
+networks:
+  default:
+    driver: bridge

@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  typebot:
+    image: typebot/typebot:latest # Use a specific tag if needed
+    container_name: typebot
+    ports:
+      - "5000:5000" # Expose Typebot API on the host, default port is 5000
+    volumes:
+      - "./data:/data" # Mount a volume for data persistence
+      - "./config:/config" # Mount a volume for configuration files
+    environment:
+      TZ: "Europe/London" # Set the Timezone, change to your desired timezone
+      JWT_SECRET: "your_jwt_secret" # Set your JWT secret for authentication
+    networks:
+      - typebot_network
+
+  postgres:
+    image: postgres:13 # Use a specific tag if needed
+    container_name: typebot_db
+    volumes:
+      - "./data/db:/var/lib/postgresql" # Persist database data
+    environment:
+      POSTGRES_DB: "typebot"
+      POSTGRES_USER: "typebot"
+      POSTGRES_PASSWORD: "your_database_password"
+    networks:
+      - typebot_network
+
+networks:
+  typebot_network:
+    driver: bridge

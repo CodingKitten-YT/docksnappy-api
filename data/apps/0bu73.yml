@@ -1,47 +1,59 @@
 version: '3.8'
 
 services:
-  booklogr_api:
-    image: booklogr/booklogr-api:latest
-    container_name: booklogr_api
+  booklogr_web:
+    image: booklogr/booklogr:latest
+    container_name: booklogr_web
     ports:
       - "5000:5000"
     environment:
-      - DB_HOST=db
-      - DB_USER=user
-      - DB_PASSWORD=password
-      - DB_NAME=booklogr
-      - JWT_SECRET=secret_key
-      - MAIL_HOST=mailhog
-      - MAIL_PORT=1025
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=True
+      - DATABASE_URL=${DATABASE_URL}
     depends_on:
-      - db
-    networks:
-      - booklogr_network
+      - booklogr_db
+    volumes:
+      - ./logs:/var/log/booklogr
+    command: gunicorn -b :5000 --workers=4 booklogr:app
 
-  db:
+  booklogr_db:
     image: postgres:13
     container_name: booklogr_db
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
     environment:
+      - POSTGRES_DB=booklogr
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=booklogr
+
+  booklogr_redis:
+    image: redis:6-alpine
+    container_name: booklogr_redis
+    command: redis-server --requirepass ${REDIS_PASSWORD}
     volumes:
-      - db_data:/var/lib/postgresql/data
-    networks:
-      - booklogr_network
+      - ./data/redis:/data
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
 
-  mailhog:
-    image: mailhog/mailhog:latest
-    container_name: mailhog
+  booklogr_celery_worker:
+    image: booklogr/booklogr:latest
+    container_name: booklogr_celery_worker
+    depends_on:
+      - booklogr_db
+      - booklogr_redis
+    command: celery -A booklogr worker --loglevel=info
+
+  booklogr_rabbitmq:
+    image: rabbitmq:3-management
+    container_name: booklogr_rabbitmq
     ports:
-      - "8025:8025"
-    networks:
-      - booklogr_network
+      - "15672:15672"
+      - "15674:15674"
+    volumes:
+      - ./data/rabbitmq:/var/lib/rabbitmq
 
-volumes:
-  db_data:
-
-networks:
-  booklogr_network:
-    driver: bridge
+caches:
+  booklogr_cache:
+    image: redis:6-alpine
+    volumes:
+      - ./data/redis_cache:/data

@@ -1,41 +1,44 @@
-version: '3'
+version: '3.8'
 
 services:
-  linkace:
-    image: 'linkaceteam/linkace:latest' # Use the official LinkAce image from Docker Hub
-    container_name: linkace
+  # Web service with HTTPS, managed by Certify'em (Let's Encrypt)
+  web:
+    image: linkace/linkace:latest
     ports:
-      - "8081:80" # Expose LinkAce (HTTP) on port 8081 of the host
-    environment:
-      - DBHOST=db
-      - LINKACE_KEY='your-secret-key' # Set your secret key for encryption
-    volumes:
-      - './data:/var/www/html/app/storage/framework/cache' # For cache and sessions (optional, depending on your needs)
-      - './linkace.db:/var/www/html/app/storage/logs/linkace.log' # For logs (optional)
+      - "80:80" # HTTP
+      - "443:443" # HTTPS
     depends_on:
-      - db
-    restart: unless-stopped
-
-  db:
-    image: 'mysql:5.7' # Use the official MySQL image with version 5.7
-    container_name: linkace_db
+      - certifyem
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword # Set your MySQL root password
-      MYSQL_DATABASE: linkace # Name of the database to create
-      MYSQL_USER: linkaceuser
-      MYSQL_PASSWORD: dbpassword # Set your MySQL user password
+      - LINKACE__SECRET_KEY=your_secret_key
+      - DATABASE_URL=postgres://user:password@db:5432/dbname
+      # Add other necessary environment variables
     volumes:
-      - './dbdata:/var/lib/mysql' # For persistent storage of MySQL data
-    restart: unless-stopped
+      - ./data:/code/data
+      - ./logs:/code/logs
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
 
-  cron:
-    image: 'perl:latest' # Use Perl to run cron jobs
-    container_name: linkace_cron
-    command: '/opt/cron.sh' # Path to the script that contains your cron jobs
+  # Database server (PostgreSQL)
+  db:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=dbname
     volumes:
-      - './cronjobs:/opt' # For persistent storage of your cron jobs script
-    restart: unless-stopped
+      - db_data:/var/lib/postgresql/data
 
-# Optional: Define a custom script for cron jobs inside the 'cronjobs' directory on your host.
-# Create a file named 'cron.sh' with your desired cron entries, for example:
-# */5 * * * /usr/local/bin/php /var/www/html/artisan schedule:run --hourly > /dev/null &> /dev/null
+  # Certbot (Let's Encrypt) client for automatic SSL certificate issuance and renewal
+  certifyem:
+    image: certbot/certbot
+    volumes:
+      - certs:/etc/letsencrypt
+    entrypoint: '/bin/sh -c "trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;"'
+
+volumes:
+  db_data:
+  certs:
+
+networks:
+  default:
+    driver: bridge

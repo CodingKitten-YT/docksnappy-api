@@ -1,56 +1,38 @@
 version: '3.8'
 
 services:
-  db:
-    image: postgres:12
-    volumes:
-      - db_data:/var/lib/postgresql/data
+  admido-api:
+    image: admido/admido:latest
+    container_name: admido-api
     environment:
-      POSTGRES_DB: admidio
-      POSTGRES_USER: admindbuser
-      POSTGRES_PASSWORD: adminpass
+      ADMIDO_SECRET_KEY: ${RANDOM:-"secret_key"} # Change this with a real secret key in production
+      ADMIDO_DATABASE_URL: postgres://admido-db:5432/admido  # PostgreSQL connection string
+      ADMIDO_REDIS_URL: redis://admido-redis:6379/0            # Redis connection string
     ports:
-      - "5432:5432"
-
-  php:
-    image: php:fpm-alpine
-    volumes:
-      - source:/var/www/html
-      - php_data:/var/lib/php
+      - "8000:8000"                                     # Adjust if you want to expose a different port
     depends_on:
-      - db
-    environment:
-      DB_HOST: db
-      DB_NAME: admidio
-      DB_USER: admindbuser
-      DB_PASSWORD: adminpass
-      ADMIDIO_DSN: 'pgsql://admindbuser:adminpass@db:3306/admindio'
-    user: "www-data"
+      - admido-db
+      - admido-redis
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
 
-  nginx:
-    image: nginx:stable-alpine
-    volumes:
-      - source:/var/www/html/public
-      - nginx_conf:/etc/nginx
-    depends_on:
-      - php
-    ports:
-      - "80:80"
-      - "443:443"
+  admido-db:
+    image: postgres:latest
+    container_name: admido-db
     environment:
-      VIRTUAL_HOST: example.com
-      VIRTUAL_PORT: 80
-      GLOBAL_SSL: "true"
-    user: "www-data"
+      POSTGRES_DB: admido        # Database name
+      POSTGRES_USER: admido       # Database user
+      POSTGRES_PASSWORD: admido   # Database password
+    volumes:
+      - admido-db-data:/var/lib/postgresql/data  # Persistent volume for database data
+
+  admido-redis:
+    image: redis:latest
+    container_name: admido-redis
 
 volumes:
-  db_data:
-  php_data:
-  source:
-    external: false
-  nginx_conf:
-
-networks:
-  default:
-    external:
-      name: admidio_net
+  admido-db-data:
+    driver: local

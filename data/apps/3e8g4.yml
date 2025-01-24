@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  owncloud:
+    image: owncloud:latest
+    container_name: owncloud
+    ports:
+      - "80:444" # HTTP
+      - "443:444" # HTTPS (if you have a SSL certificate)
+    volumes:
+      - "/path/to/ownCloudData:/data" # The local path where your data will be stored
+      - "/etc/localtime:/etc/localtime" # Optional, for timezone settings
+    environment:
+      OWNCLOUD_DATABASE_HOST: "db" # Reference to the database service
+      OWNCLOUD_DATABASE_PASSWORD: "dbpassword" # The password for the database (make sure it's secure!)
+      OWNCLOUD_SERVER_DOMAIN: "owncloud.example.com" # The domain of your ownCloud instance
+      OWNCLOOD_SERVER_FIRST_ADMIN_USERNAME: "admin" # The first admin user
+      OWNCLOUD_SERVER_FIRST_ADMIN_PASSWORD: "password" # Password for the first admin user
+      GUEST_ACCOUNT=off # Set to 'on' to create a default guest account
+    depends_on:
+      - db
+      - redistsynced
+    restart: unless-stopped
+
+  owncloud_db:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: "rootpassword" # The root password for MySQL
+      MYSQL_DATABASE: "owncloud"
+      MYSQL_USER: "ocuser"
+      MYQL_PASSWORD: "dbpassword"
+    volumes:
+      - "/path/to/mysqlData:/var/lib/mysql" # The local path where your MySQL data will be stored
+    restart: unless-stopped
+
+  owncloud_redis:
+    image: redis:alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - "redisData:/data"
+    restart: unless-stopped
+
+volumes:
+  owncloudData:
+  mysqlData:
+  redisData:
+
+networks:
+  default:
+    driver: bridge

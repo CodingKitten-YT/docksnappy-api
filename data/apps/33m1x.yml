@@ -1,128 +1,46 @@
 version: '3.8'
 
 services:
-  evershop_redis:
-    image: redis:6-x64
-    healthcheck:
-      test: ["CMD", "REDIS-SERVER", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+  evershop-api:
+    image: evershop/evershop-api:latest
     ports:
-      - "6379:6379"
+      - "8000:80"
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+      - cache
+    environment:
+      EVERSHOP_SECRET_KEY: "your_secret_key"
+      EVERSHOP_DATABASE_URL: "postgres://db:5432/evershop"
+      EVERSHOP_CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+      EVERSHOP_CELERY_BROKER_URL: "amqp://rabbitmq:5672/"
+      EVERSHOP_CACHES: "{cache:cache, database:database}"
+      EVERSHOP_DEFAULT_CURRENCY: "USD"
+    volumes:
+      - ./data/evershop-api:/code/data
 
-  evershop_rabbitmq:
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: db
+      POSTGRES_PASSWORD: db
+      POSTGRES_DB: evershop
+    volumes:
+      - evershop-db-data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:6-alpine
+
+  rabbitmq:
     image: rabbitmq:3.8-management
-    healthcheck:
-      test: ["CMD", "rabbitmq-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
     ports:
       - "5672:5672"
-      - "15672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: evershop
-      RABBITMQ_DEFAULT_PASS: evershop
+      - "15674:15674"
 
-  evershop_mysql:
-    image: mysql:8.0
-    command: --default-authentication-plugin=mysql_native_password
-    environment:
-      MYSQL_ROOT_PASSWORD: evershop_root
-      MYSQL_DATABASE: evershop
-      MYSQL_USER: evershop
-      MYSQL_PASSWORD: evershop_user
-    healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-    ports:
-      - "3306:3306"
-
-  evershop_db_migration_tool:
-    image: evershop/db-migrations-tool:latest
-    volumes:
-      - ./migrations:/app/src/main/resources/db/migration
-    environment:
-      JAVA_HOME: /usr/local/openjdk
-      SPRING_PROFILES_ACTIVE: migration-only
-    depends_on:
-      - evershop_mysql
-
-  evershop_eureka:
-    image: evershop/eureka-server:latest
-    ports:
-      - "8761:8761"
-    environment:
-      SERVER_PORT: 8761
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka
-
-  evershop_config:
-    image: evershop/config-server:latest
-    ports:
-      - "8888:8888"
-    environment:
-      SERVER_PORT: 8888
-      SPRING_PROFILES_ACTIVE: server,config
-
-  evershop_gateway:
-    image: evershop/api-gateway:latest
-    ports:
-      - "8080:8080"
-    depends_on:
-      - evershop_eureka
-      - evershop_config
-      - evershop_product-service
-      - evershop_order-service
-      #- evershop_payment-service
-      #- evershop_search-service
-
-  evershop_product-service:
-    image: evershop/product-service:latest
-    environment:
-      SERVER_PORT: 8090
-      SPRING_PROFILES_ACTIVE: product
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka
-    depends_on:
-      - evershop_config
-      - evershop_mysql
-
-  evershop_order-service:
-    image: evershop/order-service:latest
-    environment:
-      SERVER_PORT: 8091
-      SPRING_PROFILES_ACTIVE: order
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka
-    depends_on:
-      - evershop_config
-      - evershop_mysql
-
-  evershop_payment-service:
-    image: evershop/payment-service:latest
-    environment:
-      SERVER_PORT: 8092
-      SPRING_PROFILES_ACTIVE: payment
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka
-    depends_on:
-      - evershop_config
-      #- evershop_mysql
-
-  evershop_search-service:
-    image: evershop/search-service:latest
-    environment:
-      SERVER_PORT: 8093
-      SPRING_PROFILES_ACTIVE: search
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka
-    depends_on:
-      - evershop_config
-      #- evershop_mysql
+  cache:
+    image: redis:6-alpine
 
 volumes:
-  evershop_data:
-    driver: local
-
-networks:
-  evershop_net:
-    driver: bridge
+  evershop-db-data:
+  evershop-api-data:

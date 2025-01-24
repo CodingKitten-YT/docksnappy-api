@@ -1,65 +1,56 @@
 version: '3.8'
+
 services:
-  # Damselfly server service
   damselfly:
-    image: leogordeev/damselfly:latest  # Use the official Damselfly image from Docker Hub
-    container_name: damselfly-server
+    image: damselfly/damselfly:latest  # Use the official Damselfly image or your custom image
+    command: /run/damselfly
     ports:
-      - "80:80"  # Map port 80 on the host to port 80 in the container (HTTP)
-      - "443:443"  # Map port 443 on the host to port 443 in the container (HTTPS, if configured)
-    volumes:
-      - ./data:/var/lib/damselfly  # Mount a volume for Damselfly data persistence
-      - ./certs:/etc/ssl/certs:ro  # Optional: Mount a volume with SSL certificates if you have them
-        name: damselfly-certs  # Named volume for the certificates
+      - "8080:80"  # Expose Damselfly on host port 8080
     environment:
-      TZ: "Europe/Moscow"  # Set timezone, adjust to your needs
-      JWT_SECRET: "your_jwt_secret"  # Set a secret key for JWT authentication
-      DB_HOST: "db"  # Specify the hostname for the database service (defined below)
-      SMTP_HOST: "mailhog"  # Optional: If you're using MailHog or similar for emails
+      POSTGRES_USER: damselfly  # PostgreSQL user for the database
+      POSTGRES_PASSWORD: changeit  # PostgreSQL password (make sure to update this)
+      POSTGRES_DB: damselfly  # Database name
+      DATABASE_URL: postgres://damselfly:changeit@db:5432/damselfly?tcp_keepalive=true
     depends_on:
       - db
-      - mailhog
-    restart: unless-stopped  # Ensure Damselfly restarts on failure, but not on Configure/Update
+    volumes:
+      - ./data:/data  # Mount local data directory for application data persistence
+      - ./config:/code/config:ro  # Mount local configuration directory as read-only
 
-  # PostgreSQL service for Damselfly database
-  db:
+  postgres:
     image: postgres:latest
-    volumes:
-      - ./db_data:/var/lib/postgresql  # Mount a volume for database data persistence
     environment:
-      POSTGRES_DB: damselfly  # Database name
-      POSTGRES_USER: damselfly  # Database user
-      POSTGRES_PASSWORD: secret  # Database password
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U damselfly"]
-      timeout: 10s
-      retries: 5
-    restart: unless-stopped
-
-  # Nginx Reverse Proxy (optional, if you want to use Nginx as a reverse proxy)
-  nginx:
-    image: nginx:latest
-    container_name: nginx-proxy
-    ports:
-      - "80:80"
-      - "443:443"
+      POSTGRES_USER: damselfly
+      POSTGRES_PASSWORD: changeit
+      POSTGRES_DB: damselfly
     volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d  # Configuration files for Nginx
-      - damselfly-server:/var/lib/damselfly  # Use the Damselfly data volume from the Damselfly service
-    depends_on:
-      - damselfly
-    restart: unless-stopped
+      - ./data/postgres:/var/lib/postgresql/data  # Mount local data directory for PostgreSQL persistence
 
-  # MailHog (optional email test tool)
-  mailhog:
-    image: mailhog/mailhog:latest
-    ports:
-      - "8025:8025"  # Map port 8025 on the host to port 8025 in the container (SMTP)
-      - "8000-8003:8000-8003"  # Map ports for MailHog UI and API
-    environment:
-      MAILHOG_INMEMORYSTORAGE: "true"  # Use in-memory storage for simplicity (not recommended for production)
-    restart: unless-stopped
+  redis:
+    image: redis:latest
+    command: redis-server --appendonly yes
+    volumes:
+      - ./data/redis:/data
 
-# Optional volume for storing SSL certificates
-volumes:
-  damselfly-certs:
+# Uncomment the following lines if you need a reverse proxy with Nginx or Caddy
+# nginx:
+#   image: nginx:latest
+#   ports:
+#     - "80:80"
+#   volumes:
+#     - ./nginx/conf.d:/etc/nginx/conf.d
+#     - ./data/nginx:/var/log/nginx
+#   depends_on:
+#     - damselfly
+
+# caddy:
+#   image: caddy:latest
+#   ports:
+#     - "80:81"
+#   volumes:
+#     - ./caddy/data:/data/caddy
+#     - ./data/caddy:/data
+#   depends_on:
+#     - damselfly
+
+# Note: If you are using a custom image for Damselfly, replace the 'image' field in the 'damselfly' service definition with your image source.

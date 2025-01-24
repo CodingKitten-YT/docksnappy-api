@@ -2,24 +2,25 @@ version: '3.8'
 
 services:
   homer:
-    image: homerd/homer:latest
+    image: homer/homer:latest  # Use the official Homer image from Docker Hub
     container_name: homer
     ports:
-      - "80:80" # Map Homer's web UI to port 80 on the host
+      - "80:80"  # Map HTTP port 80 on the host to port 80 in the container
+    environment:
+      - HOMEPATH=/data  # Define the data storage path
+      - TZ=Europe/London  # Set the timezone (change to your desired timezone)
     volumes:
-      - ./homer.yaml:/app/config/homer.yaml # Custom configuration file (if you have one)
-      - homer-data:/app/data     # Persistent data storage for Homer
+      - ./homer-data:/data  # Mount a local directory for Homer's data and configuration files
+      - homer-logs:/var/log/homer  # Mount a volume for Homer logs (optional, but recommended for persistence)
 
   postgres:
     image: postgres:latest
-    volumes:
-      - postgres-data:/var/lib/postgresql # Persistent data storage for PostgreSQL
-      - ./pg_hba.conf:/etc/postgresql/main/pg_hba.conf  # Custom pg_hba.conf (for advanced users)
-      - ./postgresql.conf:/etc/postgresql/main/postgresql.conf # Custom postgresql.conf (for advanced users)
     environment:
-      POSTGRES_DB: homer
-      POSTGRES_USER: homer
-      POSTGRES_PASSWORD: change_this_password
+      - POSTGRES_DB=homer
+      - POSTGRES_USER=homer
+      - POSTGRES_PASSWORD=homerdocker
+    volumes:
+      - homer-postgres-data:/var/lib/postgresql/data  # Persist PostgreSQL data
 
   redis:
     image: redis:latest
@@ -27,8 +28,8 @@ services:
       - redis-data:/data
 
 volumes:
-  homer-data:
-  postgres-data:
+  homer-logs:
+  homer-postgres-data:
   redis-data:
 
 networks:

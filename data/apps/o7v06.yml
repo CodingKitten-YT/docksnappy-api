@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  sorrycypress-frontend:
+    image: sorrycypress/sorrycypress-frontend:latest
+    ports:
+      - "3001:3001" # Expose the port where the frontend app runs (default is 3001)
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - sorrycypress-api
+
+  sorrycypress-api:
+    image: sorrycypress/sorrycypress-api:latest
+    ports:
+      - "8081:8080" # Expose the port where the API runs (default is 8080)
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: sorrycypress
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:

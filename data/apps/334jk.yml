@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  octobot:
+    image: octobot/octobot-trading:latest  # Use the official OctoBot Trading Docker image
+    container_name: octobot_trading
+    environment:
+      - TZ=Europe/Paris  # Set your timezone, example here for Paris
+      - DISABLE_SSH=true  # Optional: Disable SSH if not needed
+      # Add other environment variables as per your configuration needs
+    ports:
+      - "5000:5000"  # Web UI on port 5000, hosted inside the container
+      - "8080:8080"  # WebSocket API on port 8080, hosted inside the container
+    volumes:
+      - ./octobot_config:/home/octobot/.config/octobot  # Mount your local OctoBot config directory to the container
+      - ./octobot_logs:/home/octobot/logs  # Optional: Mount your local logs directory to the container
+    restart: unless-stopped  # Ensure the container restarts on any stop
+    networks:
+      - octobot_network
+
+networks:
+  octobot_network:
+    driver: bridge

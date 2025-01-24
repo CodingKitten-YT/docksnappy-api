@@ -1,80 +1,72 @@
 version: '3.8'
 
 services:
-  dashpress:
-    image: 'dashpress/dashpress:latest' # Use the official Dashpress image from Docker Hub
-    container_name: dashpress
+  # Dashboard application service
+  web:
+    image: dashpress/dashpress:latest
+    container_name: dashpress_web
     ports:
-      - "8000:8000" # Expose Dashpress on port 8000 of the host
-    volumes:
-      - "./dashpress-data:/data" # Mount a volume for Dashpress data (user-generated content)
-      - "./dashpress-media:/media" # Mount a volume for user media uploads
+      - "8000:8000" # HTTP port
     environment:
-      - DJANGO_SETTINGS_MODULE=dashpress.settings  # Set the Django settings module
-      - SECRET_KEY=random_secret_key  # Replace with a random secret key for development
-      - ALLOWED_HOSTS=0.0.0.0  # Allow hosting from any IP (change to specific hosts as needed)
-    command: gunicorn dashpress.wsgi --bind 0.0.0.0:8000  # Run Dashpress with Gunicorn
-    restart: unless-stopped  # Restart the container unless it has been manually stopped
-
-  redis:
-    image: 'redis:latest'  # Use the official Redis image from Docker Hub
+      DJANGO_SETTINGS_MODULE: dashpress.settings.production
+      SECRET_KEY: 'your-secret-key'
+      ALLOWED_HOSTS: 'localhost 127.0.0.1 [::1]'
+      # Optionally, you can set the following environment variables for additional configurations
+      POSTGRES_DB: 'db' # Database name for docker-compose's internal service
+      POSTGRES_USER: 'dashpress' # Username for the database
+      POSTGRES_PASSWORD: 'dashpresspassword' # Password for the database
     volumes:
-      - "./dashpress-redis:/data"  # Persist Redis data to a volume (optional but recommended)
-    environment:
-      - REDIS_PORT=6379  # Default port for Redis
-    restart: unless-stopped
-
-  db:
-    image: 'postgres:latest'  # Use the official PostgreSQL image from Docker Hub
-    volumes:
-      - "./dashpress-db:/var/lib/postgresql"  # Persist database data to a volume (optional but recommended)
-    environment:
-      - POSTGRES_DB=dashpress  # Database name
-      - POSTGRES_USER=dashpress  # Database user
-      - POSTGRES_PASSWORD=random_password  # Replace with a random password for development
-    restart: unless-stopped
-
-  nginx:
-    image: 'nginx:latest'  # Use the official Nginx image from Docker Hub
-    container_name: nginx
-    ports:
-      - "80:80"  # Map HTTP port 80 to the container (optional, you can use another port)
-      - "443:443"  # Map HTTPS port 443 to the container (if using SSL/TLS)
-    volumes:
-      - "./dashpress-nginx:/etc/nginx"  # Mount a volume for Nginx configuration files
+      - './data:/code/dashpress/data' # Mount for user-generated content and attachments
+      - './media:/code/dashpress/media' # Mount for uploaded files
     depends_on:
-      - dashpress
-    restart: unless-stopped
+      - db
+    command: gunicorn dashpress.wsgi --bind 0.0.0.0:8000
 
-# If you want to use SSL/TLS with Nginx, uncomment the following and generate the certificates:
-# nginx:
-#   image: 'jwilder/nginx-proxy':latest
-#   container_name: nginx
-#   ports:
-#     - "80:80"
-#     - "443:443"
-#   volumes:
-#     - "./dashpress-nginx:/etc/nginx"
-#   networks:
-#     default:
-#       external_links:
-#         - letssencrypt
-#   depends_on:
-#     - dashpress
-#   restart: unless-stopped
+  # Database service
+  db:
+    image: postgres:13
+    container_name: dashpress_db
+    volumes:
+      - './data/db:/var/lib/postgresql/data' # Mount for the database data
+    environment:
+      POSTGRES_DB: 'dashpress' # Default database name
+      POSTGRES_USER: 'dashpress' # Default user
+      POSTGRES_PASSWORD: 'dashpresspassword' # Default password
 
-# Uncomment the following if you want to include SSL certificates with Let's Encrypt (requires Docker 1.13+):
-# nginx:
-#   image: 'jwilder/letsencrypt-nginx-proxy:latest'
-#   container_name: nginx
-#   ports:
-#     - "80:80"
-#     - "443:443"
-#   volumes:
-#     - "./dashpress-nginx:/etc/nginx"
-#     - "/var/run/docker.sock:/var/run/docker.sock" # Required for Let's Encrypt to work
-#   restart: unless-stopped
+  # Redis cache service (optional, for caching and session handling)
+  redis:
+    image: redis:6-alpine
+    container_name: dashpress_redis
+    volumes:
+      - './data/redis:/data' # Mount for Redis data persistence
 
-# Note: The `jwilder/nginx-proxy` and `jwilder/letsencrypt-nginx-proxy` images are deprecated in favor of the `Jeiwan/nginx-proxy` and `Jeiwan/letsencrypt-nginx-proxy` images.
+  # Celery worker service (optional, for task queue processing)
+  celery_worker:
+    image: dashpress/dashpress-celery-worker:latest
+    container_name: dashpress_celery_worker
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379
+      CELERY_RESULT_BACKEND: db
+    volumes:
+      - './data/db:/var/lib/postgresql/data' # Mount for the database data (same as db service)
+    depends_on:
+      - db
+      - redis
+    command: celery -A dashpress worker --loglevel=info
 
-# Add any additional configurations or services as needed for your Dashpress setup.
+  # RabbitMQ for message broker (optional, if you choose to use RabbitMQ instead of Redis)
+  # This service setup is commented out by default as it's not part of the standard Dashpress stack.
+  # rabbitmq:
+  #   image: rabbitmq:3-management
+  #   container_name: dashpress_rabbitmq
+  #   ports:
+  #     - "5672:5672" # RabbitMQ default AMQP port (management UI available on 15672)
+  #   environment:
+  #     RABBITMQ_DEFAULT_USER: 'admin'
+  #     RABBITMQ_DEFAULT_PASS: 'password'
+  #   volumes:
+  #     - './data/rabbitmq:/var/lib/rabbitmq/mnesia/
+
+networks:
+  default:
+    driver: bridge

@@ -1,54 +1,50 @@
-version: '3'
+version: '3.8'
 services:
-  redis:
-    image: redis:6-alpine
+  openquizmaster:
+    image: openquizmaster/openquizmaster:latest
     ports:
-      - "6379:6379"
-    command: Redis-server /usr/local/etc/redis/redis.conf
+      - "5000:5000"
     volumes:
-      - ./data/redis:/usr/local/var/lib/redis
-
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.3.0
+      - ./data:/var/lib/openquizmaster
     environment:
-      - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    volumes:
-      - ./data/elasticsearch:/usr/share/elasticsearch/data
-
+      - DJANGO_SETTINGS_MODULE=openquizmaster.settings
+      - SECRET_KEY=random_secret_key_here
+      - POSTGRES_DB=quizmaster
+      - POSTGRES_USER=quizmaster
+      - POSTGRES_PASSWORD=change_this_password
+    environment: .env
+    command: openquizmaster --detached --collectstatic --no-debug
+    restart: unless-stopped
   postgres:
     image: postgres:13
-    environment:
-      - POSTGRES_DB=quartermaster
-      - POSTGRES_USER=quartermaster
-      - POSTGRES_PASSWORD=changeit
     volumes:
-      - ./data/postgres:/var/lib/postgresql/data
-
-  mastermind-server:
-    image: mastermindio/open-qm:latest
+      - ./data/db:/var/lib/postgresql
     environment:
-      - REDIS_HOST=redis
-      - ELASTICSEARCH_URL=http://elasticsearch:9200
-      - DATABASE_URL=postgres://quartermaster:changeit@postgres:5432/quartermaster
-    ports:
-      - "8080:8080"
+      - POSTGRES_DB=quizmaster
+      - POSTGRES_USER=quizmaster
+      - POSTGRES_PASSWORD=change_this_password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U quizmaster"]
+      timeout: 10s
+      retries: 5
+  redis:
+    image: redis:6-alpine
+    volumes:
+      - ./data/redis:/data
+  celery-beat:
+    image: openquizmaster/openquizmaster-celery-beat:latest
     depends_on:
+      - openquizmaster
+    command: celery --loglevel=info --broker=redis://redis:6379/0 --result_backend=redis://redis:6379/0 openquizmaster.celery_app.make_ CeleryWorker
+    restart: unless-stopped
+  celery-worker:
+    image: openquizmaster/openquizmaster-celery-worker:latest
+    depends_on:
+      - openquizmaster
       - redis
-      - elasticsearch
-      - postgres
-
-  mastermind-webui:
-    image: mastermindio/open-qm-frontend:latest
-    ports:
-      - "3000:3000"
-    depends_on:
-      - mastermind-server
-
-volumes:
-  redis_data:
-  elasticsearch_data:
-  postgres_data:
+    environment:
+      - CELERY_TASK_RESULT_EXCHANGE=openquizmaster
+      - CELERY_TASK_RESULT_QUEUE=result
+      - CELERY_TASK_RESULT_ROUTING_KEY=result
+    command: celery --loglevel=info --broker=redis://redis:6379/0 --result_backend=rabbitmq openquizmaster.celery_app.worker
+    restart: unless-stopped

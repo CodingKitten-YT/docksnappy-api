@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  vod2pod_rss:
+    image: vod2pod/vod2pod-rss:latest
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/London # Replace with your timezone if needed
+    volumes:
+      - ./config.yml:/etc/vod2pod/config.yml
+    environment:
+      - SECRET_KEY=secret
+      - RSS_FEED_URL=your_rss_feed_url
+      - DOWNLOAD_PATH=/path/to/downloads # Replace with your desired download path if not using a volume
+    volumes:
+      - ./downloads:/usr/src/app/downloads # This line is optional, use it if you want to persist downloads outside the container

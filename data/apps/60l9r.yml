@@ -1,0 +1,51 @@
+version: '3.7'
+
+services:
+  # Teleport server with PostgreSQL plugin and client UI
+  teleport:
+    image: 'gravitational/teleport:latest'
+    command: >
+      /entrypoint.sh --log-level debug \
+        --server.service-cluster-ingress-enabled true \
+        --storage-driver files \
+        --storage-path /data \
+        --router.service-mesh-ingress-enabled true \
+        --postgres.enabled true \
+        --postgres.datadir /var/lib/postgresql/data \
+        --resources-backend.storage-path /data/resources
+    container_name: teleport
+    ports:
+      - "3080:3080" # Teleport HTTP UI port
+      - "3022:3022" # SSH port (if enabled)
+      - "4415:4415" # Admin UI port for Teleport service (default is 4415)
+    volumes:
+      - "./data:/data"
+      - "./config:/etc/teleport"
+    environment:
+      TELEPORT_LOGLEVEL: debug
+      TELEPORT_RESOURCE_BACKEND_STORAGE_PATH: /data/resources
+      TELEPORT_POSTGRESQL_DATA_DIR: /var/lib/postgresql/data
+    networks:
+      - teleport_net
+
+  # PostgreSQL service used by Teleport's PostgreSQL plugin
+  postgres:
+    image: 'postgres:latest'
+    container_name: postgres
+    command: >
+      postgres \
+        --dbname=teleport \
+        --user=teleport \
+        --password teleport
+    volumes:
+      - "./data/postgresql:/var/lib/postgresql/data"
+    environment:
+      POSTGRES_DB: teleport
+      POSTGRES_USER: teleport
+      POSTGRES_PASSWORD: teleport
+    networks:
+      - teleport_net
+
+networks:
+  teleport_net:
+    driver: bridge

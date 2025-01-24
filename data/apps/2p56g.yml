@@ -1,56 +1,53 @@
 version: '3.8'
 
 services:
-  opensign_db:
-    image: postgres:12
-    container_name: opensign_db
+  opensign_postgres:
+    image: postgres:13
     environment:
       POSTGRES_DB: opensign
       POSTGRES_USER: opensign
       POSTGRES_PASSWORD: your_password
     volumes:
-      - opensign-db:/var/lib/postgresql/data
-    command: 'postgres'
+      - opensign-postgres-storage:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
 
   php:
     image: php:fpm-alpine
     container_name: opensign_php
-    ports:
-      - "9000:9000"
     volumes:
-      - ./app:/var/www/html
-      - php:/var/www/html
-    depends_on:
-      - opensign_db
+      - .:/var/www/html
+      - opensign-postgres-storage:/var/www/html/vendor/drugapost/opensign/docker/db
     environment:
-      DB_HOST: opensign_db
+      DB_HOST: opensign_postgres
       DB_DATABASE: opensign
       DB_USERNAME: opensign
       DB_PASSWORD: your_password
-      APP_ENV: local
-      APP_DEBUG: true
-      APP_KEY: base64:your_application_key
+      APP_ENV: production
+      APP_KEY: some-random-string
+      APP_DEBUG: false
+      APP_URL: http://localhost
+    depends_on:
+      - opensign_postgres
+    user: "1001"
 
   nginx:
-    image: nginx:alpine
+    image: nginx:stable-alpine
     container_name: opensign_nginx
     ports:
       - "8080:80"
     volumes:
-      - ./app/public:/var/www/html/public
-      - nginx:/var/www/html/public
+      - .:/var/www/html
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+      - opensign-postgres-storage:/var/www/html/var/cache/nginx
     depends_on:
       - php
-    environment:
-      DOMAIN: opensign.local
-      PHP_ID: php
+    user: "1001"
     networks:
-      - opensign-network
+      - opensign_network
 
 volumes:
-  opensign-db:
-  php:
-  nginx:
+  opensign-postgres-storage:
 
 networks:
-  opensign-network:
+  opensign_network:

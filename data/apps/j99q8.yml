@@ -1,70 +1,45 @@
 version: '3.8'
 services:
   openproject:
-    image: openproject/openproject:latest # or a specific version like openproject/openproject:EE-12.0.0
+    image: openproject/openproject:latest # or specify a particular version like openproject/openproject:EE-12.0.0
     container_name: openproject
     ports:
       - "9000:9000" # HTTP (Web UI)
-      - "8080:8080" # Admin API (for backup, etc.)
-      - "9001:9001" # Rails console for maintenance purposes
+      - "8080:8080" # AJP (Application Protocol/Java Servlet Pooling Protocol) for the underlying Tomcat server
+      - "443:443"  # HTTPS (Secure Web UI, if you configure SSL/TLS)
     environment:
-      OP_ENVIRONMENT: production
-      OP_DATABASE_DATABASE: openproject
-      OP_DATABASE_USER: openproject
-      OP_DATABASE_PASSWORD: your_database_password
-      OP_DATABASE_HOST: db
-      OP_DB_ENFORCE_SCHEMAS: false # set to true for enforcing schemas (not recommended for production)
-      OP_RAILS_SERVE_STATIC_FILES: true
-      OP_WEB_CONSOLE_ENABLED: true # Allows to access the Rails console through a web interface at http://<OpenProject-Host>:9001/
-      OP_ADMIN_API_ENABLED: true # Enables the Admin API at http://<OpenProject-Host>:8080/
-      OP_LOG_LEVEL: INFO # Change this to DEBUG for more verbose logging, etc.
+      OP_USE_EXTERNAL_URL: 'true' # If running behind a reverse proxy or load balancer
+      JAVA_OPTS: "-Dserver.tomcat.port=8080 -Djavax.net.ssl.keyStore=/opt/openproject/data/ssl/keystore.jks -Djavax.net.ssl.keyStorePassword=your_password" # Configure as per your SSL setup
+      OP_DB_DATABASE_HOST: db
+      OP_DB_DATABASE_PORT: 5432
+      OP_DB_DATABASE_USERNAME: postgres
+      OP_DB_DATABASE_PASSWORD: postgres
+      OP_DB_DATABASE_DBNAME: openproject
     volumes:
-      - openproject-shared:/var/lib/openproject
-      - openproject-logs:/var/log/openproject
+      - openproject-data:/opt/openproject/data # Persistent storage for OpenProject data (incl. attachments, plugins, etc.)
+      - openproject-logs:/opt/openproject/logs  # Logs
+      - openproject-conf:/opt/openproject/conf    # Configuration files (optional)
     depends_on:
       - db
-      - redmine_rails
-      - redis
-      - mailcatcher # Optional service for receiving emails sent by the system (useful for testing)
-      # Uncomment the next line if you want to use a different configuration file
-      # environment:
-      #   OP_CONFIG_PATH: /path/to/custom/config.yml
-    networks:
-      - openproject_default
+    restart: unless-stopped
 
   db:
     image: postgres:latest
+    container_name: openproject_db
+    volumes:
+      - openproject-data:/var/lib/postgresql
     environment:
       POSTGRES_DB: openproject
-      POSTGRES_USER: openproject
-      POSTGRES_PASSWORD: your_database_password
-    volumes:
-      - openproject-db:/var/lib/postgresql
-    networks:
-      - openproject_default
-
-  redis:
-    image: redis:latest
-    networks:
-      - openproject_default
-
-  mailcatcher:
-    image: mailcatcher:alpine
-    ports:
-      - "1080:1080"
-    networks:
-      - openproject_default
-
-  redis:
-    image: redis:latest
-    networks:
-      - openproject_default
-
-networks:
-  openproject_default:
-    driver: bridge
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    expose:
+      - "5432"
 
 volumes:
-  openproject-shared:
+  openproject-data:
   openproject-logs:
-  openproject-db:
+  openproject-conf:
+
+networks:
+  default:
+    driver: bridge

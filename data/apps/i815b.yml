@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  planka-db:
+    image: postgres:13
+    command: postgres -c 'fsync=off'
+    volumes:
+      - planka-db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: planka
+      POSTGRES_USER: planka
+      POSTGRES_PASSWORD: a_very_secure_password
+    networks:
+      - planka-net
+
+  planka-web:
+    image: planka/planka:latest
+    ports:
+      - "8000:8000" # HTTP API is available on port 8000
+    volumes:
+      - planka-web-data:/app/data
+      - planka-web-media:/app/media
+    environment:
+      DATABASE_URL: postgres://planka:a_very_secure_password@planka-db:5432/planka
+      SECRET_KEY: a_very_secret_key # Replace with your own secret key
+    depends_on:
+      - planka-db
+    networks:
+      - planka-net
+
+volumes:
+  planka-db-data:
+  planka-web-data:
+  planka-web-media:
+
+networks:
+  planka-net:

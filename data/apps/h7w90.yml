@@ -1,22 +1,58 @@
-version: '3'
+version: '3.8'
+
 services:
   gladys:
-    image: gladysio/gladys:latest
+    image: gladys/gladys:latest  # Use the official image with the desired tag
     container_name: gladys
-    environment:
-      - GLADYS_LANGUAGE=en
-      # Optional, set your timezone e.g. Europe/Paris
-      - TZ=Europe/Paris
     ports:
-      - "8081:8080" # Expose the web interface on port 8081 of the host
+      - "5001:5000"  # Expose the internal HTTP API on port 5000 to the host (5001 here for different port mapping)
     volumes:
-      - "./config:/config" # Mount your local config directory to the container
-      - "./gladys_data:/var/lib/gladys" # Mount a data volume for Gladys data persistence
-      - "./logs:/var/log/gladys" # Optional, mount for logs (useful for debugging)
-    restart: unless-stopped # Automatically restart on failure
-    networks:
-      - gladys_network
+      - "./gladys-config:/app/config"  # Mount your Gladys configuration directory to the container's config directory
+      - "./gladys-data:/app/data"  # Mount your Gladys data directory to the container's data directory (if needed)
+      - "./gladys-addons:/app/addons"  # Mount a directory for custom addons if you have any
+    environment:
+      - GLADYS_LANGUAGE=en  # Set the language of Gladys (en for English, fr for French, etc.)
+      - TZ=Europe/Paris  # Set your timezone (change to your preferred timezone)
+      - DB_HOST=gladys_db  # Define the database host if you are using a separate service for the database
+      - DB_USER=gladys  # Database user
+      - DB_PASSWORD=gladys  # Database password
+      - DB_DATABASE=gladys  # Database name
+    depends_on:
+      - gladys_db  # Depend on the database service
+
+  mariadb:
+    image: mariadb:latest
+    container_name: gladys_db
+    command: --transaction-isolation=READ-COMMITTED
+    volumes:
+      - "./gladys-db:/docker-entrypoint-initdb.d"  # Mount a directory with your database initializations scripts (SQL files)
+    environment:
+      MYSQL_ROOT_PASSWORD: changeit  # Set the root password for MariaDB
+      MYSQL_DATABASE: gladys  # Create a database for Gladys
+      MYSQL_USER: gladys
+      MYSQL_PASSWORD: gladys
+    ports:
+      - "3306:3306"  # Expose the MySQL port to the host
+
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    container_name: gladys_nginx
+    ports:
+      - "80:80"  # Map the NGINX proxy to the host's port 80 for HTTP requests
+      - "443:443"  # Map the NGINX proxy to the host's port 443 for HTTPS requests (if you want SSL/TLS)
+    depends_on:
+      - gladys
+    volumes:
+      - "./gladys-certificates:/etc/letsencrypt"  # Mount a directory with your Let's Encrypt certificates (if using SSL/TLS)
+
+  letsencrypt:
+    image: jrcsgo/docker-letsencrypt-nginx-proxy-companion
+    container_name: gladys_letsencrypt
+    depends_on:
+      - nginx-proxy
+    volumes:
+      - "./gladys-certificates:/etc/letsencrypt"  # Same volume as the NGINX proxy for shared certificates
 
 networks:
-  gladys_network:
-    driver: bridge
+  default:
+    external: true  # Use the native network driver to allow host networking features

@@ -2,85 +2,58 @@ version: '3.8'
 
 services:
   glance-api:
-    image: registry.openstack.org/storyboard/glance:latest
-    depends_on:
-      - mysql
+    image: openstack/glance-api:latest
+    container_name: glance-api
     environment:
-      GLANCE_DB_CONNECTION: 'mysql://glance:${GLANCE_DB_PASSWORD}@mysql:3306/glance'
-      GLANCE_RPC_BACKEND: rabbitmq
-      GLANCE_API_DISCOVERY_ENABLED: true
+      GLANCE_STORE: mongodb
+      GLANCE_NOTIFY_QUEUESV2_ENABLED: true
+      RABBITMQ_HOST: rabbitmq
+      SERVICE_HOST: 0.0.0.0
+      SERVICE_PORT: 9292
     ports:
-      - "92:92"
-    commandReviewable: |
-      globe-api --config-file=/etc/glance/paste.ini glance.conf
-    volumes:
-      - ./data/glance/:/etc/glance/
-      - ./logs/glance/:/var/log/glance/
-      - ./glance_proxy_config.json:/etc/glance/glance_proxy.conf
+      - "9292:9292"
     depends_on:
-      - mysql
+      - mongodb
       - rabbitmq
-      - keystone
-    networks:
-      - private
+      - registry-backend
 
   glance-registry:
-    image: registry.openstack.org/storyboard/glance:latest
-    depends_on:
-      - mysql
+    image: openstack/glance-registry:latest
+    container_name: glance-registry
     environment:
-      GLANCE_DB_CONNECTION: 'mysql://glance:${GLANCE_DB_PASSWORD}@mysql:3306/glance'
-      GLANCE_NOTIFICATION_DRIVER: "mongodb"
-      GLANCE_API_DISCOVERY_ENABLED: false
+      GLANCE_STORE: file
+      REGISTRY_BACKEND: file
     volumes:
-      - ./data/glance/:/etc/glance/
-      - ./logs/glance/:/var/log/glance/
-      - ./glance_registry_config.json:/etc/glance/glance_registry.conf
+      - ./data:/var/lib/glance/images
     depends_on:
-      - mysql
-      - mongodb
-      - keystone
-    networks:
-      - private
+      - novnc-proxy
 
-  mysql:
-    image: mariadb:latest
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: glance
-      MYSQL_USER: glance
-      MYSQL_PASSWORD: glancepassword
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: your_root_password
     volumes:
-      - ./data/mysql/:/var/lib/mysql/
-    commandReviewable: |
-      mysqld
-    networks:
-      - private
+      - mongodata:/data/db
+    ports:
+      - "27017:27017"
 
   rabbitmq:
-    image: rabbitmq:3.8-management
-    environment:
-      RABBITMQ_DEFAULT_USER: glance
-      RABBITMQ_DEFAULT_PASSWORD: glancepassword
+    image: rabbitmq:3-management
+    container_name: rabbitmq
     ports:
       - "5672:5672"
       - "15672:15672"
-    networks:
-      - private
+    volumes:
+      - rabbitdata:/var/lib/rabbitmq
 
-  keystone:
-    image: registry.openstack.org/storyboard/keystone:latest
-    environment:
-      MYSQL_PASSWORD: mysqlpassword
-      KEEPALIVE_INTERVAL: "10"
-      KEEPALIVE_TIMEOUT: "2"
-      SERVICE_PASSWORD: keystonepassword
-      SERVICE_USERNAME: admin
-      SERVICE_PROTOCOL: http
-    ports:
-      - "5000:5000"
-    networks:
-      - private
+  registry-backend:
+    image: openstack/glance-store-file:latest
+    container_name: registry-backend
+    depends_on:
+      - mongodb
 
-networks:
-  private:
+volumes:
+  mongodata:
+  rabbitdata:

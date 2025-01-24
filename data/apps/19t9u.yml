@@ -1,0 +1,36 @@
+version: '3.8'
+services:
+  screeningo2:
+    image: screeningo/screengo:latest # Use the latest official Screego image
+    container_name: screengo
+    ports:
+      - "5000:5000" # Expose the necessary port, e.g., 5000 for Screego server
+    environment:
+      PGID: "{pgid}"
+      PUID: "{puid}"
+      TZ: "Europe/London" # Set your own timezone
+      JOBS: "4" # Number of threads for the scheduler (CPU-intensive)
+      GROUP_NAME: "screengo" # The docker group name
+    cap_add:
+      - ALL
+    volumes:
+      - "./config:/config" # Mount your configuration directory to the container
+      - "./data:/data" # Mount your data directory to the container (optional, but recommended for data persistence)
+      - "./logs:/logs" # Mount your logs directory to the container (optional)
+    networks:
+      - screengo_network
+
+  mongodb:
+    image: mongo:latest
+    volumes:
+      - "./data/db:/data/db" # Persistent volume for MongoDB data
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "screengo"
+      MONGO_INITDB_ROOT_PASSWORD: "screengo-secret"
+      DB_NAME: screengo # This should match the Screego configuration
+    networks:
+      - screengo_network
+
+networks:
+  screengo_network:
+    driver: bridge

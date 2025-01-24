@@ -1,41 +1,27 @@
 version: '3.8'
 services:
   kitchenowl_api:
-    image: kitchenowl/kitchenowl-api:latest
+    image: kitchenowl/kitchenowl:latest
     ports:
-      - "4000:4000"
+      - "8000:8000" # Expose the API on port 8000 of the host
     environment:
-      KITCHENOWL__POSTGRES__HOST: db
-      KITCHENOWL__DB__USERNAME: kitchenowl
-      KITCHENOWL__DB__PASSWORD: a_very_secure_password
-      KITCHENOWL__DB__NAME: kitchenowl_dev
+      - KITCHENOWL_DATABASE_URL=postgres://db:5432/kitchenowl
+      - KITCHENOWL_SECRET_KEY=secretkeygoeshere
+      - KITCHENOWL_ALLOWED_HOSTS=localhost,api.kitchenowl.com,127.0.0.1,[::1]
     depends_on:
       - db
-    command: --dbhost=db --loglevel=info
-
-  kitchenowl_web:
-    image: kitchenowl/kitchenowl-web:latest
-    ports:
-      - "8000:8000"
-    environment:
-      KITCHENOWL__SECRET_KEY: a_very_secret_key
-    depends_on:
-      - kitchenowl_api
-
+    volumes:
+      - .:/code # For local development, to allow changes to be picked up without rebuilding the container
+    command: gunicorn --bind :8000 kitchenowl.wsgi:application
   db:
     image: postgres:13
-    volumes:
-      - ./db:/var/lib/postgresql/data
     environment:
-      POSTGRES_USER: kitchenowl
-      POSTGRES_PASSWORD: a_very_secure_password
-      POSTGRES_DB: kitchenowl_dev
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U kitchenowl"]
-      timeout: 10s
-      retries: 5
+      POSTGRES_DB: kitchenowl
+      POSTGRES_USER: db
+      POSTGRES_PASSWORD: secretpassword
+    volumes:
+      - postgres_data:/var/lib/postgresql/#path/to/your/local/database/data  # Persist database data to a local volume (optional, for data persistence)
+    command: postgres --pgdata=/var/lib/postgresql/data
 
-# Optional, if you need to store your local changes in the database container
 volumes:
-  kitchenowl_db_data:
-    driver: local
+  postgres_data:

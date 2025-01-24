@@ -1,53 +1,44 @@
 version: '3.8'
 
 services:
-  hubleys-web:
+  web:
     image: hubleys/web:latest
     ports:
-      - "80:80" # Map HTTP port 80 on the host to port 80 in the container
-      - "443:443": # Map HTTPS port 443 on the host to port 443 in the container if using SSL
+      - "8000:80"
     depends_on:
-      - hubleys-db
+      - api
     environment:
-      - DATABASE_URL=postgres://hubleys-db:5432/hubleys
+      - DATABASE_HOST=db
+      - DATABASE_USER=hubleys
+      - DATABASE_PASSWORD=secret
+      - DATABASE_NAME=hubleys_db
     volumes:
-      - ./hubleys-web:/usr/src/app
-      - hubleys-web_logs:/var/log/hubleys-web
+      - .:/src
+      - /src/node_modules
+    command: npm run dev
 
-  hubleys-db:
+  api:
+    image: hubleys/api:latest
+    environment:
+      - DATABASE_HOST=db
+      - DATABASE_USER=hubleys
+      - DATABASE_PASSWORD=secret
+      - DATABASE_NAME=hubleys_db
+    depends_on:
+      - db
+
+  db:
     image: postgres:13
+    volumes:
+      - hubleys-db:/var/lib/postgresql/data
     environment:
-      - POSTGRES_DB=hubleys
-      - POSTGRES_USER=hubleysuser
-      - POSTGRES_PASSWORD=hubleyspassword
-    volumes:
-      - hubleys-db_data:/var/lib/postgresql/data
-      - hubleys-db_logs:/var/log/hubleys-db
-
-  hubleys-cache:
-    image: redis:6
-    environment:
-      - REDIS_PASSWORD=redispw
-    volumes:
-      - hubleys-cache_data:/data
-      - hubleys-cache_logs:/var/log/hubleys-cache
-
-  hubleys-worker:
-    image: worker:1 # Replace with the actual worker service image
-    command: tail -f /dev/null # Keep container running without consuming CPU
-    depends_on:
-      - hubleys-db
-    volumes:
-      - hubleys-worker_logs:/var/log/hubleys-worker
+      - POSTGRES_USER=hubleys
+      - POSTGRES_PASSWORD=secret
+      - POSTGES_DB=hubleys_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hubleys"]
+      timeout: 10s
+      retries: 5
 
 volumes:
-  hubleys-web_logs:
-  hubleys-db_data:
-  hubleys-db_logs:
-  hubleys-cache_data:
-  hubleys-cache_logs:
-  hubleys-worker_logs:
-
-networks:
-  default:
-    driver: bridge
+  hubleys-db:

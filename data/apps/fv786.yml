@@ -1,36 +1,36 @@
-version: '3.7'
-
+version: '3.8'
 services:
-  bracket-cli:
-    image: brackethq/bracket-cli:v2.5.0 # Use the latest or specific version tag
-    command: /bin/sh -c "./grade && ./bracket"
+  bracket_api:
+    image: "bracketjs/bracket-api"
     ports:
-      - "8080:8080" # Bracket CLI default port
-    depends_on:
-      - postgres
-
-  local-stack:
-    image: localstack/localstack:latest # Use the latest or specific version tag
-    ports:
-      - "4566:4566" # AWS default port for LocalStack
-      - "9000:9000" # DynamoDB default port for LocalStack
-      - "8000:8000" # API Gateway default port for LocalStack
+      - "5000:5000" # Bracket API server runs on port 5000 by default
     environment:
-      LOCALSTACK_LAUNCH_ZIPS: "true"
-      LOCALSTACK_DOCKER_HOST: "bundle"
-      AWS_ACCESS_KEY_ID: "localstack"
-      AWS_SECRET_ACCESS_KEY: "localstack"
-      AWS_REGION: "us-east-1"
-
-  postgres:
-    image: postgres:13 # Use the latest or specific PostgreSQL version
+      CONFIG_FILE: /config.json # Path to your custom config file if you have one
+      DATABASE_HOST: db              # Service name of the database container
+      POSTGRES_DB: bracket          # Database name for PostgreSQL
+      POSTGRES_USER: bracket         # Database user for PostgreSQL
+      POSTGRES_PASSWORD: yourpassword  # Database password for PostgreSQL
     volumes:
-      - bracket-postgres-data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: bracket_test
-      POSTGRES_USER: bracket
-      POSTGRES_PASSWORD: secret
+      - ./bracket-api.env:/config.env # Load custom environment variables from a file (optional)
+    depends_on:
+      - db
+    networks:
+      - bracket_network
 
+  db:
+    image: "postgres:13"             # Use the official PostgreSQL image
+    volumes:
+      - postgres_data:/var/lib/postgresql # Persist database data
+    environment:
+      POSTGRES_DB: bracket          # Database name
+      POSTGRES_USER: bracket         # Database user
+      POSTGRES_PASSWORD: yourpassword  # Database password
+    networks:
+      - bracket_network
+
+# named volumes for persistence
 volumes:
-  bracket-postgres-data:
-    driver: local
+  postgres_data:
+
+networks:
+  bracket_network:

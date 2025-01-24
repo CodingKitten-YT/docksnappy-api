@@ -1,0 +1,46 @@
+version: '3.7'
+
+services:
+  livestreamer:
+    image: lintw/livestreamer:latest
+    volumes:
+      - "/path/to/your/media:/media" # Replace with the path to your local media files
+    environment:
+      - LIVESTREAMER_OUTPUT_FILE=/dev/null
+      - LIVESTREAMER_INPUT_OPTIONS='streamer=YouTube'
+      - LIVESTREAMER_INPUT_URL="youtube-live2:<YOUR_LIVE_EVENT_ID>" # Replace with your live event ID
+    command: livestreamer --no-verbose --limit 0 ${LIVESTREAMER_INPUT_OPTIONS} "${LIVESTREAMER_INPUT_URL}" ${LIVESTREAMER_OUTPUT_FILE}
+
+  web:
+    image: linuxserver/limespot:latest
+    environment:
+      - PUID=100 # Use the same PUID as for the Livestreamer service
+      - PUID=100 # Use the same GID as for the Livestreamer service
+      - TZ=Europe/Paris # Set your timezone
+      - LB_HOST=web # This will be mapped to another container's hostname if configured
+    volumes:
+      - "/path/to/your/media:/media" # Replace with the path to your local media files, same as Livestreamer
+      - "./config:/config" # Config directory for Limespot (optional, for configuration)
+      - "./data:/data"       # Data directory for Limespot (required for data persistence)
+    ports:
+      - "80:80" # Map the container's port to your desired host port
+      - "443:443" # If you plan on using HTTPS, map the container's port to your desired host port
+    depends_on:
+      - livestreamer
+    networks:
+      - livetimesnet
+
+  db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_DB=limespot
+      - POSTGRES_USER=limespot
+      - POSTGRES_PASSWORD=changeit
+    volumes:
+      - "./data/db:/var/lib/postgresql" # Data directory for PostgreSQL (required for data persistence)
+    networks:
+      - livetimesnet
+
+networks:
+  livetimesnet:
+    driver: bridge

@@ -1,0 +1,30 @@
+version: '3.8'
+services:
+  shellhub:
+    image: shellhub/shellhub:latest
+    container_name: shellhub
+    ports:
+      - "8080:8080" # Web UI port
+    environment:
+      SHELLHUB_ADMIN_USERNAME: admin
+      SHELLHUB_ADMIN_EMAIL: admin@example.com
+      SHELLHUB_ADMIN_PASSWORD: your_password_here
+      JAVA_OPTS: -Xms512M -Xmx512M # Optional: set Java heap size
+    volumes:
+      - shellhub-data:/data
+      - type: tar
+        source: local-scripts.tar
+        target: /opt/shellhub/scripts
+        optional: true
+
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: shellhub
+      POSTGRES_USER: shellhub
+      POSTGRES_PASSWORD: your_database_password_here
+    volumes:
+      - shellhub-data:/var/lib/postgresql/data
+
+volumes:
+  shellhub-data:

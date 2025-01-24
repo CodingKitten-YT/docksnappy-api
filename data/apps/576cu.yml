@@ -1,48 +1,32 @@
-version: '3.7'
+version: '3.8'
+
 services:
   movim:
     image: movim/movim:latest
     container_name: movim
+    command: /run.sh --background
     restart: unless-stopped
     networks:
       - movim_network
     environment:
-      MOVIM_WEB_APP_SECRET: "your_secret_here" # Generate a secret using, e.g., openssl rand -hex 32
-      MOVIM_POSTGRES_DATABASE: "movim"
-      MOVIM_POSTGRES_USER: "movim"
-      MOVIM_POSTGRES_PASSWORD: "your_password_here" # A secure password
-    ports:
-      - "8080:8080"
+      - MOVIM_ADMIN_EMAIL=admin@example.com
+      - MOVIM_ADMIN_PASSWORD=changeme
+      - PGID=${POSTGRES_USER:?}
+      - PUID=${POSTGRES_USER:?}
     volumes:
-      - movim-data:/data
-      - ./movim-config:/code/app:ro
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/health"]
-      interval: 15s
-      timeout: 30s
-      retries: 99
+      - movim-data:/app/data
+      - movim-config:/app/config
 
   postgres:
     image: postgres:latest
-    container_name: movim_postgres
-    restart: unless-stopped
+    container_name: postgres
     environment:
-      POSTGRES_DB: "movim"
-      POSTGRES_USER: "movim"
-      POSTGRES_PASSWORD: "your_password_here" # Same password as above
+      - POSTGRES_DB=movim
+      - POSTGRES_USER=movim
+      - POSTGRES_PASSWORD=changeme
     volumes:
       - postgres-data:/var/lib/postgresql/data
-    networks:
-      - movim_network
-
-  redis:
-    image: redis:latest
-    container_name: movim_redis
     restart: unless-stopped
-    volumes:
-      - redis-data:/data
-    networks:
-      - movim_network
 
 networks:
   movim_network:
@@ -50,5 +34,5 @@ networks:
 
 volumes:
   movim-data:
+  movim-config:
   postgres-data:
-  redis-data:

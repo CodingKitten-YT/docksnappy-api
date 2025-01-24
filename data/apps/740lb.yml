@@ -1,37 +1,38 @@
 version: '3.8'
+
 services:
   donetick_api:
-    image: donetick/donetick-api:latest
+    image: "donetick/api:latest"
     ports:
-      - "5001:5000" # Expose the API on host port 5001 (HTTP)
+      - "5000:5000"
     environment:
-      DONETICK__API__HOST: '0.0.0.0'
-      JWT_SECRET: 'your_jwt_secret' # Replace with a strong, secret key for JWT tokens
+      - SECRET_KEY=your_secret_key
+      - DB_URI=postgres://user:password@db:5432/dbname
+      - REDIS_URL=redis://redis:6379/1
+      #- ... other environment variables as needed
     depends_on:
-      - postgres
-
-  donetick_redis:
-    image: redis:6-alpine
-    command: redis-server --appendonly yes
+      - db
+      - redis
     volumes:
-      - 'redis-data:/data' # Persist Redis data with a named volume
+      - ./donetick_api:/code
+      - donetick_api_logs:/var/log/donetick_api
+    command: >
+       python manage.py runserver 0.0.0.0:5000
 
-  postgres:
-    image: postgres:13
+  db:
+    image: "postgres:13"
+    volumes:
+      - db_data:/var/lib/postgresql/data
     environment:
-      POSTGRES_DB: donetick
-      POSTGRES_USER: donetick
-      POSTGRES_PASSWORD: donetick_password # Replace with a strong password for the database
-    volumes:
-      - 'postgres-data:/var/lib/postgresql' # Persist PostgreSQL data with a named volume
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=dbname
+    ports:
+      - "5432:5432"
 
-  donetick_worker:
-    image: donetick/donetick-worker:latest
-    depends_on:
-      - donetick_api
-      - postgres
-      # In production, consider running the worker on the same host as the API for simplicity and performance.
+  redis:
+    image: "redis:6-alpine"
 
 volumes:
-  redis-data:
-  postgres-data:
+  donetick_api_logs:
+  db_data:

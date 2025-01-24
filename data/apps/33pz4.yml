@@ -1,67 +1,87 @@
 version: '3.8'
 services:
-  # PostgreSQL
-  db:
-    image: postgres:13
-    environment:
-      POSTGRES_DB: linkstack_db
-      POSTGRES_USER: linkstack
-      POSTGRES_PASSWORD: secret
-    volumes:
-      - ./init-db.sql:/docker-entrypoint-initialized/dump.sql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U linkstack"]
-      timeout: 10s
-      retries: 5
-
-  # Redis
-  redis:
-    image: redis:6-alpine
-    command: redis-server --appendonly yes
-    volumes:
-      - redis-data:/data
-    healthcheck:
-      test: ["CMD-SHELL", "redis-cli -a /dev/null ping"]
-      timeout: 10s
-      retries: 5
-
-  # Linkstack Core Service (API)
-  linkstack:
-    image: linkstack/core:latest
-    depends_on:
-      - db
-      - redis
+  # Core services of Minikube (kubeadm, kubelet, kubectl)
+  etcd:
+    image: registry.k8s.io/etcd:v3.5.0
+    command: --advertise-client-urls=http://0.0.0.0:2379,http://127.0.0.1:2379 --run-command-logger=true
     ports:
-      - "8081:80"
-    environment:
-      DB_HOST: db
-      REDIS_HOST: redis
-      API_SECRET: secret
-    healthcheck:
-      test: ["TCP", ":80/tcp"]
-      timeout: 10s
-      retries: 5
+      - "2379:2379"
+      - "2380:2380"
 
-  # Linkstack Web Service (Frontend)
-  web:
-    image: linkstack/web:latest
+  kubeadm:
+    image: registry.k8s.io/kubeadm:v1.24.1
+    command: --pod-network-cidr=10.244.0.0/16
     depends_on:
-      - db
-      - redis
+      - etcd
+      - kubectl
+
+  kubectl:
+    image: registry.k8s.io/kubectl:v1.24.1
+    depends_on:
+      - etcd
+
+  kube-proxy:
+    image: registry.k8s.io/kube-proxy:v1.24.1
+    command: --config=kube-proxy-linkstack.conf
+    depends_on:
+      - kubeadm
     ports:
-      - "8082:3000"
-    environment:
-      DB_HOST: db
-      REDIS_HOST: redis
-      API_SECRET: secret
-    healthcheck:
-      test: ["TCP", ":3000/tcp"]
-      timeout: 10s
-      retries: 5
+      - "10254:10254/udp"
+      - "10250:10250/kubernetes"
 
-volumes:
-  redis-data:
+  # Required for a high availability control plane in LinkStack
+  kube-apiserver:
+    image: registry.k8s.io/kube-apiserver:v1.24.1
+    command: --service-cluster-ip-range=10.96.0.0/16 --advertise-client-urls=http://127.0.0.1:8080 --allow-privileged=true
+    depends_on:
+      - kubeadm
+      ports:
+        - "8080:8080"
+        - "6443:6443"
 
-networks:
-  linkstack_default:
-    driver: bridge
+  # Additional services like DNS, network plugin (Calico), storage class (LocalStorage) etc.
+  calico-etcd:
+    image: quay.io/calico/node:v3.25.0
+    depends_on:
+      - kubeadm
+      - etcd
+    ports:
+      - "8472:8472/udp"
+
+  calico-kube-controllers:
+    image: quay.io/calico/kube-controllers-calico:v3.25.0
+    depends_on:
+      - kubeadm
+      - calico-etcd
+
+  # For highly available etcd with LinkStack
+  etcd-operator:
+    image: etcd-operator/etcd-operator:v1.24.0
+    command: --leaderElection=true --leaderElectionNamespace=kube-system
+    depends_on:
+      - etcd
+
+  # Metrics server for monitoring
+  metrics-server:
+    image: k8s.gcr.io/metrics-server/metrics-server:v0.5.1
+    args: [--kubelet-insecure-tls=true]
+    depends_on:
+      - kubeadm
+      - kube-proxy
+
+  # CoreDNS for DNS resolution within the cluster
+  coredns:
+    image: coredns.github.io/coredns:v1.9.2
+    command: --config=/etc/coredns/Corefile
+    depends_on:
+      - kube-apiserver
+      ports:
+        - "53:53/udp"
+        - "53:53/tcp"
+        - "9090:9090"
+
+# Additional configuration for networking can be added here, such as a load balancer or ingress controller.
+
+# Volumes are not explicitly defined in this example, but they might be necessary for persistent storage and data volume persistence.
+
+# This setup assumes you're running Minikube with the `--vm-driver=none` flag to use system Kubernetes components directly.

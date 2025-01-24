@@ -1,35 +1,30 @@
 version: '3.8'
-
 services:
   lynx:
-    image: lynxloud/lynx:latest # Use the official Docker image for Lynx
+    image: 'lynx/lynx:latest' # Use the official Lynx Docker image
     container_name: lynx
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/etc/google-cloud-keys.json # Mount your Google Cloud credentials here
     ports:
-      - "5000:5000" # Expose the default port for Lynx API (if applicable)
+      - "5901:5901" # Lynx default port for the web UI
+      # Optionally, expose the SSH port if you want to access the Lynx machine via SSH from the host
+      - "2222:22"
     volumes:
-      - ./data:/data # Mount a volume for data persistence
-      - ./lynx.yaml:/app/config.yml # Optionally override default config with a local one
-    environment:
-      - LOG_LEVEL=INFO # Set the log level (DEBUG, INFO, WARNING, ERROR)
-      - JWT_SECRET=your_jwt_secret # A secret key for JWT authentication (must be kept secure)
-      - POSTGRES_HOST=postgres # The service name of the PostgreSQL server if it's defined separately
-      - POSTGRES_DB=lynx # The database name to connect to
-      - POSTGRES_USER=lynx # The database user
-      - POSTGRES_PASSWORD=lynx # The database password
-    networks:
-      - lynx-network # Define a custom network for Lynx (optional)
+      - ./lynx-config.yaml:/etc/lynx/config.yaml # Mount your custom Lynx configuration file
+      - /var/run/docker.sock:/var/run/docker.sock:ro # Required for Docker client inside the container (if you use Lynx as a builder)
+      - google-cloud-keys.json:/etc/google-cloud-keys.json # Mount your Google Cloud keys file to authenticate with GCP
+    restart: unless-stopped
+    capabilities_add:
+      - SYS_ADMIN
+    security_opt:
+      - seccomp:unconfined
 
-  postgres:
-    image: postgres:latest
-    environment:
-      - POSTGRES_DB=lynx
-      - POSTGRES_USER=lynx
-      - POSTGRES_PASSWORD=lynx
+# Optional: If you want to use Lynx as a Docker image builder, uncomment the following section
+# and adjust the `build_image` service accordingly.
+services:
+  build_image:
+    build: .
+    depends_on:
+      - lynx
     volumes:
-      - ./postgres-data:/var/lib/postgresql/data # Persist PostgreSQL data
-    networks:
-      - lynx-network
-
-networks:
-  lynx-network:
-    driver: bridge
+      - .:/app

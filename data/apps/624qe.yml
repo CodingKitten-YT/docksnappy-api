@@ -2,65 +2,27 @@ version: '3.8'
 
 services:
   jellyfin:
-    image: jellyfin/jellyfin:latest  # Use the official Jellyfin Docker image
+    image: jellyfin/jellyfin-arr:latest  # Use the official Docker image for Jellyfin and Arr (WebUI)
     container_name: jellyfin
-    environment:
-      TZ: 'America/New_York'  # Set your timezone, e.g., Europe/London
-      PUID: 1000  # Set your user ID for volume and file permissions
-      PODID: 102  # Set your group ID for volume and file permissions
     ports:
-      - "80:80"  # Expose web UI on port 80 of the host (HTTP)
-      - "81:81"  # Expose web UI on port 81 of the host (HTTPS, optional but recommended)
+      - "8090:80"  # Map port 80 from the container to port 8090 on the host for WebUI access
+      - "8080:80"  # Map port 80 from the container to port 8080 on the host for PMS API and Docker API
     volumes:
-      - jellyfin-data:/data  # Persist Jellyfin data and media files
-      - jellyfin-config:/config  # Persist Jellyfin configuration files
-    restart: unless-stopped  # Restart the container if it stops
-    networks:
-      - jellyfin_net
-
-  db:
-    image: postgres:13  # Use the PostgreSQL 13 official Docker image
+      - "${HOME}/.config/jellyfin:/config"  # Persist local Jellyfin configuration
+      - "/var/lib/docker/volumes/jellyfin_data/:/data"  # Persist media files (Docker host path needs to be created)
+      - "/media:/media"  # Optional: Mount a host media directory if you want to access it directly
     environment:
-      POSTGRES_USER: jellyfin
-      POSTGRES_PASSWORD: change_this_password
-      POSTGRES_DB: jellyfin
-    volumes:
-      - jellyfin-db:/var/lib/postgresql  # Persist the database data
+      - PUID=1000  # Set Process User ID, must match the UID of the user that owns the data volume
+      - PGID=1000  # Set Process Group ID, must match the GID of the user that owns the data volume
+      - TZ=Europe/London  # Set Timezone, change to your local timezone
+      - JELLYFIN_ENABLE_UPNP=false  # Optional: Disable uPNP if not needed
     restart: unless-stopped
     networks:
-      - jellyfin_net
-
-volumes:
-  jellyfin-data:
-  jellyfin-config:
-  jellyfin-db:
+      - jellyfin_network
 
 networks:
-  jellyfin_net:
+  jellyfin_network:
     driver: bridge
 
-# Optional: If you want to set up a NGINX reverse proxy in front of Jellyfin, uncomment the following services:
-nginx:
-  image: nginx:stable-alpine
-  container_name: nginx
-  ports:
-    - "8080:80"  # Expose NGINX on port 8080 of the host (HTTP)
-  volumes:
-    - ./nginx.conf:/etc/nginx/nginx.conf  # Use a custom nginx.conf if you have one
-  depends_on:
-    - jellyfin
-  networks:
-    - jellyfin_net
-
-# Optional: If you want to use Let's Encrypt for SSL, uncomment the following services and add the 'ssl' key to the ports section of the Jellyfin service:
-letool:
-  image: certbot/certbot:latest
-  entrypoint: '/bin/sh -c "'while :; do certbot renew; sleep 12h & wait $${!}; done;"'
-  volumes:
-    - ./letsencrypt:/etc/letsencrypt
-    - jellyfin-data:/data
-  restart: unless-stopped
-  networks:
-    - jellyfin_net
-
-# Note: The `nginx` and `letool` services are optional and should only be used if you want to set up HTTPS with Let's Encrypt certificates.
+volumes:
+  jellyfin_data:

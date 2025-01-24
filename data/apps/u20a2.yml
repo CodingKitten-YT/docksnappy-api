@@ -1,35 +1,45 @@
 version: '3.8'
 
 services:
-  commafeed-api:
-    image: "commafeed/commafeed:latest"
-    ports:
-      - "5000:5000"
-    environment:
-      SERVICE_GUNTHER_ENABLED: "true"
-      GUNTHER_TOKEN: "some_secret_token"
-    command: run --allow-root
+  db:
+    image: postgres:13
     volumes:
-      - "./data:/var/lib/commafeed"
-      - "./commafeed.db.backup:/backup/commafeed.db.backup"
-    depends_on:
-      - gunther
-    networks:
-      - commafeed_net
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: commafeed
+      POSTGRES_USER: commafeed
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5432:5432"
 
-  gunther:
-    image: "commafeed/gunther:latest"
-    environment:
-      GUNTHER_TOKEN: "another_secret_token"
-      GUNTHER_ADMIN_USERNAME: "admin"
-      GUNTHER_ADMIN_PASSWORD: "admin_password"
-    ports:
-      - "8082:8080" # This is the default port for Gunther
+  redis:
+    image: redis:6-alpine
     volumes:
-      - "./data/gunther:/var/lib/gunther"
-      - "./gunther.db.backup:/backup/gunther.db.backup"
-    networks:
-      - commafeed_net
+      - ./data/redis:/data
+
+  worker:
+    build: .
+    volumes:
+      - .:/code
+      - ./data/commafeed:/var/tmp/commafeed/packaging
+    environment:
+      COMMAFEED_DBURL: postgres://commafeed:secret@db:5432/commafeed
+      COMMAFEED_REDIS_URL: redis://redis:6379/0
+      COMMAFEED_LOG_LEVEL: debug
+    command: worker
+
+  web:
+    build: .
+    volumes:
+      - .:/code
+      - ./data/commafeed:/var/tmp/commafeed/packaging
+    environment:
+      COMMAFEED_DBURL: postgres://commafeed:secret@db:5432/commafeed
+      COMMAFEED_REDIS_URL: redis://redis:6379/0
+      COMMAFEED_LOG_LEVEL: debug
+    expose:
+      - "8000"
+    command: server --bind 0.0.0.0:8000
 
 networks:
   commafeed_net:

@@ -1,51 +1,46 @@
 version: '3.7'
 
 services:
-  dagu-frontend:
-    image: daguio/dagu-frontend:v2.10.0 # Use the appropriate tag for the version you want
+  dagun-controller:
+    image: daguin/dagun-controller:latest
+    command:
+      - '--kubeconfig=/etc/kubernetes/controller.conf'
+      # Use the appropriate API server URL and port
+      - '--api-server=http://my_app_frontproxy:8080'
+      # You can also specify a static endpoint if you have one
+      # - '--static-endpoint=http://my-dagun-endpoint.com'
     ports:
-      - "8080:8080"
-    command: >
-      {
-        "server": {
-          "host": "0.0.0.0",
-          "port": 8080,
-          "secure": false
-        }
-      }
-
-  dagu-api:
-    image: daguio/dagu-api:v2.10.0 # Use the appropriate tag for the version you want
-    ports:
-      - "9090:9090"
-    depends_on:
-      - dagu-mysql
-    environment:
-      MYSQL_HOST: dagu-mysql
-      MYSQL_USER: root
-      MYSQL_PASSWORD: secret
-      MYSQL_DATABASE: dagu
-      SERVER_HOST: dagu-frontend
-      SECRET_KEY: a_very_secret_key # Replace with your actual secret key for cryptographic security
-
-  dagu-mysql:
-    image: mysql:5.7
-    command: --default-authentication-plugin=mysql_native_password
-    environment:
-      MYSQL_ROOT_PASSWORD: secret
-      MYSQL_DATABASE: dagu
-      MYSQL_USER: root
-      MYSQL_PASSWORD: secret
+      - "9050:9050" # Controller UI
     volumes:
-      - mysql-data:/var/lib/mysql
-
-  dagu-redis:
-    image: redis:5.0
-    command: --save-mode no-prefork-child
+      - ./kubernetes.conf:/etc/kubernetes/controller.conf
+    depends_on:
+      - my_app_etcd
+      - my_app_frontproxy
+  my_app_etcd:
+    image: etcd:3.4.6
+    command:
+      - '--advertise-client-urls=http://0.0.0.0:2379'
+      # Default discovery mode configuration
+      - '--initial-advertise-peer-urls=http://my_app_etcd.local:2380'
+      - '--listen-peer-urls=http://my_app_etcd.local:2380'
+    environment:
+      # Configure etcd discovery to find other etcd instances (peers)
+      DAGUN_ETCD_DISCOVERY: "new[my_app_etcd.local]:2380"
+    volumes:
+      - etcd-data:/etc/etcd/data
+  my_app_frontproxy:
+    image: kube-proxy:v1.20.2
+    command:
+      - '--container-runtime=remote'
+      - '--kubeconfig=/etc/kubernetes/frontproxy.conf'
+      # Configure kube-proxy to use the dagun controller's API server
+      - '--proxy-mode=iptables'
+    ports:
+      - "8080:8080" # Kubernetes front proxy
+    volumes:
+      - ./kubernetes.conf:/etc/kubernetes/frontproxy.conf
+    depends_on:
+      - my_app_etcd
 
 volumes:
-  mysql-data:
-
-networks:
-  default:
-    driver: bridge
+  etcd-data:

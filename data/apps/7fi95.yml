@@ -1,0 +1,71 @@
+version: '3.8'
+services:
+  remotely-api:
+    image: remotedev/remotely-api:latest
+    container_name: remotely-api
+    ports:
+      - "4000:4000"
+    environment:
+      TZ: "${TZ}"
+      JWT_SECRET: "${JWT_SECRET}"
+      POSTGRES_DB: "${POSTGRES_DB}"
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+    volumes:
+      - ./remotely-api/data:/data
+      - ./remotely-api/log:/root/.logs
+    command: >
+      sh -c "trap exit TERM; while :; do npm run start; sleep 1; done;"
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      POSTGRES_DB: "${POSTGRES_DB}"
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+    volumes:
+      - ./remotely-api/data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["cmd", "sleep", "5", "&&", "pg_controldata", "/tmp", "/dev/urandom"]
+      timeout: 10s
+      retries: 5
+
+  remotely-frontend:
+    image: remotedev/remotely-frontend:latest
+    container_name: remotely-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      REMOTELY_API_URL: http://remotely-api:4000
+      NODE_ENV: production
+    volumes:
+      - ./remotely-frontend/dist:/dist
+
+  nginx-proxy:
+    image: 'jwilder/nginx-proxy':latest
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./certs:/etc/letsencrypt
+      - /var/run/docker.sock:/tmp/docker.sock
+    depends_on:
+      - remotely-api
+      - remotely-frontend
+
+  letsencrypt:
+    image: 'jrcass/letsencrypt-nginx-proxy-companion':latest
+    container_name: letsencrypt
+    volumes:
+      - ./certs:/etc/letsencrypt
+      - /var/run/docker.sock:/tmp/docker.sock
+    depends_on:
+      - nginx-proxy
+
+restart_policy:
+  Version: "3"
+  RestartPolicy:
+    Name: always

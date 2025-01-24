@@ -1,38 +1,32 @@
 version: '3.8'
-
 services:
   feedcord:
-    image: 'feedcord/feedcord'
-    container_name: 'FeedCord'
+    image: feedcord/feedcord:latest
+    container_name: feedcord
     ports:
-      - '8080:8080' # Expose FeedCord's web UI on host port 8080
+      - "5000:5000" # Expose the port FeedCord runs on (default is 5000)
     environment:
-      - TZ=Europe/London # Set the timezone, change to your desired timezone
-      - BOT_TOKEN=your_discord_bot_token # Your Discord bot token
-      - OAUTH2_CLIENT_ID=your_oauth2_client_id # Your OAuth2 client ID
-      - OAUTH2_CLIENT_SECRET=your_oauth2_client_secret # Your OAuth2 client secret
-      - FEEDCORD_DATABASE_URL=jdbc:mysql://db:3306/feedcord?useSSL=false # Database URL for MySQL
-      - FEEDCORD_LOGIN=login # Database login for MySQL
-      - FEEDCORD_PASSWORD=password # Database password for MySQL
+      DISCORD_TOKEN: ${DISCORD_TOKEN}
+      CLIENT_ID: ${CLIENT_ID}
+      GUILD_ID: ${GUILD_ID}
+      POST_URL: ${POST_URL} # (optional) URL to post to, if you want FeedCord to send RSS data to another server
     volumes:
-      - './config:/etc/feedcord' # Mount your local config directory to the container for configuration files
-      - './cache:/root/.cache/minecraft' # Mount a cache directory for Minecraft server data (optional, depending on your usage)
-      - './logs:/var/log/feedcord' # Mount your local logs directory to the container for log files
-    depends_on:
-      - db # FeedCord depends on the 'db' service
-    restart: unless-stopped # Restart the container unless it has been explicitly stopped
+      - ./config:/etc/feedcord
+      - ./cache:/var/cache/feedcord
+    restart: unless-stopped
 
-  db:
-    image: 'postgres:13'
-    container_name: 'FeedCordDB'
-    environment:
-      - POSTGRES_USER=feedcord
-      - POSTGES_PASSWORD=password # Change this to a strong password
-      - POSTGRES_DB=feedcord
+  redis:
+    image: redis:6.2
+    ports:
+      - "6379:6379"
     volumes:
-      - './db:/var/lib/postgresql/data' # Mount your local db directory to the container for database data persistence
-    restart: unless-stopped # Restart the container unless it has been explicitly stopped
+      - redis-data:/data
 
-networks:
-  default:
-    driver: bridge
+  mongodb:
+    image: mongo:latest
+    volumes:
+      - mongodb-data:/data/db
+
+volumes:
+  redis-data:
+  mongodb-data:

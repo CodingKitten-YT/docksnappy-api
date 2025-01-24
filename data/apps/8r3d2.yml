@@ -1,29 +1,72 @@
-version: '3.8'
+version: '3.7'
 
 services:
   manticore:
-    image: manticoresearch/manticore-full:latest
+    image: manticoresearch/manticore-search:latest  # Use the official Manticore Search image
     container_name: manticore
-    command: /bin/sh -c "/opt/manticore/scripts/init && \
-               /opt/manticore/bin/manticore -c /etc/manticore/manticore.conf && \
-               tail -f /dev/null"
     ports:
-      - "6001:6001/tcp" # HTTP API
-      - "5984:5984"     # REST API (for the OLM Client)
-      - "8000:8000"    # Admin UI
-      - "9000:9000"    # Manticore Monitoring UI
-    volumes:
-      - "./data:/opt/manticore/data"
-      - "./conf:/etc/manticore"
-      - "./lib:/opt/manticore/share/manticore-configs"
+      - "9014:9014"  # Default Manticore port for HTTP API
+      - "5631:5631"   # Default Manticore port for MySQL clients (e.g., Elasticsearch)
     environment:
-      TZ: "Europe/London" # Set the Timezone accordingly
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "localhost:6001/info"]
-      timeout: 5s
-      retries: 3
+      MYCORDA_DATA: /var/lib/manticore/data  # Optional, for data persistence across container restarts
+      MYCORDA_LOG_LEVEL: warning  # Log level (debug, info, notice, warning, error)
+      MYCORDA_HTTP_INTERFACE: all  # Listen on all interfaces for HTTP API
+    volumes:
+      - manticore-data:/var/lib/manticore  # Mount a volume for data persistence
+      - manticore-conf:/etc/manticore  # Mount a volume for configuration files
+      - manticore-logs:/var/log/manticore  # Mount a volume for log files (optional)
+    networks:
+      - manticore_network
+
+volumes:
+  manticore-data:
+  manticore-conf:
+  manticore-logs:
 
 networks:
-  default:
-    driver: bridge
+  manticore_network:
+
+# Optional dependencies like Elasticsearch or Kibana can be added separately
+# For example, if you want to use Manticore with Elasticsearch, you would add:
+
+services:
+  manticore-es:
+    image: elasticsearch:7.10.2
+    container_name: manticore-es
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"  # Min/max memory for Elasticsearch
+      discovery.type: single-node  # Run as a standalone instance
+    networks:
+      - manticore_network
+
+volumes:
+  manticore-es-data:
+
+networks:
+  manticore_network:
+
+# If you're using Kibana as a frontend to visualize your data, add it like this:
+
+services:
+  manticore-kibana:
+    image: kibana:7.10.2
+    container_name: manticore-kibana
+    ports:
+      - "5601:5601"
+    environment:
+      ELASTICSEARCH_HOSTS: "http://manticore-es:9200"
+      XPACK_SECURITY_ENABLED: false  # Disable security for simplicity (not recommended for production)
+      SERVER.REPO_PACKAGE_URL: https://artifacts.elastic.co/packages/kibana/7.10.2/kibana-7.10.2-linux-x86_64.deb  # Use the correct URL for your Kibana version
+    depends_on:
+      - manticore-es
+    networks:
+      - manticore_network
+
+volumes:
+  manticore-kibana-data:
+
+networks:
+  manticore_network:

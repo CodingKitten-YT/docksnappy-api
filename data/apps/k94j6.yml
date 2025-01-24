@@ -2,20 +2,34 @@ version: '3.8'
 
 services:
   octobox:
-    image: "octobox/octobox:latest"
+    image: octobox/octobox:latest
     container_name: octobox
-    restart: unless-stopped
-    environment:
-      OCTOBOX_LICENSE_KEY: your_license_key # Replace with your Octobox license key
-      OCTOBOX_EMAIL: your_email@example.com # Replace with your email address
-      NODE_ENV: production
     ports:
       - "3000:3000"
+    environment:
+      OCTOBOX_GHE_ORG: your-organization-slug # Replace with your GitHub Organization slug
+      OCTOBOX_GHE_TEAM: your-team-slug     # Replace with your GitHub Team slug (optional)
+      GHE_HOSTNAME: your-github-host.com   # Replace with your GitHub instance hostname if self-hosted
     volumes:
-      - "./octobox:/data"
+      - './config:/data/api/config'
+      - './cache:/data/api/cache'
+    depends_on:
+      - postgres
     networks:
-      - octobox_network
+      - octobox-network
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    volumes:
+      - './postgres:/var/lib/postgresql'
+    environment:
+      POSTGRES_DB: octobox
+      POSTGRES_USER: octobox
+      POSTGRES_PASSWORD: change_this_password # Replace with a strong password
+    networks:
+      - octobox-network
 
 networks:
-  octobox_network:
+  octobox-network:
     driver: bridge

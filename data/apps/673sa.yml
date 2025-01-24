@@ -1,48 +1,37 @@
 version: '3.8'
 
 services:
-  gramps-web:
+  gramps:
     image: gramps/gramps-web:latest
-    container_name: gramps-web
+    container_name: gramps_web
     ports:
-      - "5000:5000" # Expose Gramps Web server on host port 5000 (HTTP)
-      - "5001:5001" # Expose Gramps Web server on host port 5001 (HTTPS, if configured)
+      - "80:5000" # Expose Gramps Web on port 80 of the host
     volumes:
-      - "./data:/data" # Mount a local directory to store the database and media files
-      - "./gramps.conf:/etc/gramps/gramps.conf" # Optional: Mount for custom gramps configuration file
-      - "./gramps-web.conf:/etc/gramps/gramps-web.conf" # Optional: Mount for custom nginx/gramps-web configuration file
+      - ./gramps-data:/var/lib/gramps # Path to your local Gramps data directory
+      - ./gramps-media:/srv/gramps/media # Path to your local media files directory (optional)
+      - ./gramps-plugins:/usr/share/gramps/plugins # Path to your local plugins directory (optional)
     environment:
-      - TZ=Europe/London  # Set the Time Zone, adjust to your location
-    restart: unless-stopped
+      - TZ=Europe/London  # Set the Timezone as needed (e.g., Europe/London, America/New_York)
+    restart: unless-stopped # Ensure the container restarts on failure
 
-  redis:
-    image: redis:6-alpine
-    volumes:
-      - "./redis-data:/data"  # Mount a local directory for Redis data persistence
-    environment:
-      - REDIS_PORT=6379   # Default port Redis listens on
-    restart: unless-stopped
-
-  db:
+  postgres:
     image: postgres:13
     volumes:
-      - "./db-data:/var/lib/postgresql/data"  # Mount a local directory for PostgreSQL data persistence
+      - gramps-postgres-data:/var/lib/postgresql
     environment:
-      - POSTGRES_DB=gramps   # Database name to be used by Gramps
-      - POSTGRES_USER=gramps   # Username for the database
-      - POSTGRES_PASSWORD=changeit  # Password for the database user
-    restart: unless-stopped
+      - POSTGRES_DB=gramps
+      - POSTGRES_USER=gramps
+      - POSTGRES_PASSWORD=secret  # You should change this password to something secure
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gramps"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-# Uncomment the following service if you want to use let's encrypt for SSL/TLS
-# services:
-#   letsencrypt:
-#     image: certbot/certbot
-#     container_name: certbot
-#     volumes:
-#       - "./letsencrypt:/etc/letsencrypt"
-#     ports:
-#       - "80:80"
-#       - "443:443"
-#     depends_on:
-#       - gramps-web
-#     entrypoint: /bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'
+networks:
+  default:
+    driver: bridge
+
+volumes:
+  gramps-postgres-data:
+    driver: local

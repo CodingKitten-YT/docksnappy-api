@@ -1,0 +1,50 @@
+version: '3.8'
+services:
+  tine:
+    image: 'typo3/tine2:latest' # Use the official TYPO3 Tine Docker image
+    container_name: tine
+    ports:
+      - "8081:80" # Expose Tine web interface on host port 8081
+    environment:
+      TINE_OCS_USE: '1'
+      MYSQL_DATABASE: 'tine2'
+      MYSQL_USER: 'tine2'
+      MYSQL_PASSWORD: 'change_this_password'
+      MYSQL_ROOT_PASSWORD: 'rootpassword'
+    volumes:
+      - './config:/etc/tine2' # Mount your local configuration directory to the container
+      - './data:/var/lib/mysql' # Mount a volume for MySQL data (use an existing directory or let it be created)
+      - './apps:/var/www/html/install/apps' # Mount a volume for TYPO3 extensions (optional, for managing extensions without container restart)
+    depends_on:
+      - mysql
+
+  mysql:
+    image: 'mysql:5.7'
+    container_name: mysql
+    environment:
+      MYSQL_DATABASE: 'tine2'
+      MYSQL_USER: 'tine2'
+      MYSQL_PASSWORD: 'change_this_password'
+      MYSQL_ROOT_PASSWORD: 'rootpassword'
+    volumes:
+      - './data:/var/lib/mysql' # Mount a volume for MySQL data (use an existing directory or let it be created)
+      - './mysql_init.sql:/docker-entrypoint-initdb.d/mysql_init.sql' # Optional: execute custom SQL scripts on container init (e.g., additional databases, users, etc.)
+    command: '--default-authentication-plugin=mysql_native_password'
+
+  phpmyadmin:
+    image: 'phpmyadmin/phpmyadmin'
+    container_name: phpmyadmin
+    ports:
+      - "8082:80" # Expose PHPMyAdmin on host port 8082
+    environment:
+      PMA_ARBITRARY: 'true'
+      MYSQL_ROOT_PASSWORD: 'rootpassword'
+      MYSQL_USER: 'tine2'
+      MYSQL_PASSWORD: 'change_this_password'
+      MYSQL_DATABASE: 'tine2'
+    volumes:
+      - './data/pma:/var/lib/phpmyadmin'
+
+networks:
+  default:
+    driver: bridge

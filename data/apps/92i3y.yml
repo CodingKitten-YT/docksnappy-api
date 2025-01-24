@@ -2,25 +2,64 @@ version: '3.8'
 services:
   hoarder-app:
     image: hoarder/hoarder-app:latest
+    container_name: hoarder_app
     ports:
-      - "5000:5000" # Expose the port where Hoarder App runs (default is 5000)
+      - "5000:5000" # Expose the port on which Hoarder App runs (default is often 5000)
     environment:
-      - HOARDER_SECRET=your_secret_key # Set a secret key as an environment variable for security
+      - HOARDER_APP_SECRET_KEY=secretkey
+      - HOARDER_APP_DB_URL=postgres://user:password@db:5432/dbname
+    depends_on:
+      - db
     volumes:
-      - ./data:/var/lib/hoarder-app # Mount a local directory for data persistence
-    networks:
-      - hoarder_network
+      - ./data:/data
+      - ./config:/config
+    command: >
+      python manage.py collectstatic --noinput
+      gunicorn hoarder_app.wsgi -b 0.0.0.0:5000
+
+  db:
+    image: postgres:13
+    container_name: hoarder_db
+    volumes:
+      - ./db_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=dbname
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
+      timeout: 10s
+      retries: 5
 
   redis:
     image: redis:6-alpine
-    volumes:
-      - redis-data:/data
-    environment:
-      - REDIS_PASSWORD=your_password # Set a password for Redis if needed for security
+    container_name: hoarder_redis
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli --scan --slot-count 16384 ping"]
+      timeout: 10s
+      retries: 5
 
-networks:
-  hoarder_network:
-    driver: bridge
+# Optional services like celery/beats for queues and logging can be added here as well.
+# Example for Celery Beat (if your app uses it):
+# celery_beat:
+#   image: org.example.image:tag
+#   command: celery -A hoarder_app worker --loglevel=info
+#   depends_on:
+#     - hoarder-app
 
-volumes:
-  redis-data:
+# Example for Celery Worker (if your app uses it):
+# celery_worker:
+#   image: org.example.image:tag
+#   command: celery -A hoarder_app worker --loglevel=info
+#   depends_on:
+#     - hoarder-app
+
+# Example for a logging service (like ELK stack):
+# elk_stack:
+#   image: docker.elastic.co/elasticsearch/elasticsearch:7.15.2
+#   container_name: hoarder_elk_stack
+#   environment:
+#     - "discovery.type=single-node"
+#   ports:
+#     - "9200:9200"
+#     - "9300:9300"

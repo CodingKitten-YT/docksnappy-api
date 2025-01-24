@@ -2,30 +2,37 @@ version: '3.8'
 
 services:
   anonaddy:
-    image: anonymousaddy/anonaddylib
+    image: anonaddy/anonaddy:latest
     container_name: anonaddy
     ports:
-      - "8080:80" # Web interface
-      - "54321:5432" # Postfix for email receiving
-    volumes:
-      - ./data/conf.d:/etc/anonaddy/conf.d
-      - ./data/certs:/etc/letsencrypt
-      - ./data/mail:/var/spool/mail
+      - "5678:80" # default HTTP port, you can use another port if needed
     environment:
-      - ANONADDY_DOMAIN=yourdomain.com
-      - TZ=Your/Timezone
-      - PGID=100
-      - PGROUPNAME=anonaddy
-      - PUID=100
-      - GUI=true
-      - DOMAIN_ALLOWLIST=example.com,another.com
-    networks:
-      - anonaddy_net
+      - VIRTUAL_HOST=yourdomain.com # set to your domain or use a wildcard like '*.example.com' for SNI support
+      - VIRTUAL_PORT=80 # the port you want to listen on the host machine, e.g., 80 or 443 for HTTP/HTTPS respectively
+      - VIRTUAL_PROTO=http # set to 'https' if you want to use SSL
+      - SECRET_KEY=# a random secret key for security purposes
+    volumes:
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt
+    depends_on:
+      - letsencrypt
+
+  letsencrypt:
+    image: certbot/certbot
+    container_name: letsencrypt
+    volumes:
+      - ./letsencrypt:/etc/letsencrypt
+    entrypoint: /bin/sh -c "trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;"
 
 networks:
   anonaddy_net:
     driver: bridge
 
-volumes:
-  anonaddy_data:
-    driver: local
+# Uncomment the following if you're using a custom proxy setup or need to enable/disable dns
+# services:
+#   anonaddy:
+#     labels:
+#       com.github.ecthelot.proxy: "127.0.0.1:3000" # Replace with your proxy address and port
+#     networks:
+#       anonaddy_net:
+#         disable_network: true

@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  bin:
+    image: wantguns/bin:latest
+    container_name: wantguns_bin
+    ports:
+      - "8080:80" # Expose the necessary port, default is 80
+    volumes:
+      - ./config.json:/app/config.json # Mount your config file into the container if you have one
+      - ./data:/app/data       # Mount a data volume for persistent storage
+    environment:
+      - PUID=1000                  # Set the Process User ID (optional, defaults to 1000)
+      - PGID=1000                  # Set the Process Group ID (optional, defaults to 1000)
+      - TZ=Europe/London         # Set the Timezone (optional)
+    restart: unless-stopped    # Restart policy for automated recovery
+    networks:
+      - webnet
+
+networks:
+  webnet:

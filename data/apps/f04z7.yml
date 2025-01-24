@@ -1,26 +1,46 @@
-version: '3.8'
+version: '3.7'
+
 services:
   coder:
-    image: coder.com/coder.io/coder:2.9.1607
+    image: coder.com/coder/coder:latest # or a specific version like coder.com/coder/coder:2.5.0
     container_name: coder
     ports:
-      - "8080:80" # Coder UI
-      - "3000:3000" # Coder WebSocket
-    read_only: true
-    restart: unless-stopped
-    volumes:
-      - "./coder:/coder"
-      - coder-data:/root/.local/share/codermobile
+      - "80:80" # Host to Container
     environment:
-      CODER_SKIP_ALREADY_DOWNLOADED_DEPS: "1"
-      CODESERVER_SERVER_HOST: "0.0.0.0" # Expose Coder to the host network
-      CODESERVER_SERVER_PORT: "80"
-    networks:
-      - coder-net
+      CODER_SKIP_EULA: "true" # Skip the End User License Agreement on first run
+      # Optionally, you can set a CODESPACE_NAME variable here or in the Docker volume for a custom workspace name
+    volumes:
+      - ./coder-data:/root/.local/share/io.codestrategy/coder
+      - coder-auth:/var/lib/coder-auth
 
-networks:
-  coder-net:
-    driver: bridge
+  postgres:
+    image: postgres:latest # or a specific version like postgres:13
+    volumes:
+      - coder-auth:/var/lib/postgresql
+
+# NGINX Proxy Manager service (optional, for ingress and reverse proxy)
+nginx_proxy:
+  image: nginxpm/nginx-proxy:stable
+  container_name: nginx-proxy
+  ports:
+    - "80:80" # HTTP
+    - "443:443" # HTTPS (requires a TLS certificate)
+  volumes:
+    - ./certs/nginx.crt:/etc/nginx/ssl/nginx.crt
+    - ./certs/nginx.key:/etc/nginx/ssl/nginx.key
+    - nginx-proxy_data:/var/lib/nginx-proxy
+  depends_on:
+    - coder
+
+# Optional Certbot container to automate TLS certificates (if using NGINX Proxy Manager)
+certbot:
+  image: certbot/certbot:latest # or a specific version like certbot/certbot:1.24.0
+  volumes:
+    - ./certs:/etc/letsencrypt
+  depends_on:
+    - nginx_proxy
 
 volumes:
+  coder-auth:
   coder-data:
+  nginx-proxy_data:

@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:6-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    environment:
+      - REDIS_MEMORY_MB=512
+
+  postgres:
+    image: postgres:13
+    command: postgres -c 'fig.max_wal_size = 0'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=slash
+      - POSTGRES_USER=slash
+      - POSTGRES_PASSWORD=yourpassword
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./letsencrypt:/workspace/letsencrypt
+      - certbot-conf:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    entrypoint: /bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'
+    depends_on:
+      - nginx
+
+  nginx:
+    image: nginx:stable-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./ssl:/etc/letsencrypt
+      - nginx-conf:/etc/nginx/conf.d
+      - nginx-data:/var/lib/nginx
+      - certbot-www:/var/www/certbot
+    depends_on:
+      - certbot
+
+  slash-site:
+    image: slash/slash:latest
+    environment:
+      - JAVA_OPTS=-Xmx1g -Xms512m
+      - SLASH_HOST=0.0.0.0
+      - SLASH_PORT=8080
+      - SLASH_DB_URL=jdbc:postgresql://postgres:5432/slash
+      - SLASH_DB_USER=slash
+      - SLASH_DB_PASSWORD=yourpassword
+    volumes:
+      - slash-data:/var/lib/slugline
+    depends_on:
+      - postgres
+      - redis
+      - nginx
+
+volumes:
+  redis-data:
+  postgres-data:
+  nginx-conf:
+  nginx-data:
+  slash-data:
+  certbot-conf:
+  certbot-www:

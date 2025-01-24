@@ -1,56 +1,49 @@
 version: '3.8'
+
 services:
-  webapp:
-    image: 'elabel-webapp:latest' # Replace with your specific web app image tag
+  e_label_web:
+    image: e_label_web:latest
     build:
       context: .
-      dockerfile: Dockerfile.webapp
+      dockerfile: Dockerfile.web
     ports:
-      - "8000:8000" # Expose the port your web app runs on (e.g., 8000 for gunicorn)
+      - "5000:5000"
     depends_on:
-      - db
+      - e_label_api
+    environment:
+      - DB_HOST=e_label_db
+      - DB_NAME=e_label_dbname
+      - DB_USER=e_label_user
+      - DB_PASSWORD=e_label_password
+    volumes:
+      - .:/app
+      - e_label_web:/var/lib/tomcat/webapps/ROOT/WEB-INF/classes
 
-  worker:
-    image: 'elabel-worker:latest' # Replace with your specific worker image tag
+  e_label_api:
+    image: e_label_api:latest
     build:
       context: .
-      dockerfile: Dockerfile.worker
-    environment:
-      QUEUE_URL: 'http://rabbitmq:5672/api/exchanges'
-      BROKER_USERNAME: 'user'
-      BROKER_PASSWORD: 'password'
+      dockerfile: Dockerfile.api
+    ports:
+      - "5001:5001"
     depends_on:
-      - rabbitmq
-
-  db:
-    image: 'postgres:13' # Use the desired PostgreSQL image version
+      - e_label_db
     environment:
-      POSTGRES_DB: 'elabel_db'
-      POSTGRES_USER: 'user'
-      POSTGRES_PASSWORD: 'password'
-    volumes:
-      - 'elabel-db-data:/var/lib/postgresql/data' # Use a named volume for persistence
+      - DB_HOST=e_label_db
+      - DB_NAME=e_label_dbname
+      - DB_USER=e_label_user
+      - DB_PASSWORD=e_label_password
 
-  rabbitmq:
-    image: 'rabbitmq:3.8-management' # Use the desired RabbitMQ image version with management plugin
-    ports:
-      - "5672:5672" # RabbitMQ default port
-      - "15672:15672" # Management UI port
+  e_label_db:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=e_label_dbname
+      - POSTGRES_USER=e_label_user
+      - POSTGRES_PASSWORD=e_label_password
+      - PGDATA=/var/lib/postgresql/data/e_label_db.db
     volumes:
-      - 'elabel-rabbitmq-data:/var/lib/rabbitmq' # Use a named volume for persistence
-
-  redis:
-    image: 'redis:6' # Use the desired Redis image version
-    ports:
-      - "6379:6379"
-    volumes:
-      - 'elabel-redis-data:/data' # Use a named volume for persistence
+      - e_label_db:/var/lib/postgresql/data
 
 volumes:
-  elabel-db-data:
-  elabel-rabbitmq-data:
-  elabel-redis-data:
-
-networks:
-  default:
-    driver: bridge
+  e_label_web:
+  e_label_db:

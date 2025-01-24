@@ -1,62 +1,67 @@
-version: '3'
+version: '3.7'
 
 services:
   globaleaks:
-    image: 'globaleaks/globaleaks'
+    image: 'globaleaks/globaleaks:latest' # Use a specific tag if needed
     container_name: globaleaks
     ports:
-      - "8080:8080" # web admin interface (HTTP)
-      - "5000:5000" # API
-      - "6000:6000" # admin secure interface
+      - "443:443"
+      - "80:80"
     volumes:
-      - "./data/globaleaks:/var/lib/globaleaks"
-      - "./submission-form-templates/globaleaks:/etc/globaleaks/forms"
-      - "./public-uploads/globaleaks:/var/www/html/uploads" # Shared storage for files uploaded by submitters. Make sure to create these directories with the correct permissions.
+      - 'globaleaks-data:/var/lib/globaleaks'
+      - './conf.d:/etc/letsencrypt'
+      - './submission_templates:/var/lib/globaleaks/submission_templates' # Optional, for custom templates
+      - './public_html:/var/www/public_html' # Optional, if you want to customize the public HTML content
     environment:
-      - "ADMIN_KEY=<your-admin-key>" # Set your admin key, it's needed to access the admin interface and API
-      - "SERVER_URL=http://localhost:8080" # Server URL (should be the URL of the web service)
-      - "SUBMISSIONS_EXPORT_PATH=/path/to/export/directory" # Path where submissions will be stored after being processed, if you want to enable this feature.
-    restart: unless-stopped
-    networks:
-      - globaleaks_network
-
-  postgres:
-    image: 'postgres:12'
-    container_name: globaleaks_postgres
-    volumes:
-      - "./data/globaleaks_postgres:/var/lib/postgresql"
-    environment:
-      POSTGRES_DB: globaleaks
-      POSTGRES_USER: globaleaks
-      POSTGRES_PASSWORD: globaleaks
-    restart: unless-stopped
-    networks:
-      - globaleaks_network
-
-  redis:
-    image: 'redis:6'
-    container_name: globaleaks_redis
-    volumes:
-      - "./data/globaleaks_redis:/var/lib/redis"
-    restart: unless-stopped
-    networks:
-      - globaleaks_network
-
-  nginx-reverse-proxy:
-    image: 'JrCs/docker-nginx-proxy-companion'
-    container_name: globaleaks_nginx
-    ports:
-      - "80:80" # HTTP (optional)
-      - "443:443" # HTTPS (optional)
-    volumes:
-      - "./globaleaks-certs/letsencrypt:/etc/letsencrypt" # Directory where you'll store certbot certificates.
-      - "./nginx-data/globaleaks:/etc/nginx"
-    environment:
-      - "DOMAIN=yourdomain.com" # Set your domain name here if using HTTPS.
-      - "EMAIL=youremail@example.com" # Email to receive certbot notifications and letters.
-      - "GLBOALEAKS_HOSTNAME=globaleaks.yourdomain.com" # Hostname for the GlobaLeaks instance inside the container.
+      - 'SERVER_TOKEN=12345' # Change this with a secure token
+      - 'DB_HOST=db'
+      - 'DB_USER=globaleaks'
+      - 'DB_PASSWORD=globaleaks'
+      - 'DB_NAME=globaleaks'
+      - 'ADMINS=admin@example.com' # comma-separated list of admin emails
+      - 'SUPERADMINS=superadmin@example.com' # comma-separated list of superadmin emails
+      - 'SERVER_DOMAIN=your.globaleaks.domain'
+      - 'GATEWAY_URL=https://your.globaleaks.domain'
+      - 'EMAIL_SUBMISSIONS=true'
     depends_on:
-      - globaleaks
+      - db
+      - certbot
+    networks:
+      - globaleaks_network
+
+  db:
+    image: 'postgres:13'
+    volumes:
+      - 'globaleaks-dbdata:/var/lib/postgresql'
+    environment:
+      - POSTGRES_DB=globaleaks
+      - POSTGRES_USER=globaleaks
+      - POSTGRES_PASSWORD=globaleaks
+    networks:
+      - globaleaks_network
+
+  certbot:
+    image: 'certbot/certbot:latest'
+    container_name: certbot
+    volumes:
+      - 'globaleaks-dbdata:/var/lib/letsencrypt'
+      - './letsencrypt:/etc/letsencrypt'
+    entrypoint: '/bin/sh -c "trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;"'
+    networks:
+      - globaleaks_network
+
+  nginx-proxy:
+    image: 'nginxproxy/nginx-proxy:latest'
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - 'globaleaks-dbdata:/var/lib/letsencrypt'
+      - '/var/run/docker.sock:/tmp/docker.sock'
+      - './certbot/conf':/etc/nginx/conf.d
+    depends_on:
+      - certbot
     networks:
       - globaleaks_network
 

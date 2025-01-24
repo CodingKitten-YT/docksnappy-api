@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  postiz:
+    image: postiz/postiz:latest
+    container_name: postiz
+    ports:
+      - "80:80" # Map HTTP port (adjust the host port if needed)
+    environment:
+      POSTIZ_DB_SERVER: db
+      POSTIZ_DB_NAME: postiz_db
+      POSTIZ_DB_USER: postiz_user
+      POSTIZ_DB_PASSWORD: your_db_password
+      POSTIZ_ADMIN_EMAIL: admin@example.com
+      POSTIZ_ADMIN_PASSWORD: your_admin_password
+    volumes:
+      - ./postiz:/var/www/html
+      - ./postiz/uploads:/var/www/html/uploads
+    depends_on:
+      - db
+    networks:
+      - postiz_network
+
+  db:
+    image: mysql:5.7
+    container_name: db
+    environment:
+      MYSQL_DATABASE: postiz_db
+      MYSQL_USER: postiz_user
+      MYSQL_PASSWORD: your_db_password
+      MYSQL_ROOT_PASSWORD: another_strong_password
+    volumes:
+      - ./db_data:/var/lib/mysql
+    networks:
+      - postiz_network
+
+networks:
+  postiz_network:
+    driver: bridge

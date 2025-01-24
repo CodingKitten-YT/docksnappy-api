@@ -1,93 +1,60 @@
 version: '3.8'
-
 services:
-  lidatube:
-    image: lidatube/lidatube:latest
-    container_name: lida_tube
-    command: -d /var/www/html
-    volumes:
-      - type: bind
-        source: ./data
-        target: /var/www/html/public/storage/app
-    environment:
-      - DB_HOST=db
-      - APP_ENV=local
-      - APP_KEY=
-      - APP_DEBUG=true
-      - APP_URL=http://localhost
-    depends_on:
-      - db
+  lidatube_web:
+    image: lidatube/lidatube_web:latest
+    container_name: lidatube_web
     ports:
-      - "8000:80"
-
-  db:
-    image: postgres:13
-    container_name: lida_tube_db
+      - "80:80" # HTTP (can be any free port and default is 80)
+    environment:
+      - TZ=Europe/Madrid  # Set the timezone as per your requirement
     volumes:
-      - type: bind
-        source: ./data/db
-        target: /var/lib/postgresql/data
+      - ./data:/data
+      - ./lidatube.ini:/etc/lidatube.ini  # If you have a custom lidatube configuration file
+    user: "1001"  # Optional, to map the local user ID to the container
+
+  lidatube_api:
+    image: lidatube/lidatube_api:latest
+    container_name: lidatube_api
+    environment:
+      - TZ=Europe/Madrid  # Set the timezone as per your requirement
+    volumes:
+      - ./data:/data
+      - ./lidatube.ini:/etc/lidatube.ini  # If you have a custom lidatube configuration file
+    user: "1001"  # Optional, to map the local user ID to the container
+    depends_on:
+      - lidatube_db
+
+  lidatube_db:
+    image: postgres:latest
+    container_name: lidatube_db
     environment:
       - POSTGRES_DB=lidatube
-      - POSTGRES_USER=lida
-      - POSTGRES_PASSWORD=secret
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U lidatube"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  redis:
-    image: redis:6-alpine
-    container_name: lida_tube_redis
+      - POSTGRES_USER=lidauser
+      - POSTGRES_PASSWORD=lidapass
     volumes:
-      - type: bind
-        source: ./data/redis
-        target: /data
+      - ./data/db:/var/lib/postgresql/data  # Persistent storage for the database
+    user: "1001"  # Optional, to map the local user ID to the container
 
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: lida_tube_pma
+  lidatube_redis:
+    image: redis:latest
+    container_name: lidatube_redis
     ports:
-      - "8080:80"
-    environment:
-      - PMA_HOST=db
-      - MYSQL_ROOT_PASSWORD=secret
-      - MYSQL_DATABASE=lidatube
-      - MYSQL_USER=lida
-      - MYSQL_PASSWORD=secret
-    depends_on:
-      - db
+      - "6379:6379"  # Redis port (default is 6379)
+    user: "1001"  # Optional, to map the local user ID to the container
 
-  nginx:
-    image: nginx:latest
-    container_name: lida_tube_nginx
-    volumes:
-      - type: bind
-        source: ./data/nginx
-        target: /etc/nginx
-    ports:
-      - "80:80"
-    depends_on:
-      - lidatube
-    networks:
-      - lidanet
-
-  worker:
-    image: php:7.4-fpm
-    container_name: lida_tube_worker
-    volumes:
-      - type: bind
-        source: ./data/worker
-        target: /var/www/html
+  lidatube_cache_redis:
+    image: lidatube/lidatube_api:latest
+    container_name: lidatube_cache_redis
     environment:
-      - APP_ENV=local
-      - APP_KEY=
-      - APP_DEBUG=true
-      - APP_URL=http://lida_tube
+      - TZ=Europe/Madrid  # Set the timezone as per your requirement
+    user: "1001"  # Optional, to map the local user ID to the container
     depends_on:
-      - lidatube
+      - lidatube_redis
 
 networks:
-  lidanet:
+  default:
     driver: bridge
+
+volumes:
+  lidatube_data:
+    driver: local

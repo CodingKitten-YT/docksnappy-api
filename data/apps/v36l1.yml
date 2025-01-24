@@ -1,55 +1,29 @@
 version: '3.8'
-
 services:
   web:
-    image: 'justshortit/jsi-web:latest'
-    container_name: justshortit-web
-    build:
-      context: ./web
+    image: 'justshortit/justshortit:latest'
     ports:
-      - "5000:5000"
+      - '8000:8000' # Expose the port where Just Short It! runs (you might need to adjust this based on the actual port used by the application)
+    environment:
+      - SECRET_KEY=your_secret_key # Set your secret key for Django
+      - DB_HOST=db  # Database host, set to 'db' because we define a service with that name
+      - DB_NAME=justshortit  # Name of the database to be created on the fly
+      - POSTGRES_USER=user  # PostgreSQL username
+      - POSTGRES_PASSWORD=password  # PostgreSQL password
     depends_on:
-      - api
-    environment:
-      - API_HOST=api
-      - API_PORT=8000
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - REDIS_PASSWORD=your_secure_password
-    volumes:
-      - ./web:/usr/src/app
-
-  api:
-    image: 'justshortit/jsi-api:latest'
-    container_name: justshortit-api
-    build:
-      context: ./api
-    ports:
-      - "8000:8000"
-    environment:
-      - DATABASE_HOST=db
-      - DATABASE_PORT=5432
-      - DATABASE_USER=your_database_user
-      - DATABASE_PASSWORD=your_database_password
-      - DATABASE_DBNAME=your_database_name
-    volumes:
-      - ./api:/usr/src/app
+      - db
+    command: gunicorn justshortit.wsgi --bind 0.0.0.0:8000 --workers 4
 
   db:
-    image: 'postgres:latest'
-    container_name: justshortit-db
+    image: postgres:13
     environment:
-      - POSTGRES_USER=your_database_user
-      - POSTGRES_PASSWORD=your_database_password
-      - POSTGRES_DB=your_database_name
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - db-data:/var/lib/postgresql
 
   redis:
     image: 'redis:latest'
-    container_name: justshortit-redis
-    ports:
-      - "6379:6379"
 
 volumes:
-  postgres_data:
+  db-data:

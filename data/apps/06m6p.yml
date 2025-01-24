@@ -1,26 +1,33 @@
 version: '3.8'
-
 services:
   app:
-    image: gonic/go-kubernetes-boilerplate:latest # Use the official Gonic image or your custom image
+    image: gin-app:latest
     ports:
-      - "80:8080" # Map the web server port to host port 80 for HTTP access
-    environment:
-      GO_ENV: production # Set the environment variable for Go environment (e.g., development, staging, production)
+      - "8080:8080" # Expose the Go application on port 8080 of the host
     depends_on:
       - db
+    environment:
+      MYSQL_DSN: 'mysql://root:password@db:3306/database_name'
+      MYSQL_ROOT_PASSWORD: rootpassword # Replace with your desired root password
 
   db:
-    image: postgres:latest
+    image: mysql:5.7
+    command: --default-authentication-plugin=mysql_native_password
     environment:
-      POSTGRES_DB: example_db # Database name
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      MYSQL_DATABASE: database_name
+      MYSQL_USER: user
+      MYSQL_PASSWORD: userpassword # Replace with your desired user password
+      MYSQL_ROOT_PASSWORD: rootpassword # Same root password as the app for consistency
     volumes:
-      - db-data:/var/lib/postgresql/#name# # Persist database data using a named volume
+      - db-data:/var/lib/mysql
 
-  redis:
-    image: redis:latest
+  migration:
+    image: gin-migration:latest
+    command: migrate -path /src/app/db/migration -database "mysql://root:password@db:3306" up
+    depends_on:
+      - db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword # Same root password as the app and db for consistency
 
 volumes:
   db-data:

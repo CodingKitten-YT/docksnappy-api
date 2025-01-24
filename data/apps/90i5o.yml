@@ -1,46 +1,48 @@
 version: '3.8'
 
 services:
-  karaoke_backend:
-    image: karaoke_eternal_backend:latest
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+  karaoke-app:
+    image: karaoke_eternal:latest
     ports:
-      - "8000:8000"
-    networks:
-      - karaoke-net
+      - "3000:3000" # HTTP port
     environment:
-      - DB_HOST=db
-      - DB_NAME=karaoke
-      - DB_USER=root
-      - DB_PASSWORD=secret
+      NODE_ENV: development
+    volumes:
+      - .:/src
+      - /tmp/cache:/tmp/cache
     depends_on:
-      - db
+      - redis
+      - postgres
 
-  karaoke_frontend:
-    image: karaoke_eternal_frontend:latest
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    networks:
-      - karaoke-net
+  redis:
+    image: redis:6-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
 
-  db:
+  postgres:
     image: postgres:13
     environment:
-      - POSTGRES_DB=karaoke
-      - POSTGRES_USER=root
-      - POSTGRES_PASSWORD=secret
+      POSTGRES_DB: karaoke_eternal
+      POSTGRES_USER: karaokeuser
+      POSTGRES_PASSWORD: karaokepassword
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - karaoke-net
+      - postgres-data:/var/lib/postgresql/data
+
+  # Optional: If the application uses a queue, you might need a service like RabbitMQ or AWS SQS
+  queue:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672" # AMQP port
+      - "15672:15672" # Management UI port
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
 
 volumes:
-  postgres_data:
+  redis-data:
+  postgres-data:
+  rabbitmq-data:
 
 networks:
-  karaoke-net:
+  default:
+    driver: bridge

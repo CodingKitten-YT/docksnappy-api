@@ -1,0 +1,55 @@
+version: '3'
+
+services:
+  solr:
+    image: apache/solr-standalone
+    ports:
+      - "8983:8983" # Solr HTTP interface
+    environment:
+      SOLR_DATA_DIR: /var/solr/data
+      SOLR_HOME: /var/solr
+      SOLR_LOG_DIR: /var/log/solr
+      JAVA_OPTS: "-Djetty.request.content=true -Xms512M -Xmx1024M"
+    volumes:
+      - solr-data:/var/solr
+      - solr-logs:/var/log/solr
+
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: websurfx
+      POSTGRE_USER: websurfx
+      POSTGRES_PASSWORD: websurfx_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  websurfx_backend:
+    image: websurfx/websurfx-backend
+    depends_on:
+      - solr
+      - postgres
+    environment:
+      SOLR_SERVER_URL: http://solr:8983
+      DB_HOST: postgres
+      DB_NAME: websurfx
+      DB_USER: websurfx
+      DB_PASSWORD: websurfx_password
+    volumes:
+      - websurfx-backend-data:/var/lib/websurfx/websurfx-backend
+
+  websurfx_frontend:
+    image: websurfx/websurfx-frontend
+    depends_on:
+      - websurfx_backend
+    ports:
+      - "8000:80" # Websurfx frontend web UI
+
+volumes:
+  solr-data:
+  solr-logs:
+  postgres-data:
+  websurfx-backend-data:
+
+networks:
+  default:
+    driver: bridge

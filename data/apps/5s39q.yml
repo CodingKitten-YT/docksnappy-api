@@ -1,33 +1,30 @@
 version: '3.8'
 
 services:
-  kavita-webapp:
-    image: kavitawebapp:latest # Ensure you have this image available or build it from your code
+  kavita_web:
+    image: kavitaproject/kavita:latest  # Assuming there is an official image for Kavita project
     ports:
-      - "80:80" # Map the container's port 80 to port 80 on the host for HTTP
-    depends_on:
-      - kavita-db
+      - "5000:5000"
     environment:
-      DB_HOST: kavita-db
-      DB_USERNAME: your_database_user
-      DB_PASSWORD: your_database_password
-      DB_NAME: your_database_name
-    volumes:
-      - kavita-webapp-data:/var/www/html # Persist web app data
+      - DEBUG=true
+      - NAME=Kavita Web Service
+    networks:
+      - kavita_network
 
-  kavita-db:
-    image: postgres:latest # Use the official PostgreSQL image
-    environment:
-      POSTGRES_USER: your_database_user
-      POSTGRES_PASSWORD: your_database_password
-      POSTGRES_DB: your_database_name
+  kavita_db:
+    image: postgres:13
     volumes:
-      - kavita-db-data:/var/lib/postgresql # Persist database data
+      - db_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=kavita_db
+      - POSTGRES_USER=kavita
+      - POSTGRES_PASSWORD=secret
+    networks:
+      - kavita_network
 
 volumes:
-  kavita-webapp-data:
-  kavita-db-data:
+  db_data:
 
 networks:
-  default:
+  kavita_network:
     driver: bridge

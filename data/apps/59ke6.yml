@@ -1,45 +1,32 @@
 version: '3.8'
+
 services:
-  hatsu:
-    image: hatsu/hatsu:latest # Use the official or tagged image as needed
+  hatsu_web:
+    image: hatsu/hatsu:latest
     ports:
-      - "80:80" # Map HTTP port 80 on the host to port 80 in the container
-    restart: unless-stopped # Automatically restart the service unless it has been stopped
-    volumes:
-      - ./data:/var/lib/hatsu # Mount a volume for data persistence
-      - ./config:/etc/hatsu # Mount a volume for configuration files
-      - ./log:/var/log/hatsu # Mount a volume for logs
+      - "8000:8000" # Expose the default port Hatsu runs on (8000) to the host
     environment:
-      - HATSU_ENVIRONMENT=production # Set the environment to 'production' or as needed
-      - POSTGRES_DB=hatsu # Database name for PostgreSQL
-      - POSTGRES_USER=hatsu # Username for PostgreSQL
-      - POSTGRES_PASSWORD=hatsu # Password for PostgreSQL
-    depends_on:
-      - postgres # Depend on the PostgreSQL service
-
-  postgres:
-    image: postgres:13 # Use PostgreSQL version 13 as an example
+      - SECURE_COOKIE_SECRET=change_this_for_production
+      - ENABLE_TESTSUITE=true
+      - MAIL_HOST=smtp.example.com
+      - MAIL_PORT=587
+      - MAIL_USERNAME=info@example.com
+      - MAIL_PASSWORD=your_email_password
     volumes:
-      - ./dbdata:/var/lib/postgresql # Mount a volume for database data persistence
+      - ./hatsu-data:/var/lib/hatsu
+      - ./hatsu:/code
+    depends_on:
+      - hatsu_db
+
+  hatsu_db:
+    image: postgres:13
     environment:
-      POSTGRES_DB: hatsu # Database name
-      POSTGRES_USER: hatsu # Username
-      POSTGRES_PASSWORD: hatsu # Password
-    restart: unless-stopped # Automatically restart the service unless it has been stopped
-
-  nginx-reverse-proxy:
-    image: nginx:latest # Use the official NGINX image as an example
-    ports:
-      - "443:443" # Map HTTPS port 443 on the host to port 443 in the container if using SSL
+      - POSTGRES_USER=hatsu
+      - POSTGRES_PASSWORD=change_this_for_production
+      - POSTGRES_DB=hatsu_db
     volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d # Configuration files for NGINX
-      - ./nginx/certs:/etc/nginx/ssl # Mount a volume for SSL certificates
-      - hatsu:/var/lib/hatsu # Use the Hatsu service as a dependency
-    depends_on:
-      - hatsu
-    restart: unless-stopped # Automatically restart the service unless it has been stopped
+      - hatsu-db-data:/var/lib/postgresql
 
-networks:
-  default:
-    external:
-      name: mynetwork # If you have an existing network named 'mynetwork'
+volumes:
+  hatsu-db-data:
+  hatsu-data:

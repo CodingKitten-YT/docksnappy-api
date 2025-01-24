@@ -1,63 +1,93 @@
 version: '3.8'
 
 services:
+  # PostgreSQL with extensions
   db:
-    image: postgres:12
+    image: postgres:13
+    command:postgres -c 'fig.max_wal_size=256MB' -N 30 -U docspell -E UTF8LL -d docspell --role=none
+    volumes:
+      - ./db:/var/lib/postgresql/data
     environment:
-      POSTGRES_DB: docspell
       POSTGRES_USER: docspell
       POSTGRES_PASSWORD: change_this_password
-    volumes:
-      - db-data:/var/lib/postgresql/data
-    command: >
-      postgres \
-      --max_connections=200 \
-      --shared_buffers='12MB' \
-      --work_mem='4MB' \
-      --wal_buffers=8MB \
-      --synchronous_commit=off \
-      --full_page_writes=off
-    networks:
-      - docspell-network
+      POSTGRES_DB: docspell
+    ports:
+      - "5432:5432"
 
-  documentstore:
+  # Document service (main API and document handling)
+  app:
     image: docspell/docspell:latest
-    environment:
-      DOCSPLL_DB__HOST: db
-      DOCSPELL_DB__NAME: docspell
-      DOCSPELL_DB__USER: docspell
-      DOCSPELL_DB__PASSWORD: change_this_password
-      JAVA_TOOL_OPTIONS:-Xms512M -Xmx512M
+    container_name: docspell-app
     depends_on:
       - db
+      - filekeeper
+      - search
+    environment:
+      JDBC_DATASOURCE_URL: jdbc:postgresql://db:5432/docspell
+      JDBC_DATASOURCE_USERNAME: docspell
+      JDBC_DATASOURCE_PASSWORD: change_this_password
+      DOCSPLL_FILEKEEPER_URL: filekeeper:9404
+      DOCSPELL_SEARCH_URL: search:9200
+      DOCSPELL_LOGGER_LEVEL: INFO
     ports:
       - "8080:8080"
     volumes:
-      - docspell-data:/data
-    networks:
-      - docspell-network
+      - ./app:/var/lib/docspell
+      - ./app-conf:/config
+      - type: tmpfs,volume:/tmp
 
-  # Optionally, you can run search with elasticsearch or opensearch.
-  # Here's an example for OpenSearch (formerly Elasticsearch) service.
-  # Uncomment and modify as needed.
-  # search:
-  #   image: opensearch:2.4.1
-  #   environment:
-  #     OPENSEARCH_JAVA_OPTS: "-Xms512m -Xmx512m"
-  #   ports:
-  #     - "9200:9200"
-  #   volumes:
-  #     - search-data:/usr/share/opensearch/data
-  #   networks:
-  #     - docspell-network
+  # Filekeeper (file storage)
+  filekeeper:
+    image: docspell/filekeeper:latest
+    container_name: docspell-filekeeper
+    depends_on:
+      - db
+    volumes:
+      - ./files:/var/lib/docspell/files
+    environment:
+      JDBC_DATASOURCE_URL: jdbc:postgresql://db:5432/docspell
+      JDBC_DATASOURCE_USERNAME: docspell
+      JDBC_DATASOURCE_PASSWORD: change_this_password
+    ports:
+      - "9404:9404"
+
+  # Elasticsearch for full-text search
+  search:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
+    container_name: docspell-search
+    depends_on:
+      - db
+    environment:
+      xpack.security.enabled: false
+      discovery.type: single-node
+    volumes:
+      - ./search:/config
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+
+  # Admin UI
+  ui:
+    image: docspell/docspell-ui:latest
+    container_name: docspell-ui
+    depends_on:
+      - app
+    ports:
+      - "8081:3000"
+    environment:
+      DOCSPELL_API_URL: http://app:8080
+
+  # Mailhog for email testing (optional)
+  mailhog:
+    image: mailhog/mailhog
+    container_name: docspell-mailhog
+    ports:
+      - "8025:8025"
+      - "8001:8001"
+      - "9000-9003:9000-9003" # WebUI on port 8001
 
 volumes:
-  db-data:
-    driver: "local"
-  docspell-data:
-    driver: "local"
-  # search-data:
-  #   driver: "local"
-
-networks:
-  docspell-network:
+  db:
+  app:
+  app-conf:
+  files:

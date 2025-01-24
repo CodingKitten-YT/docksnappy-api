@@ -1,30 +1,56 @@
 version: '3.8'
+
 services:
   ghostfolio:
-    image: ghostfolio/ghostfolio:latest  # Use the official Ghostfolio image from Docker Hub
+    image: ghostfolio/ghostfolio:latest  # Use the official Ghostfolio Docker image
     container_name: ghostfolio
-    ports:
-      - "8080:3000"  # Map the default Ghostfolio port to host port 8080 for web access
-    restart: unless-stopped  # Ensure the container restarts automatically on failure
-    volumes:
-      - "./data:/var/lib/ghostfolio"  # Persist data to a local directory (create this directory if it doesn't exist)
-      - "./config:/var/opt/ghostfolio"  # Persist configuration files to a local directory (create this directory if it doesn't exist)
+    restart: unless-stopped
     environment:
-      - TZ=Your/Timezone  # Set the timezone, e.g., "America/New_York"
+      - DB_HOST=db
+      - REDIS_HOST=redis
+      - VUE_ENV=production
+      - DEBUG=false
+    ports:
+      - "3000:3000"  # Ghostfolio web interface
     depends_on:
       - db
+      - redis
+      - certbot
+    volumes:
+      - "./config/ghostfolio.json:/usr/src/app/ghostfolio.json"  # Your Ghostfolio configuration file
+      - ghostfolio-data:/usr/src/app/data
+      - ghostfolio-public:/usr/src/app/public
 
   db:
-    image: postgres:13  # Use the official PostgreSQL image
-    container_name: ghostfolio_db
-    volumes:
-      - "./dbdata:/var/lib/postgresql"  # Persist database data to a local directory (create this directory if it doesn't exist)
+    image: postgres:latest
     environment:
-      - POSTGRES_DB=ghostfolio  # The name of the database
-      - POSTGRES_USER=ghostfolio  # The default PostgreSQL user
-      - POSTGRES_PASSWORD=changeit  # Set your own strong password
+      - POSTGRES_DB=ghostfolio
+      - POSTGRES_USER=ghostfolio
+      - POSTGRES_PASSWORD=ghostfolio
+    volumes:
+      - ghostfolio-db:/var/lib/postgresql/data
     restart: unless-stopped
 
+  redis:
+    image: redis:latest
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+  certbot:
+    image: certbot/certbot:latest
+    container_name: certbot
+    volumes:
+      - "./letsencrypt:/etc/letsencrypt"
+    restart: unless-stopped
+
+volumes:
+  ghostfolio-data:
+  ghostfolio-public:
+  ghostfolio-db:
+  redis-data:
+
 networks:
-  ghostfolio_net:
+  default:
     driver: bridge

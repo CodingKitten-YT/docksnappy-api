@@ -1,34 +1,60 @@
 version: '3.8'
 
 services:
-  docat:
-    image: docat/docat:latest # Use the latest official image or a specific tag/version
+  # DOCAT backend service
+  docat-backend:
+    image: 'h2o/docat:latest'
     ports:
-      - "8000:8000" # Expose Docat UI on port 8000 of the host
+      - "8081:80"
     volumes:
-      - "./docs:/usr/src/app/docs" # Mount your local docs directory to the container
-      - "./node_modules:/usr/src/app/node_modules" # Optional: Keep node modules between restarts if you have custom themes or plugins
+      - './config:/etc/docat'
+      - './data:/var/lib/docat'
+      - './public:/public'
     environment:
-      - DOCAT__OUTPUT=./output # Set the output directory for generated documentation
-      - GOOGLE_ANALYTICS_ID=UA-12345678-9 # Optional: Set your Google Analytics ID for tracking
-      - ADMIN_USERNAME=admin # Optional: Set an admin username for Docat UI
-      - ADMIN_PASSWORD=password # Optional: Set an admin password for Docat UI
-    environment:
-      - DOCAT__USE_VIRTUAL_HOSTS=false # Optional: Set to true if you're using virtual hosts in your docs
-    restart: unless-stopped # Ensure the container restarts on failure
+      DOCAT__HOST_WHITELIST: '0.0.0.0'
+      JAVA_TOOL_OPTIONS: '-Xmx1g -Xms512m'
 
-  nginx-reverse-proxy:
-    image: nginx:latest
-    ports:
-      - "80:80" # Map HTTP port 80 to the host for a reverse proxy
-      - "443:443" # Map HTTPS port 443 to the host for a reverse proxy (if you have SSL setup)
+  # PostgreSQL service for the backend to store session data and user information
+  postgres:
+    image: 'postgres:latest'
     volumes:
-      - "./nginx/conf.d:/etc/nginx/conf.d" # Mount your local nginx configuration directory to the container
-      - "./certs:/etc/ssl/certs" # Mount your SSL certificates directory to the container (if using HTTPS)
+      - './data/postgres:/var/lib/postgresql'
+    environment:
+      POSTGRES_USER: 'docat'
+      POSTGRES_PASSWORD: 'change_this_password'
+      POSTGRES_DB: 'docat'
+
+  # Redis service for session management and caching
+  redis:
+    image: 'redis:latest'
+
+  # Nginx as a reverse proxy to serve DOCAT frontend static files and handle CORS
+  docat-nginx:
+    image: 'jwilder/nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - './public:/usr/src/app'
+      - './data/letsencrypt:/etc/letsencrypt'
+      - './config/nginx-proxy/certs:/etc/nginx/certs'
+      - './logs:/var/log/nginx-proxy'
     depends_on:
-      - docat
-    networks:
-      - backend
+      - docat-backend
+    environment:
+      NGINX_PROXY_SSL_REDIRACT_OUTBOUND_SSL: 'true'
+      NGINX_PROXY_SSL_WHITELIST: 'docat.example.com' # replace with your domain
+      DOCAT__HOST_WHITELIST: 'docat.example.com' # replace with your domain
+
+  # Certbot for letting's encrypt SSL certificates
+  letsencrypt:
+    image: 'certbot/certbot'
+    volumes:
+      - './data/letsencrypt:/etc/letsencrypt'
+    depends_on:
+      - docat-nginx
 
 networks:
-  backend:
+  default:
+    external:
+      name: myapp_network # replace with your network name if already defined

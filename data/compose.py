@@ -15,12 +15,13 @@ def generate_docker_compose_with_wizardlm2(app_details):
         
         for _ in range(3):
             try:
-                # Use subprocess to run Ollama command
                 result = subprocess.run(
                     ['ollama', 'run', 'koesn/wizardlm2-7b', prompt], 
                     capture_output=True, 
                     text=True, 
-                    timeout=60
+                    timeout=60,
+                    encoding='utf-8',
+                    errors='ignore'
                 )
                 
                 compose_content = result.stdout.strip()
@@ -29,20 +30,29 @@ def generate_docker_compose_with_wizardlm2(app_details):
                     return compose_content
             except subprocess.TimeoutExpired:
                 logging.warning(f"Timeout generating compose for {app_details['Name']}")
+            except UnicodeDecodeError:
+                logging.warning(f"Unicode decode error for {app_details['Name']}")
         
         return None
     except Exception as e:
         logging.error(f"Wizardlm2 generation error for {app_details['Name']}: {e}")
         return None
 
-def process_single_app(app, result_queue):
+def process_single_app(app, result_queue, apps_dir):
+    compose_file_path = os.path.join(apps_dir, f"{app['ID']}.yml")
+    
+    # Check if file exists and is not empty
+    if os.path.exists(compose_file_path) and os.path.getsize(compose_file_path) > 0:
+        logging.info(f"Skipping {app['Name']} - File already exists and is not empty")
+        result_queue.put(None)
+        return
+
     try:
         logging.info(f"Processing {app['Name']} (ID: {app['ID']})")
 
         docker_compose_content = generate_docker_compose_with_wizardlm2(app)
 
-        if docker_compose_content:
-            compose_file_path = os.path.join('apps', f"{app['ID']}.yml")
+        if docker_compose_content and not os.path.exists(compose_file_path):
             with open(compose_file_path, 'w', encoding='utf-8') as f:
                 f.write(docker_compose_content)
             logging.info(f"Saved Docker Compose for {app['Name']}")
@@ -56,7 +66,8 @@ def process_single_app(app, result_queue):
         result_queue.put(f"{app['Name']} - {app['ID']} - Unexpected error")
 
 def process_applications(input_json_path='output.json'):
-    os.makedirs('apps', exist_ok=True)
+    apps_dir = 'apps'
+    os.makedirs(apps_dir, exist_ok=True)
     failed_apps = []
 
     with open(input_json_path, 'r', encoding='utf-8') as f:
@@ -64,7 +75,7 @@ def process_applications(input_json_path='output.json'):
 
     for app in applications:
         result_queue = queue.Queue()
-        thread = threading.Thread(target=process_single_app, args=(app, result_queue))
+        thread = threading.Thread(target=process_single_app, args=(app, result_queue, apps_dir))
         thread.start()
         thread.join(timeout=60)
 

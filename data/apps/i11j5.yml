@@ -1,0 +1,27 @@
+version: '3.8'
+services:
+  technitium-dns:
+    image: 'technitium/dns-server:latest'
+    container_name: technitium_dns_server
+    ports:
+      - "53:53/udp"
+      - "53:53/tcp"
+      - "853:853/udp"
+      - "853:853/tcp"
+    volumes:
+      - './config:/etc/technitium-dns-server'
+    environment:
+      - TZ=Europe/London
+      - JAVA_OPTS=-Xms512M -Xmx512M -XX:+UseG1GC
+      - DNS_SERVER_LISTEN_INTERFACES=eth0,docker0
+      - DNS_SERVER_ADVERTISED_ADDRESS=0.0.0.0
+      - DNS_SERVER_INTERNAL_IP=127.0.0.1
+      - DNS_DOMAIN=example.com
+      - AUTHORIZED_KEYS=/path/to/your/authorized_keys.json
+    restart: unless-stopped
+networks:
+  default:
+    external:
+      - dns_server_network
+depends_on:
+  - "dns_server_network"

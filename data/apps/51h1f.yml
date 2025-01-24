@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  prisme_analytics:
+    image: prisme/prisme-analytics:latest
+    container_name: prisme_analytics
+    environment:
+      # License information (replace with your actual license)
+      PRISME__LICENSE_AGREEMENT: |
+        {
+          "status": true,
+          "data": {
+            "licenseKey": "YOUR_LICENSE_KEY",
+            "acceptanceDate": "${DATETIME}",
+            "agreementTextId": "PRS-EA-10436"
+          }
+        }
+    ports:
+      - "8082:8082" # HTTP API port
+      - "5673:5673"  # WebSocket port for the app
+    volumes:
+      - "./data/prisme-analytics:/var/lib/prisme_analytics"
+      - "./logs/prisme-analytics:/var/log/prisme_analytics"
+    restart: unless-stopped
+    networks:
+      - prisme_network
+
+networks:
+  prisme_network:
+    driver: bridge

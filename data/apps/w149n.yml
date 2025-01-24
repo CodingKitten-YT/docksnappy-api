@@ -2,48 +2,59 @@ version: '3.8'
 
 services:
   datasette:
-    image: datasette/datasette:latest  # Use a specific tag if needed
-    container_name: datasette
-    user: "${USERR}"
+    image: datasette/datasette:latest
+    user: datasette
     ports:
-      - "8008:8000"  # Expose Datasette's web UI on port 8000 within the container on port 8008 on the host
+      - "8008:8000" # HTTP web server on port 8000, or use the default (80).
+      - "8009:8001" # WebSocket proxy server on port 8001.
     volumes:
-      - .datasets:/data
-      - ./config.yaml:/app/config.yaml  # Mount a local config file if you have one
-      - ./environment.py:/app/environment.py  # Optional custom environment.py
-      - gevent-eventlet:/usr/local/lib/python3.8/site-packages/  # For Windows to enable eventlet with Gevent
+      - .datasette:/data/datasette
+      - ./datasette.yaml:/data/datasette/datasette.yaml
+    environment:
+      JUPYTERHUB_API_TOKEN: 'secret' # Set the JupyterHub API token for authentication.
+      NODE_ENV: development # Run Datasette in development mode. Use production for a production setup.
+      DATASETTE_INITIAL_SCHEMAS: "public,my_custom_schema" # List of schemas to initialize with.
     depends_on:
       - postgres
-    environment:
-      - DATASETTE_PG_HOST=postgres
-      - DATASETTE_PG_USER=datasette
-      - DATASETTE_PG_PASSWORD=secret
-      #- DATASETTE_PG_DBNAME=mydb  # Uncomment if your database has a specific name
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000/ping"]
-      interval: 15s
-      timeout: 30s
-      retries: 60
 
   postgres:
-    image: postgres:latest  # Use a specific tag if needed
-    container_name: postgres
-    environment:
-      - POSTGRES_DB=datasette
-      - POSTGRES_USER=datasette
-      - POSTGRES_PASSWORD=secret
+    image: postgres:latest
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - .postgres:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: datasette # The default database name.
+      POSTGRES_USER: datasette # The default user name.
+      POSTGRES_PASSWORD: secret # The default password for the above user.
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
-      interval: 10s
-      timeout: 20s
-      retries: 30
+      test: ["cmd", "pg_isready", "-U", "datasette"]
+      timeout: 5s
+      retries: 10
 
-volumes:
-  postgres-data:
-  gevent-eventlet:
+# (Optional) If you're using a custom image of Datasette, you can define it here:
+# datasette:
+#   image: my-private-datasette-image:latest
 
-networks:
-  default:
-    driver: bridge
+# (Optional) If you want to use a persistent volume for data:
+# volumes:
+#   datasette_data:
+#     driver: local
+#   postgres_data:
+#     driver: local
+# services:
+#   datasette:
+#     volumes:
+#       - datasette_data:/data/datasette
+#   postgres:
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
+
+# (Optional) If you want to configure JupyterHub with Datasette, uncomment the following and adjust as needed.
+# services:
+#   jupyterhub:
+#     image: jupyterhub/jupyterhub:latest
+#     user: jupyter
+#     volumes:
+#       - .jupyterhub:/data/jupyterhub
+#     environment:
+#       JUPYTERHUB_CONFIG: "/data/jupyterhub/config.py"
+#       JUPYTERHUB_API_TOKEN: 'secret'

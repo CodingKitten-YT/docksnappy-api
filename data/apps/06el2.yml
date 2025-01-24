@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  weechat:
+    image: weechat/weechat-core-extensions:latest # Use the official WeeChat image with core and extensions
+    container_name: weechat
+    command: "/bin/sh -c 'trap exit TERM; while :; do sleep 1 & wait $${!}; /usr/bin/weechat-server --umask 002 & wait $${!};';'"
+    volumes:
+      - weechat_data:/data
+      - .weechat:/root/.weechat
+    environment:
+      TZ: "${TZ:-Europe/Paris}" # Set the timezone, you can change it to your preferred one
+    ports:
+      - "9023:9023" # WeeChat server listens on this port inside the container, map it to host as needed
+    restart: unless-stopped # Automatically restart the container unless it has been manually stopped
+
+volumes:
+  weechat_data:

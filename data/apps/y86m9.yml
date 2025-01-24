@@ -1,48 +1,48 @@
-version: '3.7'
-
+version: '3.8'
 services:
-  # Assuming bewCloud consists of multiple components, each with its own service definition
-
-  # Web Application (Example using Flask for a simple web server)
-  webapp:
-    image: "bewcloud/webapp:latest"
+  app:
+    image: bewcloud/app:latest
     ports:
-      - "5000:5000"
+      - "80:80" # Expose HTTP on the host
+    environment:
+      AWS_REGION: "us-west-2"
+      S3_BUCKET_NAME: "my-s3-bucket"
+      AWS_ACCESS_KEY_ID: "your_access_key_id"
+      AWS_SECRET_ACCESS_KEY: "your_secret_access_key"
     depends_on:
       - db
-    environment:
-      - DB_HOST=db
-      - DB_USER=user
-      - DB_PASSWORD=password
-      - DB_NAME=bewcloud_data
-    volumes:
-      - .:/src/app
 
-  # Database (Example using PostgreSQL)
   db:
-    image: "postgres:12"
+    image: postgres:13
     environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=bewcloud_data
+      POSTGRES_DB: bewcloud
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
     volumes:
       - db-data:/var/lib/postgresql/data
 
-  # Redis Cache (Optional, if needed)
-  redis:
-    image: "redis:6"
+  worker:
+    image: bewcloud/worker:latest
+    environment:
+      QUEUE_URL: "https://sqs.us-west-2.amazonaws.com/youraccountid/yourqueue"
+      AWS_REGION: "us-west-2"
+      AWS_ACCESS_KEY_ID: "your_access_key_id"
+      AWS_SECRET_ACCESS_KEY: "your_secret_access_key"
+    depends_on:
+      - app
 
-  # Other services like load balancer, monitoring, etc., can be added here
+  sentry:
+    image: getsentry/sentry-debug:latest
+    ports:
+      - "9000:9000" # Sentry web interface
+    environment:
+      SENTRY_PROJECT_ID: "your_sentry_project_id"
+      SENTRY_SERVER_URL: "http://localhost:9000"
+      SENTRY_AUTH_TOKEN: "your_auth_token"
 
-  # Volumes defined for data persistence
-  volumes:
-    db-data:
+volumes:
+  db-data:
 
-  # Named volumes for ease of management and backup
-  named_volumes:
-    db-data:
-
-# Define networks to ensure service discovery works between services (optional, as it's also configured in the individual service definitions)
 networks:
   default:
     driver: bridge

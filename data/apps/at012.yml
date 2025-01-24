@@ -1,25 +1,33 @@
 version: '3.8'
 
 services:
-  flashpaper-app:
-    image: "flashpaper/flashpaper:latest" # Use the official FlashPaper image from Docker Hub
+  app:
+    image: flashpaper/flashpaper:latest
     ports:
-      - "80:8080" # Map HTTP port 80 on the host to port 8080 in the container for public access
+      - "5000:5000" # HTTP endpoint exposed to the host, uncomment if needed
     environment:
-      - FLASHPAPER_SECRET_KEY=secretkey # Set a secret key for Django, make sure to replace with a secure key
-      - FLASHPAPER_DEBUG=true # Enable debug mode (for development purposes only)
-      - FLASHPAPER_ALLOWED_HOSTS=0.0.0.0,localhost # Allow access from any host for development
+      - GOOGLE_APPLICATION_CREDENTIALS=/etc/google-secrets/flashpaper-gce.json # Path to your Google Cloud credentials file
+      - SECRET_KEY=your_secret_key # Your Django secret key, this should be a secure random key for production
     volumes:
-      - ./data:/code/flashpaper/data # Mapping local data directory to the container's data directory for file storage
-      - ./flashpaper/media:/code/flashpaper/media # Mapping local media directory to the container's media directory if needed
-      - ./flashpaper/static:/code/flashpaper/static # Mapping local static directory to the container's static directory if needed
+      - ./data:/data  # Mount the data directory from the host to store Flashpaper files and settings
+      - ./flashpaper:/code  # Mount the flashpaper directory from the host to keep local custom code or configurations
+    command: gunicorn --workers=4 --bind unix:///run/gunicorn.sock app:app
     depends_on:
       - db
 
   db:
-    image: "postgres:13" # Use PostgreSQL image version 13
+    image: postgres:13
     volumes:
-      - flashpaper-db-data:/var/lib/postgresql/data # Persist database data using a named volume
+      - postgres_data:/var/lib/postgresql/data  # Use a named volume to store database data persistently
+
+    environment:
+      - POSTGRES_USER=flashuser
+      - POSTGRES_PASSWORD=flashpassword
+      - POSTGRES_DB=flashpaper_db
 
 volumes:
-  flashpaper-db-data:
+  postgres_data:
+
+networks:
+  default:
+    driver: bridge

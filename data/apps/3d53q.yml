@@ -1,86 +1,28 @@
 version: '3.8'
 services:
-  atsimeru_atsume_reader:
-    image: 'atsumeru/atsume_reader:latest'
-    container_name: atsimeru_atsume_reader
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:h2:mem:atsumeru;DB_CLOSE_DELAY=-1
-      - SPRING_DATASOURCE_USERNAME=sa
-      - SPRING_DATASOURCE_PASSWORD=password
-      #- API_SECRET=your_secret_here # Optional, for API key based authentication
+  atsimeru:
+    image: 'atsimeru/atsimeru:latest' # Use the official Atsumeru image
+    container_name: atsimeru
     ports:
-      - "8080:8080"
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "localhost:8080/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 30
-
-  atsimeru_atsume_writer:
-    image: 'atsumeru/atsume_writer:latest'
-    container_name: atsimeru_atsume_writer
+      - "8081:8080" # Expose Atsumeru's web UI on host port 8081
+    volumes:
+      - "./config:/etc/atsimeru/conf.d" # Mount a volume for configuration files
+      - "./data:/var/lib/atsimeru" # Mount a volume for data storage
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:h2:mem:atsumeru;DB_CLOSE_DELAY=-1
-      - SPRING_DATASOURCE_USERNAME=sa
-      - SPRING_DATASOURCE_PASSWORD=password
-    ports:
-      - "8081:8081"
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "localhost:8081/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 30
+      - JVM_OPTS="-Xms512M -Xmx512M" # Set initial and maximum Java heap size to 512MB (adjust as needed)
+      - TIMEZONE=America/New_York # Set timezone (change to your desired timezone)
+    restart: unless-stopped # Ensure the container restarts if it stops
 
-  atsimeru_atsume_coordinator:
-    image: 'atsumeru/atsume_coordinator:latest'
-    container_name: atsimeru_atsume_coordinator
+  postgres:
+    image: 'postgres:latest' # Use the official PostgreSQL image
+    container_name: atsimeru_db
+    volumes:
+      - "./data/db:/var/lib/postgresql" # Mount a volume for database data storage
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:h2:mem:atsumeru;DB_CLOSE_DELAY=-1
-      - SPRING_DATASOURCE_USERNAME=sa
-      - SPRING_DATASOURCE_PASSWORD=password
-    ports:
-      - "8082:8082"
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "localhost:8082/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 30
-
-  atsimeru_config_server:
-    image: 'atsumeru/atsume_config_server:latest'
-    container_name: atsimeru_atsume_config_server
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:h2:mem:atsumeru;DB_CLOSE_DELAY=-1
-      - SPRING_DATASOURCE_USERNAME=sa
-      - SPRING_DATASOURCE_PASSWORD=password
-    ports:
-      - "8083:8083"
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "localhost:8083/actuator/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 30
-
-  atsimeru_eureka_server:
-    image: 'atsumeru/atsume_eureka_server:latest'
-    container_name: atsimeru_atsume_eureka_server
-    environment:
-      - EUREKA_CLIENT_REGISTER_WITH_EUREKA=false
-      - EUREKA_CLIENT_FETCH_FROM_EUREKA=true
-      - SPRING_DATASOURCE_URL=jdbc:h2:mem:atsumeru;DB_CLOSE_DELAY=-1
-      - SPRING_DATASOURCE_USERNAME=sa
-      - SPRING_DATASOURCE_PASSWORD=password
-    ports:
-      - "8084:8761"
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "localhost:8761/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 30
-
-volumes:
-  atsimeru_data:
-    driver: local
+      - POSTGRES_DB=atsimeru # Set the default database name to 'atsimeru'
+      - POSTGRES_USER=atsimeru # Set the default PostgreSQL username to 'atsimeru'
+      - POSTGRES_PASSWORD=atsimerupassword # Set the default PostgreSQL password (change this to a secure password)
+    restart: unless-stopped # Ensure the container restarts if it stops
 
 networks:
   atsimeru_net:

@@ -1,58 +1,54 @@
-version: '3.8'
+version: '3.7'
 
 services:
   flexisip:
-    image: 'flexisip/flexisip:latest' # Use the official FlexiSIP image from Docker Hub
+    image: "flexisip/core:latest" # Use the official FlexiSIP Core image or a specific tag
     container_name: flexisip
     ports:
-      - "5060-5070:5060-5070" # Expose the SIP and RTP ports host <-> container
-    environment:
-      TZ: "Europe/London" # Set the timezone, change to your desired timezone
-      LOG_LEVEL: "debug" # Set the logging level (info, debug, warn, error)
+      - "8080:8080" # Web interface
+      - "5060:5060" # SIP server
+      - "5061:5061" # SIP client
     volumes:
-      - "./config:/etc/flexisip" # Mount a volume for configuration files
-      - "./certs:/etc/letsencrypt" # Mount a volume for Let's Encrypt certificates if using SSL
-      - "./logs:/var/log/flexisip" # Optional: Mount a volume for logs (useful for log rotation)
-    restart: unless-stopped # Restart the container on failure or if it exits
-
-  database:
-    image: 'postgres:latest' # Use the official PostgreSQL image from Docker Hub
-    container_name: flexisip_db
-    volumes:
-      - "./data:/var/lib/postgresql" # Mount a volume for the database data
+      - ./config:/etc/flexisip # Mount your configuration directory to the container
+      - ./logs:/var/log/flexisip # Mount a logs directory to store log files from the container
+      - ./sip_certificates:/etc/flexisip/certificates # Mount a directory with SSL certificates if needed
     environment:
-      POSTGRES_DB: "flexisip"
-      POSTGRES_USER: "flexisip"
-      POSTGRES_PASSWORD: "yourpassword" # Replace with your own strong password
+      - TZ=Europe/Paris # Set the timezone, change to your desired timezone
+      - LOGLEVEL=info # Set the log level (debug, info, warning, error)
+      - REGISTER_STRATEGY=least_routes # Configure register strategy (least_routes, round_robin, least_load, random, least_cost)
     restart: unless-stopped
 
   redis:
-    image: 'redis:latest' # Use the official Redis image from Docker Hub
+    image: "redis:latest"
     container_name: flexisip_redis
+    command: "RedisStart=yes"
+    volumes:
+      - "./data/redis:/data" # Persist Redis data
+    restart: unless-stopped
+
+  mysql:
+    image: "mysql:5.7"
+    container_name: flexisip_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: flexisip
+      MYSQL_USER: flexisipuser
+      MYSQL_PASSWORD: flexisippass
+    volumes:
+      - "./data/mysql:/var/lib/mysql" # Persist MySQL data
+    restart: unless-stopped
+
+  postgres:
+    image: "postgres:latest"
+    container_name: flexisip_postgres
+    environment:
+      POSTGRES_DB: flexisip
+      POSTGRES_USER: flexisipuser
+      POSTGRES_PASSWORD: flexisippass
+    volumes:
+      - "./data/postgres:/var/lib/postgresql" # Persist PostgreSQL data
     restart: unless-stopped
 
 networks:
   default:
     driver: bridge
-
-# Define a network for the services to communicate over
-networks:
-  flexisip_network:
-    driver: bridge
-
-# Optionally, define a custom network if you need more advanced networking features
-networks:
-  custom_network:
-    name: custom_network
-    driver: bridge
-
-services:
-  flexisip:
-    networks:
-      - flexisip_network
-  database:
-    networks:
-      - default
-  redis:
-    networks:
-      - default

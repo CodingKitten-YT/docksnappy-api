@@ -2,33 +2,39 @@ version: '3.8'
 
 services:
   etherpad:
-    image: ether/etherpad-lite:latest
+    image: ether/etherpad-lite:latest # Use the official Etherpad image
     container_name: etherpad
-    ports:
-      - "9000:9000" # Web UI port
-      - "6123:6123"  # OTS (On The Same) port for collaborative editing
-      - "443:443"     # HTTPS port (if you want to enable it, see notes below)
-    volumes:
-      - etherpad-data:/etc/etherpad-lite
-      - ./config:/config
+    command: --loglevel production
     environment:
-      ETHERPAD_USER_EMails: "user@example.com"
-      ETHERPAD_USER_PASSWORDS: "password"
-      ETHERPAD_HOSTNAME: "localhost" # Use the container name or host IP if different
-      ETHERPAD_URL: "https://your-etherpad-domain.tld" # Set your domain here for HTTPS
-    networks:
-      - etherpadnet
-    restart: unless-stopped
+      - EP_DB_ADAPTER=postgres
+      - EP_DB_HOST=db
+      - EP_DB_NAME=etherpad
+      - EP_DB_USER=postgres
+      - EP_DB_PASSWORD=postdoc
+      - EP_SECRET=change_this_to_a_random_string_for_security
+      # Uncomment the next line if you need to set the locale (e.g., 'fr_FR')
+      # - EP_LOCALE=en_US.utf8
+    ports:
+      - "9000:9000" # Etherpad's default port (web interface)
+    volumes:
+      - etherpad-data:/var/lib/etherpad-lite # Persistent storage for Etherpad data
+      - ./config:/etc/etherpad-lite # For config.js if you have custom configurations
+    depends_on:
+      - db
+
+  db:
+    image: postgres:13 # Use an official PostgreSQL image
+    container_name: etherpad_db
+    command: --lc-collation=C
+    volumes:
+      - etherpad-data:/var/lib/postgresql # Persistent storage for database data
+    environment:
+      - POSTGRES_DB=etherpad
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postdoc
+    ports:
+      - "5432:5432" # PostgreSQL default port
 
 volumes:
   etherpad-data:
     driver: local
-
-networks:
-  etherpadnet:
-
-# If you want to enable SSL (recommended for production use), you'll need to:
-# 1. Generate a certificate and key using Let's Encrypt or similar.
-# 2. Mount the generated certificate and key into the container, updating the volume mount for port 443 accordingly.
-# 3. Set ETHERPAD_SECRETKEY if not already set (important for HTTPS).
-# 4. Update ETHERPAD_URL to use https:// instead of http://.

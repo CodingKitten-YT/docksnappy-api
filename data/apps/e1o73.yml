@@ -2,16 +2,32 @@ version: '3.8'
 
 services:
   fenrus:
-    image: 'fenrus/fenrus:latest' # Use the official or specific tag as needed
-    container_name: fenrus
-    environment:
-      - CLOUDFLARE_EMAIL=your_email # Set your Cloudflare API email
-      - CLOUDFLARE_API_KEY=your_api_key # Set your Cloudflare API key
+    image: 'fenrus/fenrus:latest' # Use the official image or a specific tag
     ports:
-      - '8080:8080' # Fenrus server port (default is 8080)
+      - "8080:8080" # Expose the default port if needed, change according to your configuration
+    environment:
+      - FENRUS_DATABASE_URL=postgres://dbuser:dbpassword@db:5432/dbname # Set your database connection string
+      # Add other necessary environment variables for Fenrus configuration
+    depends_on:
+      - db # Define dependencies if any, e.g., a database service
     volumes:
-      - './config/fenrus.yaml:/etc/fenrus/fenrus.yaml' # Configuration file
-      - fenrus-data:/var/lib/fenrus # Data volume for Fenrus
+      - './data:/app/data' # Mount your local data volume to store application data
+
+  postgres:
+    image: 'postgres:latest' # Use the official PostgreSQL image or a specific tag
+    environment:
+      - POSTGRES_USER=dbuser
+      - POSTGRES_PASSWORD=dbpassword
+      - POSTGRES_DB=dbname
+    volumes:
+      - './data/postgres:/var/lib/postgresql/data' # Mount your local data volume for PostgreSQL data persistence
+      # Optionally, you can use a docker volume instead of a local path for production environments
+
+# Define any additional configurations like networks, volumes, etc.
+networks:
+  default:
+    driver: bridge
 
 volumes:
-  fenrus-data:
+  fenrus_data:
+  postgres_data:

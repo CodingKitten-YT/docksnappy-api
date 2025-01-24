@@ -1,59 +1,50 @@
-version: '3.8'
+version: '3.7'
 
 services:
   misago:
-    image: misago/misago:latest
+    image: misagoforum/misago:latest
     container_name: misago
-    ports:
-      - "8000:8000" # HTTP port, customize as needed
-      - "4430:443"   # HTTPS port, if configured with SSL, customize as needed
     environment:
-      - SECRET_KEY=`cat /path/to/secret_key.txt` # Set your own secret key
-      - ALLOWED_HOSTS=localhost,127.0.0.1,[::1]
-      - DEBUG=False
-      - EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
-      - EMAIL_HOST=smtp.example.com # Replace with your SMTP server
-      - EMAIL_PORT=587
-      - EMAIL_USE_TLS=True
-      - EMAIL_HOST_USER=your_email@example.com # Replace with your email address
-      - EMAIL_HOST_PASSWORD=`cat /path/to/email_password.txt` # Set your email password securely
-    volumes:
-      - ./misago:/opt/misago
-      - misago-media:/opt/misago/user_upload
-      - misago-static:/opt/misago/staticfiles
-      - misago-logs:/var/log/misago
+      MISAGO_SECRET_KEY: ${RANDOM:-"${MISAGO_SECRET_KEY:-$(cat /dev/urandom | tr -dc 'a-z0-9' | head -c 32)}"}
+      MISAGO_DB_HOST: db
+      MISAGO_DB_NAME: misago
+      MISAGO_DB_USER: misago
+      MISAGO_DB_PASSWORD: misagouser
+      MISAGO_EMAIL_BACKEND: smtp://{mail_username}:{mail_password}@mailhog:1025
+      # Uncomment the following line if you want to enable Django's in-memory SQLite database for development purposes
+      # MISAGO_USE_SQLITE=true
+    ports:
+      - "8000:8000"
     depends_on:
       - db
-      # Uncomment the next line if you need to use Redis (optional)
-      # - redis
+      - mailhog
+    volumes:
+      - ./misago.conf:/etc/misago/misago.conf
+      - misago-static:/code/misago/static
+      - misago-media:/code/misago/media
+      - misago-logs:/var/log/misago
     restart: unless-stopped
 
   db:
     image: postgres:12
     container_name: misago_db
+    environment:
+      POSTGRES_DB: misago
+      POSTGRES_USER: misago
+      POSTGRES_PASSWORD: misagouser
     volumes:
       - misago-db:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_DB=misago
-      - POSTGRES_USER=misago
-      - POSTGRES_PASSWORD=`cat /path/to/db_password.txt` # Set your database password securely
     restart: unless-stopped
 
-  redis: # Uncomment this section if you need to use Redis (optional)
-    image: redis:6-alpine
-    container_name: misago_redis
-    volumes:
-      - misago-redis:/data
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mailhog
+    ports:
+      - "8025:8025"
     restart: unless-stopped
 
 volumes:
-  misago-db:
-  misago-media:
   misago-static:
+  misago-media:
+  misago-db:
   misago-logs:
-  misago-redis: # Uncomment this line if you are using Redis
-
-# If you're setting up a production environment, consider enabling these options:
-# - Readiness and Liveness probes for better monitoring of the application
-# - Resource constraints (CPU/Memory limits and requests)
-# - Network settings (like publishing the correct ports)

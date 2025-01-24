@@ -2,35 +2,77 @@ version: '3.7'
 
 services:
   mindsdb:
-    image: mindsdb/minserver:latest # or use a specific version like 'mindsdb/minserver:v0.25.1'
-    command: -c /app/conf/min.toml --log-format json
-    ports:
-      - "8080:8080" # HTTP API port
-      - "9090:9090" # TCP server
-    volumes:
-      - ./data:/app/data
-      - ./conf:/app/conf
+    image: mindsdb/mindsdb:latest # or specify a particular version like 'mindsdb/mindsdb:1.12.0'
+    container_name: mindsdb
+    command: -d -v ${LOCAL_TIMEZONE} -p ${MINDSDB_PORT}:8000 --max-uncommitted-predictions 5 --allow-non-integer-feature-importance --model-store-backend sqlite
     environment:
-      - ALLOW_ANONYMOUS_UPLOAD=true
-      - ENABLE_ADMIN_INTERFACE=true
-      - MINDB_METRICS_ENABLED=false # Set to true to enable metrics endpoint
+      LOCAL_TIMEZONE: '{{ .Env.TZ }}'
+      MINDSDB_PORT: '9000' # You can change the port to avoid conflicts
+    ports:
+      - "9000:9000"
+    volumes:
+      - type: bind
+        source: ./models
+        target: /app/models
+        mode: cached
     depends_on:
       - postgres
-    networks:
-      - mindsdb-network
 
   postgres:
-    image: postgres:13
-    command: 'postgres -c "config_file = '/etc/postgresql/main.conf'"'
+    image: postgres:latest # or specify a particular version like 'postgres:13'
+    command: -c 'fsync=1'
     volumes:
-      - ./pgdata:/var/lib/postgresql/data
+      - type: bind
+        source: ./data/postgres
+        target: /var/lib/postgresql/data
+        mode: numpy
     environment:
+      POSTGRES_DB: mindsdb
       POSTGRES_USER: mindsdb
       POSTGRES_PASSWORD: mindsdb
-      POSTGRES_DB: mindsdb
-    networks:
-      - mindsdb-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mindsdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:latest # or specify a particular version like 'redis:6-alpine'
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/data'
+    volumes:
+      - type: bind
+        source: ./data/prometheus
+        target: /data
+        mode: numpy
+
+  grafana:
+    image: grafana/grafana:latest # or specify a particular version like 'grafana/grafana:7.4.3'
+    ports:
+      - "3000:3000"
+    command:
+      - '--config.file=/etc/grafana/grafana.ini'
+      - '--storageMaxLifetime=72'
+    volumes:
+      - type: bind
+        source: ./data/grafana
+        target: /data
+        mode: numpy
+
+  mindsdb-integration-tests:
+    image: mindsdb/mindsdb-integration-test:latest # or specify a particular version
+    volumes:
+      - type: bind
+        source: ./integration_tests
+        target: /app/integration_tests
+        mode: cached
 
 networks:
-  mindsdb-network:
+  mindsdb_network:
     driver: bridge

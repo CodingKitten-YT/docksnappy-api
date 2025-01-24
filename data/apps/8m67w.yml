@@ -1,51 +1,56 @@
 version: '3.8'
 
 services:
-  # PostgreSQL database
-  db:
-    image: postgres:12
-    volumes:
-      - db_data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: docuseal
-      POSTGRES_USER: docuseal
-      POSTGRES_PASSWORD: change_this_password
-    restart: unless-stopped
-
-  # DocuSeal application server
-  app:
-    image: docuseal/docuseal:latest
+  docueseal-portal:
+    image: docueseal/docueseal-portal:latest
+    container_name: docueseal-portal
     ports:
       - "5000:5000"
-    depends_on:
-      - db
     environment:
-      DOCUSEAL__DB__HOSTNAME: db
-      DOCUSEAL__DB__DATABASE: docuseal
-      DOCUSEAL__DB__USERNAME: docuseal
-      DOCUSEAL__DB__PASSWORD: change_this_password
-      DOCUSEAL__SECRET_KEY: changeme12345
+      - DOCUSEAL_DB_CONNECTIONSTRING="postgres://dbuser:dbpassword@db:5432/dbname"
+      # Set to 'true' if you want to create a default admin user on first run
+      - DOCUSEAL_ADMIN_ACCOUNT=false
     volumes:
-      - app_data:/app/data
-    restart: unless-stopped
-
-  # Nginx as a reverse proxy (optional, if you want to expose DocuSeal publicly)
-  nginx:
-    image: nginx:latest
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - nginx_conf:/etc/nginx/conf.d
-      - app_data:/app/data
+      - "./data:/data"
+      - "./logs:/root/.logforwarder"
     depends_on:
-      - app
-    restart: unless-stopped
+      - docueseal-db
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "localhost:5000/health"]
+      interval: 10s
+      timeout: 2s
+      retries: 30
 
-volumes:
-  db_data:
-  app_data:
-  nginx_conf:
+  docueseal-db:
+    image: postgres:latest
+    container_name: docueseal-db
+    environment:
+      - POSTGRES_DB=docueseal
+      - POSTGRES_USER=dbuser
+      - POSTGRES_PASSWORD=dbpassword
+    volumes:
+      - "./data/db:/var/lib/postgresql/data"
+
+  log-forwarder:
+    image: logzio/logforwarder:latest
+    container_name: log-forwarder
+    environment:
+      - LOGZIO_TOKEN=YOUR_LOGZIO_TOKEN
+      # Set the correct host for your setup, default is set to localhost
+      - HOSTNAME=docueseal-portal
+    volumes:
+      - "./logs:/root/.logforwarder"
+    depends_on:
+      - docueseal-portal
+
+  redis:
+    image: redis:latest
+    container_name: docueseal-redis
+    healthcheck:
+      test: ["CMD", "REDIS-CLI", "PING"]
+      interval: 10s
+      timeout: 2s
+      retries: 30
 
 networks:
   default:

@@ -2,63 +2,38 @@ version: '3.8'
 
 services:
   openslides:
-    image: openslides/openslides:latest
+    image: 'open slides/openslides:latest'
     container_name: openslides
-    environment:
-      - OPENSLIDES_DB_HOST=database
-      - OPENSLIDES_DB_NAME=openslides
-      - OPENSLIDES_DB_USER=openslides
-      - OPENSLIDES_DB_PASSWORD=secret
-      - OPENSLIDES_SECRET_KEY=${OPENSLIDES_SECRET_KEY}
     ports:
-      - "8000:80"
-    depends_on:
-      - database
+      - "8081:80"
     volumes:
-      - ./data/openslides:/var/lib/openslides
-      - ./configs/openslides.conf:/etc/openslides/openslides.conf
-    command: --nothreads
-
-  postgres:
-    image: postgres:latest
-    container_name: database
+      - ./openslides.conf:/etc/openslides/openslides.conf
+      - openslides-data:/var/lib/openslides
+      - openslides-config:/etc/openslides
     environment:
       - POSTGRES_DB=openslides
-      - POSTGES_USER=openslides
+      - POSTGRES_USER=openslides
       - POSTGRES_PASSWORD=secret
-    volumes:
-      - ./data/database:/var/lib/postgresql/data
-
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: phpmyadmin
-    ports:
-      - "8080:80"
+      - OPENSLIDES_SECRET=secret
+      - TZ=Europe/Berlin
     depends_on:
-      - database
+      - postgres
 
-  nginx-proxy:
-    image: 'jwilder/nginx-proxy'
-    container_name: nginx-proxy
-    ports:
-      - "80:80"
-      - "443:443"
-    depends_on:
-      - app
+  postgres:
+    image: 'postgres:latest'
     volumes:
-      - ./data/nginx:/etc/nginx/conf.d
-      - ./data/nginx/certs:/etc/letsencrypt
-      - ./data/nginx/letsencrypt-webroot:/var/www/certbot.conf
-    command: '--default-server-class=stateless'
+      - openslides-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=openslides
+      - POSTGRES_USER=openslides
+      - POSTGRES_PASSWORD=secret
+    healthcheck:
+      test: ["cmd", "pg_isready", "-U", "openslides"]
+      timeout: 20s
+      retries: 5
 
-  letsencrypt:
-    image: 'jrcassancara/letsencrypt-nginx-legacy'
-    container_name: letsencrypt
-    volumes:
-      - ./data/nginx/letsencrypt-webroot:/var/www/certbot.conf
-    command: certonly --standalone --nginx -d example.com,www.example.com
-
-networks:
-  default:
-    external:
-      name: mynetwork
+volumes:
+  openslides-data:
+    driver: local
+  openslides-config:
+    driver: local

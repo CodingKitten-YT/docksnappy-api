@@ -80,7 +80,7 @@ app.get('/apps/:id/compose', async (req, res) => {
         if (!app) {
             return res.status(404).json({ error: 'App not found' });
         }
-        const jsDelivrUrl = `https://cdn.jsdelivr.net/gh/CodingKitten-YT/docksnappy-api@master/data/apps/${app.name}/docker-compose.yml`;
+        const jsDelivrUrl = `https://cdn.jsdelivr.net/gh/CodingKitten-YT/docksnappy-api@master/data/apps/${app._id}yml`;
         res.json({ url: jsDelivrUrl });
     } catch (err) {
         console.error('Error fetching Docker Compose URL:', err);

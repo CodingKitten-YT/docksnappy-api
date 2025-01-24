@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  srs:
+    image: 'vrube/srs:latest' # Use the official SRS Docker image
+    container_name: srs
+    ports:
+      - "80:80" # Map HTTP port (change as needed)
+      - "443:443" # Map HTTPS port (change as needed)
+    volumes:
+      - ./letsencrypt:/etc/letsencrypt # Mount for Let's Encrypt data (if using Certbot for SSL)
+      - srs-data:/var/lib/srs # Persistent storage for SRS data
+    restart: unless-stopped
+    environment:
+      - PUID=1000 # Set your Process User ID (optional, default is 1000)
+      - PGID=1000 # Set your Process Group ID (optional, default is 1000)
+      - TZ=Europe/London # Set your timezone (optional, default is UTC)
+      - SRS_LOG_LEVEL=info # Set the log level (optional, default is info)
+    networks:
+      - srs_network
+
+  database:
+    image: postgres:latest
+    container_name: srs_db
+    volumes:
+      - srs-db-data:/var/lib/postgresql # Persistent storage for PostgreSQL data
+    environment:
+      - POSTGRES_DB=srs # Set the database name (optional, default is 'postgres')
+      - POSTGRES_USER=srs # Set the database user (optional, default is 'postgres')
+      - POSTGRES_PASSWORD=srs # Set the database password (optional, default is no password)
+    restart: unless-stopped
+    networks:
+      - srs_network
+
+volumes:
+  srs-data:
+  srs-db-data:
+
+networks:
+  srs_network:
+    driver: bridge

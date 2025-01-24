@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  pinepod:
+    image: pine64/ubuntu-pi4:latest  # Use the official Ubuntu Core image for PinePod
+    container_name: pinepod
+    user: 1000:1000  # Optional: Set the user to avoid permission issues
+    volumes:
+      - /etc/localtime:/etc/localtime  # Use the host's timezone (if you want to keep it)
+      - pinepod-storage:/data  # Mount a volume for persistent storage
+      - pinepod-config:/etc/pine64  # Mount a volume for persistent configuration
+
+    environment:
+      - HOSTNAME=PinePod
+      - TZ=${TZ:-America/New_York}  # Optional: Set the timezone, you can change this to your host's timezone if preferred
+
+    network:
+      name: pinepod_network
+      aliases:
+        - 'pinepod.local'  # Make the PinePod accessible via this hostname on the local network
+
+    restart: unless-stopped  # Restart the container unless it has been explicitly stopped
+
+volumes:
+  pinepod-storage:  # Define a volume for persistent storage
+  pinepod-config:   # Define a volume for persistent configuration (e.g., custom config files)
+
+networks:
+  pinepod_network:  # Define a user-defined network to allow communication between containers/devices on the same network
+    driver: bridge

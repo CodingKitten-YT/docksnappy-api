@@ -1,20 +1,49 @@
-version: '3.8'
+version: '3.7'
 
 services:
   haproxy:
-    image: haproxy:latest  # or specify a particular version like 'haproxy:2.1'
+    image: haproxy:latest
     container_name: haproxy
     ports:
       - "80:80"
       - "443:443"
     networks:
-      - backend
+      - haproxy_net
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
     volumes:
-      - ./haproxy/configs:/usr/share/nginx/html  # If you want to use custom configs
-      - /dev/urandom:/dev/urandom  # For entropy source (not required but recommended)
-    restart: unless-stopped
-    command: "-f /usr/local/etc/haproxy/haproxy.cfg"  # Use your custom haproxy.cfg file if you have one
+      - './prometheus:/etc/prometheus'
+      - prom_data:/prometheus
+    ports:
+      - "9090:9090"
+    depends_on:
+      - haproxy
+    networks:
+      - haproxy_net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana:/etc/grafana
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+      - haproxy
+    networks:
+      - haproxy_net
+
+volumes:
+  prom_data:
+  grafana_data:
 
 networks:
-  backend:
-    driver: overlay
+  haproxy_net:
+    driver: bridge

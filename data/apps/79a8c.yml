@@ -4,23 +4,19 @@ services:
   lemmy:
     image: lemmy/lemmy:latest
     container_name: lemmy
-    command: core
-    restart: unless-stopped
+    command: /app/install --force-color --non-interactive CODEOWNERS=false EULA_AGREED=true --admin-invites=true --no-browser
     ports:
-      - "127.0.0.1:8920:8920" # Instance API and admin interface
-      - "127.0.0.1:8980:8980" # Federation protocol (activitypub)
-      - "127.0.0.1:46656:46656" # WebSockets for real-time notifications
-      - "3000:3000" # Frontend UI (if you're using the built-in instance or serving it from outside the container)
+      - "8080:8080" # Port for web UI and API
+      - "8920:8920" # Admin interface
+      - "7301:7301" # Federation port (for running a federated instance)
     volumes:
-      - lemmy-instance:/var/lib/lemmy
-      - lemmy-data:/root/.local/share/lemmy
+      - lemmy-data:/app/code
+      - ./config:/app/config
     environment:
+      TZ: 'Europe/London' # Set your desired timezone here
       POSTGRES_DB: lemmy
       POSTGRES_USER: lemmy
-      POSTGRES_PASSWORD: change_this_password_and_store_it_securely
-      ADMIN_USERNAME: admin
-      ADMIN_PASSWORD: admin_password
-      ADMIN_EMAIL: admin@example.com
+      POSTGRES_PASSWORD: lemmy
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U lemmy"]
       interval: 10s
@@ -34,17 +30,7 @@ services:
     environment:
       POSTGRES_DB: lemmy
       POSTGRES_USER: lemmy
-      POSTGRES_PASSWORD: change_this_password_and_store_it_securely
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U lemmy"]
-      interval: 10s
-      timeout: 5s
-      retries: 30
+      POSTGRES_PASSWORD: lemmy
 
 volumes:
-  lemmy-instance:
   lemmy-data:
-
-networks:
-  lemmy_net:
-    driver: bridge

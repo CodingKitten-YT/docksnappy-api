@@ -1,50 +1,54 @@
 version: '3.8'
 
 services:
-  jupyterhub:
-    image: jupyter/jupyterhub:latest
-    user: jovokus
-    ports:
-      - "8888:8888" # Notebook port
-    volumes:
-      - .jupyter:/home/jovoker/.local/share/jupyter/runtime
-      - ./notebooks:/home/jovoker/notebooks
-    depends_on:
-      - jupyterlab
-
   jupyterlab:
-    image: jupyterhub/minimal-nbserver-no-notebook:latest # Optional, if you want to exclude notebook from the base image
-    user: jovokus
-    environment:
-      JUPYTERHUB_CONFIG: |
-        c.JupyterHub.executionTimeout_notebook: 600
-        c.JupyterHub.cookie_secure: False
-        c.JupyterHub.runtime_subprocesses:
-          jupyter-notebook:
-            command: /usr/local/bin/jupyter-notebook
-            memory: 1500 MB
-            cpu_affinity: 2
+    image: jupyter/base-notebook:latest  # You can also use 'jupyter/jupyterlab:latest' if you prefer
+    user: "root"
     ports:
-      - "8000:8000" # JupyterLab port
+      - "8888:notebook"
     volumes:
-      - .jupyter:/home/jovoker/.local/share/jupyter/runtime
-      - ./notebooks:/home/jovoker/notebooks
+      - .:/home/jovokit/work
+      - jupyter-data:/home/jovokit/.local
+    environment:
+      - JUPYTERLAB_LAUNCHERS_NAMES=jupyter-notebook,jupyter-lab
+      # Uncomment the next line to use JupyterLab by default (instead of the classic notebook interface)
+      # - JUPYTER_EXECUTION_NOTEBOOK=jupyter-lab
     depends_on:
       - jupyterhub
 
-  notebook-docker:
-    image: jupyter/database-links-extension:latest
+  jupyterhub:
+    image: jupyterhub/singleuser-jupyterhub:latest
+    user: "root"
+    volumes:
+      - jupyter-data:/home/jovokit/.local
+    environment:
+      JUPYTERHUB_USER: myuser
+      JUPYTERHUB_TOKEN: a_secure_password
+      JUPYTERHUB_CONFIG_CONTENTS: |
+        c.JupyterHub.executionTimeout = 1800
+        c.JupyterHub.ip_config = {
+            'JupyterHub.allow_retrieval_of_token': True,
+            'JupyterHub.cookie_secure': False,
+            'JupyterHub.create_new_user': True,
+            'c.JupyterHub.runtime_configurables': {
+                'jhub_notebook_default_url': '',
+            },
+        }
+        c.JupyterLabExtensionManager.optional_nbconvert_extensions = [
+            'nbsheets.NotebookSheetsExtension'
+        ]
     depends_on:
-      - jupyterlab
+      - postgres
 
-# Optional services for additional components like:
-# - mongodb: If you plan to use JupyterHub with MongoDB for user authentication.
-# - postgres: If you want a separate database service.
-# Uncomment the following lines and configure them as needed.
-# mongodb:
-#   image: mongo:latest
-#
-# postgres:
-#   image: postgres:latest
+  postgres:
+    image: postgres:latest
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: mydb
+      POSTGRE_USER: myuser
+      POSTGRES_PASSWORD: a_secure_password
 
-# To use a specific version of JupyterHub, replace 'latest' with the desired tag.
+volumes:
+  jupyter-data:
+  postgres-data:

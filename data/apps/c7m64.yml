@@ -1,51 +1,40 @@
 version: '3.8'
 
 services:
-  web:
-    image: fusion/web:latest
-    container_name: fusion_web
+  fusion_backend:
+    image: fusion/backend:latest # Replace with the specific backend image you need
+    command: gunicorn -b :5000 app.wsgi:application
     ports:
-      - "8000:80"
+      - "5000:5000"
     depends_on:
-      - api
+      - db
     environment:
-      WEB_API_URL: http://api:8001
+      - DATABASE_URL=postgres://db:5432/fusion
+    volumes:
+      - .:/code
+    restart: unless-stopped
 
-  api:
-    image: fusion/api:latest
-    container_name: fusion_api
+  fusion_frontend:
+    image: fusion/frontend:latest # Replace with the specific frontend image you need
     ports:
-      - "8001:8000"
-    environment:
-      API_DATABASE_URL: postgres://db:5432/fusion
-      API_RABBITMQ_URL: amqp://rabbitmq:5672/
-      API_REDIS_URL: redis://redis:6379/0
+      - "80:80"
+    depends_on:
+      - backend
+    volumes:
+      - .:/code
+    restart: unless-stopped
 
   db:
-    image: postgres:13
-    container_name: fusion_db
-    environment:
-      POSTGRES_DB: fusion
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+    image: postgres:latest
+    command: postgres -c 'listen_addresses = 0' # Allows connection from outside the container
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
-  rabbitmq:
-    image: rabbitmq:3.8-management
-    container_name: fusion_rabbitmq
-    ports:
-      - "5672:5672"
-      - "15674:15674"
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-
-  redis:
-    image: redis:6.0-alpine
-    container_name: fusion_redis
-    ports:
-      - "6379:6379"
+    environment:
+      POSTGRES_DB: fusion
+      POSTGRES_USER: db
+      POSTGRES_PASSWORD: dockerpass
 
 volumes:
   postgres_data:
-  rabbitmq_data:

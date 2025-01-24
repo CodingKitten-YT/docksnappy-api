@@ -2,32 +2,44 @@ version: '3.8'
 
 services:
   app:
-    image: managemydammnlife/web:latest
+    image: manageondamnlife/monday-app:latest
     ports:
-      - "8000:8000"
+      - "5000:5000" # Expose the Flask app on port 5000 (default for debugging in Flask)
+    environment:
+      - DATABASE_URL=postgres://db:5432/monday
     depends_on:
       - db
-    environment:
-      - SECRET_KEY=your_secret_key
-      - DATABASE_URL=postgres://db:5432/dbname
-      - DJANGO_SETTINGS_MODULE=managemydammnlife.settings
-    volumes:
-      - .:/code
-      - /code/static:/code/static
-      - /code/managemydammnlife/managemydammnlife:/code/managemydammnlife
-    command: gunicorn managemydammnlife.wsgi:application --bind 0.0.0.0:8000
 
   db:
     image: postgres:13
     environment:
-      - POSTGRES_DB=dbname
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
+      - POSTGRES_USER=dbuser
+      - POSTGRES_PASSWORD=dbpassword
+      - POSTGRES_DB=monday
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql  # Optional SQL setup script
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "dbuser"]
+      timeout: 10s
+      retries: 5
 
   redis:
-    image: redis:alpine
+    image: redis:6-alpine
+    healthcheck:
+      test: ["CMD", "REDIS-SERVER", "ping"]
+      timeout: 5s
+      retries: 10
+
+  worker:
+    image: manageondamnlife/monday-worker:latest
+    depends_on:
+      - app
+      - db
 
 volumes:
-  postgres_data:
+  monday-data:
+    driver: local
+
+networks:
+  default:
+    name: monday_network

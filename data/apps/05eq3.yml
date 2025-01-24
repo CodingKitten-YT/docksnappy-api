@@ -1,67 +1,12 @@
-version: '3.8'
-
-services:
-  directus:
-    image: directus/directus:latest  # Latest release of Directus
-    container_name: directus
-    command: /run-in-docker.sh app
-    restart: unless-stopped
-    ports:
-      - "8055:9055"  # HTTP API on Directus (default is 9055)
-      - "8060:9060"  # Admin interface (default is 9060)
-    healthcheck:
-      test: ["CMD-SHELL", "curl --fail http://localhost:9055/health"]
-      interval: 10s
-      timeout: 3s
-      retries: 120
-    environment:
-      DATABASE_HOST: db
-      SQL_ENGINE: postgres  # Use 'mysql' for MySQL, 'sqlite' for SQLite
-      SQL_DB: directus  # Database name
-      SQL_USER: directus
-      SQL_PASSWORD: change_this_password
-      ADMIN_EMAIL: admin@example.com
-      ADMIN_PASSWORD: change_me
-      NODE_ENV: production
-    volumes:
-      - ./data/directus:/var/lib/directus
-      - ./configs/directus:/root/.config/directus
-    depends_on:
-      - db
-
-  database:
-    image: postgres:latest
-    container_name: directus-db
-    command: /bin/sh -c "trap 'pkill pg_dump; exit 0'; pg_dump --clean --no-owner --no-acl --blurb-replace-identifier-quotes=none myapp > /docker/myapp.sql && sleep 1 && pg_restore --no-owner --no-acl --blurb-replace-identifier-quotes=none -h "localhost" -U "postgres" -d "myapp" /docker/myapp.sql"
-    restart: unless-stopped
-    volumes:
-      - ./data/db:/var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: myapp  # Database name
-      POSTGRES_USER: directus
-      POSTGRES_PASSWORD: change_this_password
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U directus"]
-      interval: 10s
-      timeout: 3s
-      retries: 120
-
-  redis:
-    image: redis:latest
-    container_name: directus-redis
-    restart: unless-stopped
-
-extra_hosts: &extra_hosts
-  db: "database"
-  redis: "redis"
-
-volumes:
-  directus_data:
-    driver: local
-  db_data:
-    driver: local
-
-networks:
-  default:
-    external:
-      name: true
+certbot:
+  image: certbot/certbot:latest
+  volumes:
+    - './letsencrypt:/workspace' # Let's Encrypt storage
+    - './directus-le:/etc/letsencrypt' # Let's Encrypt certificates and keys
+  ports:
+    - "80:80"
+    - "443:443"
+  depends_on:
+    - directus
+  networks:
+    - directus-net

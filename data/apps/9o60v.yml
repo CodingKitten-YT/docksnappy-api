@@ -1,0 +1,39 @@
+version: '3'
+services:
+  solr:
+    image: apache/solr:8.6.0
+    ports:
+      - "8983:8983"
+    environment:
+      JAVA_OPTS: "-Dsolr.solr.dataDir=./data -Ddata.dir=./data"
+      SOLR_MEMORY: 4g
+      SOLR_HEAP: 4g
+    volumes:
+      - ./data:/tmp/solr/data
+  scholarsphere:
+    image: scholarssphere/scholarsphere:x.y.z
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:mysql://db:3306/dspace?useLegacyDatsourceApi=true"
+      SPRING_DATASOURCE_USERNAME: "dspace"
+      SPRING_DATASOURCE_PASSWORD: "dspace"
+      SPRING_ADMIN_EMAIL: "admin@example.com"
+      SPRING_ADMIN_PASSWORD: "adminpassword"
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_DATABASE: dspace
+      MYSQL_USER: dspace
+      MYSQL_PASSWORD: dspace
+      MYSQL_ROOT_PASSWORD: rootpassword
+    volumes:
+      - ./db-data:/var/lib/mysql
+  ingesthandler:
+    image: scholarssphere/ingesthandler:x.y.z
+    depends_on:
+      - scholarsphere
+    ports:
+      - "9090:9090"

@@ -1,20 +1,25 @@
 version: '3.8'
+
 services:
   domoticz:
-    image: domoticz/domoticz:latest # Use the official Domoticz Docker image or specify a version tag
+    image: linuxserver/domoticz:latest
     container_name: domoticz
     ports:
-      - "8080:8080" # Map the Domoticz web interface port to your host, default is 8080
-      - "8700:8700" # Map the Domoticz HTTP API port to your host, default is 8700
+      - "8080:80" # Domoticz web interface
+      - "5882:5882" # MQTT port (optional, if you're using MQTT integration)
+      - "18008:18008" # Domoticz local HTTP interface (if needed for local access)
     environment:
-      TZ: "${TZ}" # Set your timezone, e.g., "Europe/London"
+      TZ: 'Europe/London' # Set your timezone, e.g., 'America/New_York'
+      PUID: 1000 # Use the same User ID as in User Defined Registry (UDR) or Host
+      PGID: 1000 # Use the same Group ID as in UDR or Host
+      EULA: 'accept' # Accept Domoticz EULA
     volumes:
-      - "/path/to/domoticz:/config" # Mount a volume for Domoticz configuration files (optional but recommended)
-      - "/path/to/log:/var/log/domoticz" # Optional volume for Domoticz logs, useful for logging purposes
-    restart: unless-stopped # Automatically restart the container if it stops
+      - '/path/to/domoticz:/config' # Replace with the path to your Domoticz configuration on the host
+      - '/var/run/docker.sock:/var/run/docker.sock' # Required for Docker within Domoticz
+    restart: unless-stopped
     networks:
-      - domoticz_network
+      - home_network
 
 networks:
-  domoticz_network:
+  home_network:
     driver: bridge

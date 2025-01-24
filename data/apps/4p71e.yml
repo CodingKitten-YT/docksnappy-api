@@ -1,44 +1,45 @@
 version: '3.8'
+
 services:
-  chibisafe_web:
+  chibisafe-web:
     image: chibisafe/chibisafe-web:latest
     ports:
-      - "8000:80"
-    environment:
-      CHIBISAFE_SECRET_KEY: "${CHIBISAFE_SECRET_KEY}"
-      CHIBISAFE_DB_HOST: db
-      CHIBISAFE_DB_NAME: chibisafe
-      CHIBISAFE_DB_USER: chibisafe_user
-      CHIBISAFE_DB_PASSWORD: chibisafe_password
-      CHIBISAFE_EMAIL_HOST: email-service
-      CHIBISAFE_EMAIL_PORT: 1025
-      CHIBISAFE_EMAIL_USER: chibisafe@example.com
-      CHIBISAFE_EMAIL_PASSWORD: chibisafe_email_password
+      - "80:80" # HTTP port exposed to the host
+      - "443:443" # HTTPS port exposed to the host
     depends_on:
-      - db
-      - email-service
-    volumes:
-      - ./chibisafe/staticfiles:/code/staticfiles
-      - ./chibisafe/media:/code/media
-    command: gunicorn --workers=2 chibisafe.wsgi:application
-  chibisafe_db:
-    image: postgres:13
+      - chibisafe-db
     environment:
-      POSTGRES_DB: chibisafe
-      POSTGRES_USER: chibisafe_user
-      POSTGRES_PASSWORD: chibisafe_password
+      - DB_HOST=chibisafe-db
+      - DB_USER=<your_database_user>
+      - DB_PASSWORD=<your_database_password>
+      - DB_NAME=<your_database_name>
+      - DB_PORT=5432  # PostgreSQL default port
+      - SECRET_KEY=<secret_key>
     volumes:
-      - db_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U chibisafe_user"]
-      timeout: 10s
-      retry: 5
+      - ./config/chibisafe.conf:/etc/chibisafe/chibisafe.conf
+      - chibisafe-web-data:/var/lib/tomcat9/webapps/ROOT/WEB-INF/classes
+      - chibisafe-web-logs:/var/log/chibisafe-web
 
-  chibisafe_email_service:
-    image: mailhog/mailhog:latest
-    ports:
-      - "8025:8025"
+  chibisafe-db:
+    image: postgres:13
     volumes:
-      - ./mailhog:/app
-  db_data:
-    driver: local
+      - chibisafe-db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=<your_database_user>
+      - POSTGRES_PASSWORD=<your_database_password>
+      - POSTGRES_DB=<your_database_name>
+      - POSTGRES_PORT=5432
+
+  chibisafe-queue:
+    image: rabbitmq:3-management
+    ports:
+      - "15672:15672" # RabbitMQ default port for connections
+      - "5671:5671"   # RabbitMQ default port for client connections
+      - "5672:5672"  # Management UI interface (optional)
+    volumes:
+      - chibisafe-queue-data:/var/lib/rabbitmq
+
+volumes:
+  chibisafe-web-data:
+  chibisafe-db-data:
+  chibisafe-queue-data:

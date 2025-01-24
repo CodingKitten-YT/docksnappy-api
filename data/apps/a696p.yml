@@ -1,42 +1,39 @@
 version: '3.8'
 
 services:
-  gathio_backend:
-    image: gathio/gathio-backend:latest
-    command: gunicorn -b :8000 app.wsgi
+  app:
+    image: gathio/gathio-server:latest
+    command: --bind=localhost:8080
     ports:
-      - "8000:8000"
-    depends_on:
-      - db
-    environment:
-      DB_HOST: db
-      DB_USER: gathio
-      DB_PASSWORD: changeme
-      DB_NAME: gathio
-      SECRET_KEY: 'your_secret_key'
+      - "8080:8080"
     volumes:
       - ./app:/app
-
-  gathio_frontend:
-    image: gathio/gathio-frontend:latest
-    ports:
-      - "5000:5000"
-    depends_on:
-      - backend
-
-  db:
-    image: postgres:13
+      - ./node_modules:/node_modules
     environment:
-      POSTGRES_USER: gathio
-      POSTGRES_PASSWORD: changeme
-      POSTGRES_DB: gathio
-    volumes:
-      - gathio-db:/var/lib/postgresql/data
+      - GATRY_ENV=production
+      - NODE_ENV=production
+    depends_on:
+      - database
+      #- redis
+    env_file:
+      - .env
 
+  database:
+    image: postgres:13
+    command: --password='gathio'
+    volumes:
+      - gathio_db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=gathio
+      - POSTGRES_PASSWORD=gathio
+      - POSTGRES_DB=gathio
+
+  # Optional Redis service if you want to use it for caching or pub/sub.
   redis:
     image: redis:6-alpine
-    command: redis-server --appendonly yes
+    volumes:
+      - gathio_redis:/data
 
 volumes:
-  gathio-db:
-    driver: local
+  gathio_db:
+  gathio_redis:

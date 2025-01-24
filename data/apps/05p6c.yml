@@ -1,38 +1,41 @@
 version: '3.8'
 
 services:
-  fasten_health_gateway:
-    image: fastenit/fasten-health-gateway:latest
+  # FastAPI API Service (Web App)
+  api:
+    image: fastapiapp:latest
+    build:
+      context: ./fasten-health-api
+      dockerfile: Dockerfile
     ports:
-      - "8081:80"
-    environment:
-      - FASTEN_HEALTH_APIKEY=your_api_key_here
-      - JWT_SECRET=your_jwt_secret_here
+      - "8000:80"
     depends_on:
-      - fasten_health_data_api
-
-  fasten_health_data_api:
-    image: fastenit/fasten-health-data-api:latest
+      - db
     environment:
-      - FASTEN_HEALTH_APIKEY=your_api_key_here
-      - POSTGRES_DB=fasten_health
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
+      - DB_HOST=db
+      - DB_NAME=fasten_health_db
+      - DB_USER=fasten_user
+      - DB_PASSWORD=fasten_pass
+      - SECRET_KEY=your_secret_key  # Replace with your own secret key
+      - DEBUG=1  # Set to 0 for production
     volumes:
-      - postgres_data:/database/data
+      - ./fasten-health-api/app:/app
 
-  postgres:
-    image: postgres:13
+  # PostgreSQL Database Service
+  db:
+    image: postgres:latest
     environment:
-      - POSTGRES_DB=fasten_health
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=fasten_health_db
+      - POSTGRES_USER=fasten_user
+      - POSTGRES_PASSWORD=fasten_pass
     volumes:
-      - postgres_data:/database/data
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
-      timeout: 5s
-      retries: 5
+      - db_data:/var/lib/postgresql/data
 
+# Define named volume for database data
 volumes:
-  postgres_data:
+  db_data:
+
+# Define a network for the services to communicate with each other
+networks:
+  fasten-health-net:
+    driver: bridge

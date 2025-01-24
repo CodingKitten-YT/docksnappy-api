@@ -1,41 +1,91 @@
 version: '3.8'
-
 services:
-  jitsi-meet:
-    image: jitsi/jitsi-meet:latest  # or use a specific version if needed, e.g., 'jitsi/jitsi-meet:4.0.2169-rc1'
-    platform: linux
+  jitsi-container:
+    image: jitsi/jitsi-meet:latest
+    container_name: jitsi-meet
     ports:
-      - "80:8443"  # HTTP to WSS
-      - "443:443"   # HTTPS to HTTPS
-      - "8080:8080" # Admin web interface
-      - "5060:5060" # Jitsi Video Bridge (JVB) XMPP component
-      - "5280:5280" # Jicofo configuration UI
-    volumes:
-      - jitsi-meet-configs:/var/lib/jitsi/configs  # Keep the configs persistent across updates
-      - jitsi-meet-data:/var/lib/jitsi  # Data directory for Jitsi Meet and Jicofo, including JVB recordings
-      - jitsi-meet-logs:/var/log/jitsi  # Log files of Jitsi components (optional, but recommended for monitoring)
+      - "80:8443" # HTTP to WSS (WebSocket Secure)
+      - "444:4443" # XMPP (for chat and file transfer)
     environment:
-      JITSICLIENT_REMOTE_DOMAIN: yourdomain.com  # Replace with your domain
-      JITSICLIENT_HOSTNAME: yourdomain.com
-      JICOFO_hostname: yourdomain.com
-      JVB_allow_all_ports: "true"  # Required for XMPP traffic
+      JITSIT_AUTH_CONFIG: '{"users":[],"domain_options":{'stripped_of_extra_chars': true}'
+      TZ: 'Europe/London' # Set your timezone, e.g., Europe/Paris, America/New_York, etc.
+      JITSIPRESSO_USE_SSL: 'true'
+    volumes:
+      - jitsi-data:/var/lib/jitsi
+      - jitsi-config:/var/lib/jitsi/config
     depends_on:
-      - jitsi-meet-postgres
+      - postgres
+    networks:
+      - jitsi-network
 
-  jitsi-meet-postgres:
+  postgres:
     image: postgres:latest
+    volumes:
+      - postgres-data:/var/lib/postgresql
     environment:
       POSTGRES_DB: jitsi
       POSTGRES_USER: jitsi
-      POSTGRES_PASSWORD: change_this_password
-    volumes:
-      - jitsi-meet-db:/var/lib/postgresql/data
+      POSTGES_PASSWORD: yourpassword
+    networks:
+      - jitsi-network
 
-  jitsi-meet-redis:
-    image: redis:latest
+  mysql80:
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - mysqldata:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpwd
+      MYSQL_DATABASE: jitsi
+      MYSQL_USER: jitsiuser
+      MYSQL_PASSWORD: jitsipass
+    networks:
+      - jitsi-network
+
+  monitoring:
+    image: prom/prometheus:latest
+    volumes:
+      - prometheus-data:/data
+    ports:
+      - "9090:9090"
+    networks:
+      - jitsi-network
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - jitsi-network
+
+  node_exporter:
+    image: prometheus-community/node-exporter:latest
+    volumes:
+      - "/proseycs/lib/modules:/lib/modules"
+      - "/proc:/proc"
+      - "/sys:/sys"
+    networks:
+      - jitsi-network
+
+  prometheus_config:
+    image: prom/prometheus-config:latest
+    volumes:
+      - prometheus-data:/data
+      - ./prometheus.yml:/etc/prometheus/conf.yaml
+    depends_on:
+      - monitoring
+      - jitsi-meet
+
+networks:
+  jitsi-network:
+    driver: bridge
 
 volumes:
-  jitsi-meet-configs:
-  jitsi-meet-data:
-  jitsi-meet-db:
-  jitsi-meet-logs:
+  jitsi-data:
+  jitsi-config:
+  postgres-data:
+  mysqldata:
+  prometheus-data:
+  grafana-data:

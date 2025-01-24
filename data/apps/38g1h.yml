@@ -1,33 +1,57 @@
-version: '3.8'
-services:
-  opengist:
-    image: opengist/opengist:latest
-    container_name: opengist
-    ports:
-      - "8080:8080" # HTTP port, you can change it as per your requirement
-    environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-    volumes:
-      - "./data:/var/lib/grafana" # Bind a volume for Grafana data (optional but recommended)
-      - "./opengist-data:/tmp/openGIS/data" # Bind a volume for OpenGIS data (optional but recommended)
-    depends_on:
-      - postgres
-
-  postgres:
-    image: postgres:13
-    container_name: opengist_postgres
-    environment:
-      POSTGRES_USER: opengist
-      POSTGRES_PASSWORD: openGist
-      POSTGRES_DB: opengist
-    volumes:
-      - "./opengist-db:/var/lib/postgresql/data" # Bind a volume for PostgreSQL data (optional but recommended)
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U opengist"]
-      timeout: 10s
-      retries: 5
-
-networks:
-  default:
-    driver: bridge
+1 version: '3.8'
+2 services:
+3   opengis:
+4     image: geospatial/opengis-server:latest
+5     container_name: opengis
+6     ports:
+7       - "8080:8080" # HTTP port
+8       - "8090:8090" # WMS port (if required)
+9     volumes:
+10     - "./data:/opt/opengis-data"
+11     environment:
+12      - WMS_OPACITY=100 # Set the default opacity for WMS, if used
+13      - "POSTGIS_DBNAME=${POSTGIS_DBNAME}"
+14      - "POSTGIS_USER=${POSTGIS_USER}"
+15      - "POSTGIS_PASSWORD=${POSTGIS_PASSWORD}"
+16      - HOST_TIMEZONE=Europe/London # Set the timezone, if required
+17    restart: unless-stopped
+18
+20 geostore:
+21   image: geospatial/geostore:latest
+22   container_name: geostore
+23   ports:
+24     - "8081:80" # HTTP port
+25   volumes:
+26     - "./data:/opt/geostore-data"
+27   environment:
+28     - GEOSTORE_DBNAME=${GEOSTORE_DBNAME}
+29     - GEOSTORE_USER=${GEOSTORE_USER}
+30     - GEOSTORE_PASSWORD=${GEOSTORE_PASSWORD}
+31     - HOST_TIMEZONE=Europe/London # Set the timezone, if required
+32   restart: unless-stopped
+33
+34 networks:
+35   default:
+36     driver: bridge
+37
+38 dependencies:
+39   postgres:
+40     image: postgres:13.1-alpine
+41     volumes:
+42       - "./data/postgres:/var/lib/postgresql/data"
+43     environment:
+44       POSTGIS_EXTENSION=true # Enable PostGIS extension
+45     restart: unless-stopped
+46
+47 volumes:
+48   data:
+49 ```
+50 # The data volume is mapped to the services and can be accessed for backups, logs, etc.
+51 ```
+52
+53 networks_config:
+54   default:
+55     external:
+56       name: true
+57
+58 This docker-compose.yml file defines two services (`opengis` and `geostore`) that depend on a PostgreSQL database service. The `postgres` service is also defined separately, with the necessary environment configuration to enable the PostGIS extension for spatial data support. The volumes are set up to persist data across container restarts, and the network configuration allows for easy integration with an existing Docker network if needed. Remember to replace `${POSTGIS_DBNAME}`, `${POSTGIS_USER}`, `${POSTGIS_PASSWORD}`, `${GEOSTORE_DBNAME}`, and `${GEOSTORE_PASSWORD}` with your actual database credentials.

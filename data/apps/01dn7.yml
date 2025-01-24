@@ -1,67 +1,50 @@
 version: '3.8'
 
 services:
-  openbudgeteer_web:
+  app:
     image: openbudgeteer/openbudgeteer:latest
-    container_name: openbudgeteer-web
     ports:
-      - "8000:8000"
+      - "8000:8000" # HTTP interface
     environment:
-      SECRET_KEY: 'your_secret_key' # Replace with a secret key for your project
-      DATABASE_URL: 'postgres://user:password@db:5432/dbname' # Replace with your database connection string
-      ALLOWED_HOSTS: 'localhost,127.0.0.1,[::1]'
-    depends_on:
-      - openbudgeteer_db
+      SECRET_KEY: secret_key_goes_here # Set a secret key for Django's session framework
+      DJANGO_DEFAULT_LANGUAGE: en  # Default language code (as per the Django documentation)
+      DJANGO_SITE_ID: 'opbudgeteer.example.com'  # The default site configuration domain. Change to your domain.
+      POSTMARK_SERVER_TOKEN: postmark_token_goes_here  # Postmark token for emails if you're using it.
+      EMAIL_BACKEND: 'django.core.mail.backends.smtp.EmailBackend'
+      EMAIL_HOST: 'smtp.your-email-provider.com'
+      EMAIL_PORT: 587
+      EMAIL_USE_TLS: true
+      EMAIL_HOST_USER: your-email@example.com
+      EMAIL_HOST_PASSWORD: email-host-password
     volumes:
-      - ./data:/code/data
-      - ./openbudgeteer.conf:/etc/openbudgeteer/openbudgeteer.conf
+      - ./data:/code/openbudgeteer/data  # Path to the folder where you want to store the database and files
+    depends_on:
+      - db
+      - rabbitmq
 
-  openbudgeteer_db:
-    image: postgres:13
-    container_name: openbudgeteer-db
+  db:
+    image: postgres:latest
     environment:
-      POSTGRES_DB: 'openbudgeteer'
-      POSTGRES_USER: 'user'
-      POSTGRES_PASSWORD: 'password' # Replace with a strong password for your database
+      POSTGRES_DB: openbudgeteer  # Database name for OpenBudgeteer
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password  # You should set this in an environment variable or secret management tool like HashiCorp Vault, not in the file!
     volumes:
-      - ./data/db:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data
 
-  redis:
-    image: redis:6-alpine
-    container_name: openbudgeteer-redis
-    ports:
-      - "6379:6379"
-
-  celery_worker:
-    image: openbudgeteer/openbudgeteer:latest
-    container_name: openbudgeteer-celery-worker
-    environment:
-      SECRET_KEY: 'your_secret_key' # Replace with the same secret key as the web service
-      DATABASE_URL: 'postgres://user:password@db:5432/dbname' # Replace with your database connection string
-      REDIS_URL: 'redis://localhost:6379/0'
-    depends_on:
-      - openbudgeteer_db
-      - openbudgeteer_redis
-    command: celery -A openbudgeteer worker --loglevel=info
-
-  hstroot:
-    image: openbudgeteer/openbudgeteer-hstroot:latest
-    container_name: openbudgeteer-hstroot
-    environment:
-      SECRET_KEY: 'your_secret_key' # Replace with the same secret key as the web service
-      DATABASE_URL: 'postgres://user:password@db:5432/dbname' # Replace with your database connection string
-    depends_on:
-      - openbudgeteer_db
-
-  admin_user:
-    image: openbudgeteer/openbudgeteer-adminuser:latest
-    container_name: openbudgeteer-adminuser
-    environment:
-      SECRET_KEY: 'your_secret_key' # Replace with the same secret key as the web service
-      DATABASE_URL: 'postgres://user:password@db:5432/dbname' # Replace with your database connection string
-    depends_on:
-      - openbudgeteer_db
-    command: python manage.py createsuperuser --username admin --email admin@example.com
+  rabbitmq:
+    image: rabbitmq:latest
 
 volumes:
-  data:
+  db_data:
+
+# For Celery task queue integration with RabbitMQ
+celery_worker_image: celery:latest
+
+# Define a new service for the Celery worker using the same image as above
+celery_worker:
+  image: celery_worker_image
+  depends_on:
+    - app  # Ensure that the main app is up before starting the Celery worker.
+  environment:
+    CELERY_BROKER_URL: amqp://rabbitmq:5672   # The default connection URL for RabbitMQ.
+    CELERY_RESULT_BACKEND: db        # Store results behind a database.

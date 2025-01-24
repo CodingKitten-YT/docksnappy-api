@@ -1,39 +1,24 @@
 version: '3.8'
 
 services:
-  blocky_web:
-    image: blocky/blocky-web:latest
-    ports:
-      - "5000:5000"
-    environment:
-      - SERVICE_BINDINGS=["service://blocky_api"]
-    depends_on:
-      - blocky_api
-    networks:
-      - blocky_network
-
   blocky_api:
-    image: blocky/blocky-api:latest
+    image: blocky/blocky-api:latest  # Use the official Blocky API image or a specific tag
+    ports:
+      - "5000:5000"  # Expose the port where the Blocky API runs, if necessary
     environment:
-      - SERVICE_BINDINGS=["service://postgres"]
-    depends_on:
-      - postgres
-    networks:
-      - blocky_network
+      - TZ=Europe/London  # Set the timezone, if necessary
+    command: blocky-api --debug  # Optional: Enable debug mode if needed
+    volumes:
+      - ./data:/data  # Mount a volume for data persistence (optional, depending on your use case)
 
   postgres:
-    image: postgres:13
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+    image: postgres:13  # Use the Postgres image with tag 13 or another version of your choice
     environment:
-      - POSTGRES_DB=blocky
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-    networks:
-      - blocky_network
+      - POSTGRES_DB=blocky  # Define the database name
+      - POSTGRE_USER=blocky  # Define the database user
+      - POSTGRES_PASSWORD=change_this_password  # Set a password for the database user
+    volumes:
+      - postgres_data:/var/lib/postgresql  # Use a named volume for data persistence
 
 volumes:
-  postgres_data:
-
-networks:
-  blocky_network:
+  postgres_data:  # Define the named volume for Postgres data

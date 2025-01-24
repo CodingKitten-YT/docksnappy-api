@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  web:
+    image: pastefy/pastefy:latest
+    container_name: pastefy-web
+    ports:
+      - "80:80" # HTTP (can be customized to another port if needed)
+    command: -d --ssl-redirect=true
+    networks:
+      - pastefy_network
+
+  db:
+    image: postgres:latest
+    container_name: pastefy-db
+    volumes:
+      - ./data/postgres/:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: pastefy
+      POSTGRES_USER: pastefy
+      POSTGRES_PASSWORD: secret
+    networks:
+      - pastefy_network
+
+  redis:
+    image: redis:latest
+    container_name: pastefy-redis
+    volumes:
+      - ./data/redis/:/data/
+    networks:
+      - pastefy_network
+
+networks:
+  pastefy_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

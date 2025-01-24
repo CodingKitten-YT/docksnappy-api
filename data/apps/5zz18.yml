@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  otterwiki:
+    image: otterwiki/otter:dev # Use the development version of Otter Wiki
+    ports:
+      - "80:80" # Expose Otter on port 80 of the host for HTTP access
+    volumes:
+      - ./data:/var/lib/otter  # Mount your data volume to persist data
+      - ./config:/etc/otter    # Mount your configuration volume (optional, for custom config)
+    environment:
+      - TZ=Europe/London  # Set the timezone (change to your preferred timezone)
+      - JAVIT_OPTS=-Xms256M -Xmx512M  # Set Java heap size (adjust as needed)
+      - OTTER_USER_REGISTRATION=true  # Enable user registration
+    command: bundle
+    restart: unless-stopped  # Automatically restart the container unless it's been explicitly stopped
+
+  redis:
+    image: redis:6.0-alpine  # Use a stable version of Redis
+    command: redis-server --appendonly yes  # Enable append only mode for data persistence
+    volumes:
+      - ./redis_data:/data  # Mount your data volume to persist Redis data
+    environment:
+      - REDIS_PORT=6379  # Default port for Redis
+    restart: unless-stopped  # Automatically restart the container unless it's been explicitly stopped
+
+networks:
+  default:
+    name: otterwiki_default  # Name of the network (optional)

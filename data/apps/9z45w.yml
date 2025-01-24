@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  papermerge_postgres:
+    image: postgres:13
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: papermerge
+      POSTGRES_USER: papermerge
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5432:5432"
+
+  papermerge_redis:
+    image: redis:6-alpine
+    volumes:
+      - redisdata:/data
+
+  papermerge_worker:
+    image: papermerge/papermerge:latest
+    command: celery -A papermerge worker --loglevel=info
+    depends_on:
+      - papermerge_postgres
+      - papermerge_redis
+    volumes:
+      - ./papermerge.cfg:/etc/papermerge/config.py:ro
+      - papermerge_media:/home/papermerge/useruploads:rw
+      - papermerge_cache:/var/spool/papermerge
+
+  papermerge_celerybeat:
+    image: papermerge/papermerge:latest
+    command: celery -A papermerge beat --loglevel=info
+    depends_on:
+      - papermerge_postgres
+      - papermerge_redis
+    volumes:
+      - ./papermerge.cfg:/etc/papermerge/config.py:ro
+
+  papermerge_web:
+    image: papermerge/papermerge-web:latest
+    ports:
+      - "8000:8000"
+    depends_on:
+      - papermerge_postgres
+      - papermerge_worker
+    volumes:
+      - ./papermerge.cfg:/etc/papermerge/config.py:ro
+      - papermerge_media:/home/papermerge/useruploads:rw
+
+  papermerge_api:
+    image: papermerge/papermerge-api:latest
+    ports:
+      - "8001:8001"
+    depends_on:
+      - papermerge_postgres
+    volumes:
+      - ./papermerge.cfg:/etc/papermerge/config.py:ro
+
+volumes:
+  pgdata:
+  redisdata:
+  papermerge_media:
+  papermerge_cache:

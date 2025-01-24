@@ -1,54 +1,46 @@
 version: '3.8'
 
 services:
-  anycable_gateway:
-    image: anycable/anycable-gateway:latest
-    command: -e 'LISTEN_ADDRESS=0.0.0.0'
+  anycable:
+    image: anycable/anycable:latest
+    command: /bin/sh -c "./wait_for_bunyan.sh reds.localhost & \
+      bundle exec rackup config.ru -E production --daemon"
     ports:
-      - "4000:4000" # Subscription cable server port
+      - "8080:8080" # AnyCable websockets
+      - "9292:9292"  # Optional: for debugging with CableReady (WebSocket Inspector)
     environment:
-      - DB_HOST=postgres_1 # Assuming a linked PostgreSQL service with the alias 'postgres_1'
-      - DB_USER=anycable       # Database user for AnyCable
-      - DB_PASSWORD=anycabledb   # Database password for AnyCable
-      - DB_DATABASE=anycable     # Database name for AnyCable
-      - DB_PORT=5432             # PostgreSQL port (default is 5432)
-      - REDIS_HOST=redis_1      # Assuming a linked Redis service with the alias 'redis_1'
-      - REDIS_PASSWORD=anycabledis # Redis password (optional, for security purposes)
+      - HOST=reds.localhost
+      - SUBDOMAINS=[]
     depends_on:
-      - postgres_1
-      - redis_1
-    volumes:
-      - ./data:/data
+      - redis
 
-  postgres_1:
+  redis:
+    image: redislabs/redislab:latest
+    command: RedisLabStack-Redis
+    ports:
+      - "6379:6379" # Redis port
+    environment:
+      - REDISLAB_LICENSE=nlz8jn2qk8kqgwvjfjffjrjmjwlfsimxpnfsljdnfsdf
+    volumes:
+      - "./redis.conf:/usr/local/etc/redis/redis.conf" # Optional: custom Redis configuration
+
+  database:
     image: postgres:latest
     environment:
+      - POSTGRES_DB=anycable_dev
       - POSTGRES_USER=anycable
-      - POSTGRES_PASSWORD=anycabledb
-      - POSTGRES_DB=anycable
+      - POSTGRES_PASSWORD=secret
     volumes:
-      - ./postgres:/var/lib/postgresql/data
+      - "./db:/docker-entrypoint-initdb.d" # Optional: database init scripts
 
-  redis_1:
-    image: redis:latest
-    command: --requirepass foobaredis # Set Redis password (optional)
-
-  webapp: # Replace 'webapp' with the name of your Web application that will connect to AnyCable
-    image: your-webapp-image:latest
+  webapp:
+    image: your-webapp-image:latest # Replace with your WebApp image
     ports:
-      - "8000:8000" # Port used by your Web application (default is 8000)
+      - "3000:3000" # Your web app port
     depends_on:
-      - anycable_gateway
+      - anycable
+      - database
 
-# Uncomment the following if you need to use SSL/TLS with AnyCable Gateway
-# anycable_gateway:
-#   image: anycable/anycable-gateway:latest
-#   command: -e 'LISTEN_ADDRESS=0.0.0.0' -e 'USE_TLS=1'
-#   ports:
-#     - "4000:4000" # Subscription cable server port
-#   volumes:
-#     - ./tls:/tls
-#   environment:
-#     # ... (other variables)
-#     - SSL_CERTIFICATE=/tls/cert.pem
-#     - SSL_KEY=/tls/key.pem
+networks:
+  default:
+    driver: bridge

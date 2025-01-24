@@ -1,0 +1,60 @@
+version: '3.8'
+services:
+  wakapi-api:
+    image: "wakaruna/wakapi:latest"
+    environment:
+      NODE_ENV: production # Use 'development' for development mode
+    ports:
+      - "8000:8000" # Expose the API on port 8000
+    volumes:
+      - "./app/wakapi-data:/data" # Mount your app's data directory to the container
+      - "./app/uploaded_files:/uploaded_files" # Optional, if you want to mount uploaded files
+    environment:
+      SMTP_HOST: "your.smtp.host"
+      SMTP_PORT: "587"
+      SMTP_USER: "your-email@example.com"
+      SMTP_PASSWORD: "your-email-password"
+      ADMINS: "admin@example.com"
+      SECRET_KEY: "change_this_please_for_production" # Use a real secret key for production
+    depends_on:
+      - db
+    command: wakapi --config /code/wakapi.conf
+
+  db:
+    image: postgres:13
+    volumes:
+      - "./app/wakapi-data/db:/var/lib/postgresql/data" # Mount your app's database directory to the container
+    environment:
+      POSTGRES_DB: wakapi
+      POSTGRES_USER: wakapi
+      POSTGRES_PASSWORD: change_this_please_for_production
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wakapi"]
+      timeout: 10s
+      retries: 5
+
+  redis:
+    image: redis:alpine
+    volumes:
+      - "./app/wakapi-data/redis:/data" # Mount your app's redis directory to the container
+
+  worker:
+    image: wakaruna/wakapi-worker:latest
+    command: gunicorn -b 0.0.0.0:8000 wakapi.wsgi:application --workers=2 --timeout 300
+    volumes:
+      - "./app/wakapi-data:/data" # Mount your app's data directory to the container
+    depends_on:
+      - wakapi-api
+
+  redis_worker:
+    image: wakaruna/wakapi-worker:latest
+    command: celery -A wakapi worker --loglevel=info
+    volumes:
+      - "./app/wakapi-data/redis:/data" # Mount your app's redis directory to the container
+    depends_on:
+      - redis
+      - db
+
+networks:
+  default:
+    driver: bridge

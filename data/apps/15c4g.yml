@@ -1,75 +1,61 @@
 version: '3.8'
-
 services:
   db:
     image: mysql:5.7
-    command: --default-authentication-plugin=mysql_native_password
+    command: --default-storage-engine=INNODB
+    volumes:
+      - db_data:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: clipbucket
       MYSQL_USER: clipbucketuser
       MYSQL_PASSWORD: clipbucketpassword
-    ports:
-      - "3306:3306"
-    volumes:
-      - db-data:/var/lib/mysql
-    restart: unless-stopped
-
-  php:
-    image: php:7.4-fpm
-    container_name: clipbucket_php
-    volumes:
-      - ./app:/var/www/html
-      - .phpinit:/usr/local/etc/php-fpm.d/custom.conf
-    depends_on:
-      - db
-      - redis
-      - memcached
-    restart: unless-stopped
-
-  redis:
-    image: redis:6-alpine
-    command: 'redis-server --save . snapshot.tz "snapshot.hr" 10001'
-    volumes:
-      - redis-data:/data
-    restart: unless-stopped
-
-  memcached:
-    image: memcached:1.5-alpine
     restart: unless-stopped
 
   nginx:
     image: nginx:latest
-    container_name: clipbucket_nginx
-    volumes:
-      - ./app/public:/var/www/html/public
-      - ./app/.env:/var/www/html/.env
-      - ./app/nginx:/etc/nginx/conf.d
-      - ./app/storage:/var/www/html/storage
     ports:
-      - "80:80"
-      - "443:443"
+      - "80:80" # HTTP
+      - "443:443" # HTTPS (if you have SSL)
+    volumes:
+      - ./data/nginx:/etc/nginx/conf.d
+      - ./data/ssl:/etc/nginx/ssl
+      - ./data/uploads:/var/www/html/uploads
     depends_on:
       - php
-      - redis
-      - memcached
-    restart: unless-stopped
+    networks:
+      - clipbucket-net
 
-  mailhog:
-    image: mailhog/mailhog
-    container_name: clipbucket_mailhog
-    ports:
-      - "8025:997" # Admin UI
-      - "1025:1025" # SMTP server
-    restart: unless-stopped
+  php:
+    image: phpfpm:fpm
+    volumes:
+      - ./data/php:/etc/php/7.4/conf.d
+      - ./data/uploads:/var/www/html/uploads
+      - ./app/src:/var/www/html/src
+      - ./app/public:/var/www/html/public
+    depends_on:
+      - db
+    networks:
+      - clipbucket-net
 
-volumes:
-  db-data:
-    driver: local
-  redis-data:
-    driver: local
+  redis:
+    image: redis:latest
+    restart: always
+
+  cron:
+    image: perl:latest
+    volumes:
+      - ./app/cronjobs:/etc/cron.d
+    command: >
+      70 2 ** * /usr/local/bin/composer dump-autoload --no-dev
+      15 3 * * * php /var/www/html/artisan optimize:clear
+      0 0 * * * php /var/www/html/artisan queue:restart
+    networks:
+      - clipbucket-net
 
 networks:
-  default:
-    external:
-      name: clipbucket_default
+  clipbucket-net:
+    driver: bridge
+
+volumes:
+  db_data:

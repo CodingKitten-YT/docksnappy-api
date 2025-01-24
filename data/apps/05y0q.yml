@@ -1,60 +1,54 @@
 version: '3.8'
-
 services:
-  onlyoffice-headless:
-    image: onlyoffice/documentserver:latest
-    ports:
-      - "127.0.0.1:8080:8080" # HTTP API access
-      - "127.0.0.1:8443:8443" # Secure API access (HTTPS)
-    command: --access.api.allow_ip_range=0.0.0.0/0 --log.level=info --report.maintenance_mode=false
-    volumes:
-      - onlyoffice-documents:/var/lib/onlyoffice-docs
-      - onlyoffice-logs:/var/log/onlyoffice-server
-      - onlyoffice-conf:/etc/onlyoffice-server
-
-  postgres:
-    image: postgres:13
-    volumes:
-      - onlyoffice-postgresql:/var/lib/postgresql
+  onlyoffice-appserver:
+    image: onlyoffice/onlyoffice-enterprise-server:latest
+    container_name: onlyoffice-appserver
     environment:
-      POSTGRES_DB: onlyoffice
-      POSTGRES_USER: onlyoffice
-      POSTGRES_PASSWORD: change_this_password
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U onlyoffice"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  nginx-proxy:
-    image: jwilder/nginx-proxy:stable
+      OC_RESOURCE_TIMEOUT: "120"
+      OC_DB_TYPE: "postgres"
+      OC_DB_HOST: "db"
+      OC_DB_NAME: "onlyoffice"
+      OC_DB_USER: "onlyoffice"
+      OC_DB_PASSWORD: "your_database_password"
+      SERVICES_APP_INCLUDES: "collaboration,docs,sheets,presentations,mail,tasks,notes,projects,files"
+      SERVICES_RESOURCES_MEMORY: "4096"
+      SERVICES_RESOURCES_CPU: "2"
     ports:
-      - "80:80" # NGINX HTTP access
-      - "443:443" # NGINX HTTPS access
-    volumes:
-      - ./letsencrypt:/etc/letsencrypt
-      - nginx-conf:/etc/nginx
-      - traefik_traefik_acme_certificates:/etc/nginx/ssl
-      - traefik_traefik_data:/var/lib/traefik
+      - "80:80" # HTTP
+      - "443:443" # HTTPS (make sure to set up SSL/TLS certificates)
     depends_on:
-      - onlyoffice-headless
-
-  traefik:
-    image: traefik:v2.5
-    ports:
-      - "8081:8081" # Traefik UI
+      - db
+      - mongodb
     volumes:
-      - traefik_traefik_acme_certificates:/var/lib/traefik/acme
-      - traefik_traefik_data:/var/lib/traefic
-      - nginx-conf:/etc/nginx
-    depends_on:
-      - onlyoffice-headless
+      - ./data:/var/lib/onlyoffice-docs
+      - ./logs:/var/log/onlyoffice-server
+      - ./config:/etc/onlyoffice-server
+    networks:
+      - onlyoffice_net
 
-volumes:
-  onlyoffice-documents:
-  onlyoffice-logs:
-  onlyoffice-conf:
-  onlyoffice-postgresql:
-  nginx-conf:
-  traefik_traefik_acme_certificates:
-  traefic_traefik_data:
+  onlyoffice-db:
+    image: postgres:13
+    container_name: onlyoffice-db
+    environment:
+      POSTGRES_DB: "onlyoffice"
+      POSTGRES_USER: "onlyoffice"
+      POSTGRES_PASSWORD: "your_database_password"
+    volumes:
+      - ./data/db:/var/lib/postgresql
+    networks:
+      - onlyoffice_net
+
+  mongodb:
+    image: mongo:4.4
+    container_name: mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "root"
+      MONGO_INITDB_ROOT_PASSWORD: "your_mongo_password"
+    volumes:
+      - ./data/db-mongodb:/data/db
+    networks:
+      - onlyoffice_net
+
+networks:
+  onlyoffice_net:
+    driver: bridge

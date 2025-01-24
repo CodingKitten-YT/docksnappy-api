@@ -1,35 +1,39 @@
 version: '3.8'
-
 services:
   bunkerweb:
-    image: 'bunker/bunkerweb:latest' # Use the latest BunkerWeb image or a specific tag
-    container_name: bunkerweb
+    image: "bunkerapp/bunkerweb:latest" # Use the official BunkerWeb Docker image from Docker Hub
     ports:
-      - "80:80" # Map HTTP port 80 on the host to port 80 in the container
-    volumes:
-      - ./bunkerweb.env:/usr/src/app/bunkerweb.env # Mount your `.env` file for environment variables
-      - bunkerdata:/usr/src/app/data # Mount a volume for data persistence
+      - "8001:80" # Map port 80 of the container to port 8001 on the host for the web interface
     environment:
-      - SECRET_KEY=${SECRET_KEY} # Set the Secret Key from an environment variable if not in .env
-      # ... other necessary environment variables
+      - BUNKER_SECRET="your_secret_key" # Set your Bunker secret key for authentication
+      - SECRET_MANAGEMENT_URI=http://bunkerweb:8080/api # If using Bunker with Secretly, set the URI for Secretly service
+    depends_on:
+      - db
+      - secrets
     networks:
-      - webnet
+      - bunkernet
 
-  postgres:
-    image: 'postgres:13' # Use a specific version of PostgreSQL if needed
-    container_name: postgres
-    volumes:
-      - postgresdata:/var/lib/postgresql/data # Mount a volume for database data persistence
+  db:
+    image: "postgres:13" # Use PostgreSQL 13 as the database server
     environment:
-      POSTGRES_DB: bunker # Set the default database name
-      POSTGRES_USER: bunkeruser # Set the default PostgreSQL user
-      POSTGRES_PASSWORD: bunkerpassword # Set the default PostgreSQL password
+      - POSTGRES_DB=bunker # Set the default database name for BunkerWeb
+      - POSTGRES_USER=bunker # Set the default PostgreSQL username
+      - POSTGRES_PASSWORD=your_db_password # Set your database password
+    volumes:
+      - "bunker-db:/var/lib/postgresql" # Persist database data using Docker volume
     networks:
-      - webnet
+      - bunkernet
 
-volumes:
-  bunkerdata:
-  postgresdata:
+  secrets:
+    image: "bunkerapp/secrets:latest" # Use the official BunkerSecrets Docker image for secret storage
+    environment:
+      - SECRETS_DB_URI="postgres://bunker:your_db_password@db:5432/bunker?sslmode=disable" # Database connection string for BunkerSecrets
+    networks:
+      - bunkernet
 
 networks:
-  webnet:
+  bunkernet:
+    driver: bridge
+
+volumes:
+  bunker-db:

@@ -1,49 +1,23 @@
 version: '3.8'
-
 services:
-  web:
-    image: dpaste/dpaste
+  dpaste:
+    image: dpaste/dpaste:latest
     ports:
-      - "80:80" # Expose HTTP on the host
-    command: web
+      - "80:80" # Expose HTTP on the host, default dpaste port is 80
+    volumes:
+      - "./data:/data" # Mount a local directory to store pastes
+      - "./dpaste.conf:/etc/dpaste.conf" # Optional: Mount your own configuration file, if you want to override defaults
     environment:
-      - SERVICE_NAME=web
-      - SERVICE_ENV=production
-      - SERVICE_HOST=0.0.0.0
-      - REDIS_URL=redis://redis:6379
-    depends_on:
-      - redis
-    restart: unless-stopped
-
-  worker:
-    image: dpaste/dpaste
-    command: worker
-    environment:
-      - SERVICE_NAME=worker
-      - SERVICE_ENV=production
-      - REDIS_URL=redis://redis:6379
-    depends_on:
-      - redis
-      - db
-    restart: unless-stopped
+      - "DPASTE_RUN_AS_USER=1000" # Run dpaste as a specific user (UID), replace 1000 with the desired UID
+      - "DPASTE_GROUP_TO_RUN_AS=1000" # Same group as above, replace with the desired GID
+    restart: unless-stopped # Restart on failure unless explicitly stopped
 
   redis:
-    image: redis:6.0-alpine
-    command: redis-server --appendonly yes
+    image: redis:6.2
     volumes:
-      - "./data/redis:/data"  # Persist Redis data
+      - "./redisdata:/data" # Persist Redis data to a local directory
     environment:
-      - REDIS_URL=redis://localhost:6379
-    restart: unless-stopped
-
-  db:
-    image: postgres:12
-    volumes:
-      - "./data/db:/var/lib/postgresql"  # Persist PostgreSQL data
-    environment:
-      - POSTGRES_DB=dpaste
-      - POSTGRES_USER=dpaste
-      - POSTGRES_PASSWORD=secret
+      - "REDIS_PORT=6379" # Default port for Redis
     restart: unless-stopped
 
 networks:

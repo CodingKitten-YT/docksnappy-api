@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  loungeweb:
+    image: thelounge/thelounge:latest
+    container_name: thelounge-web
+    ports:
+      - "8081:80"
+    environment:
+      TZ: "Europe/London" # Set your timezone accordingly
+    volumes:
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt
+      - ./lounge.crt:/data/ssl/lounge.crt
+      - ./lounge.key:/data/ssl/lounge.key
+    restart: unless-stopped
+
+  loungedb:
+    image: postgres:13
+    container_name: thelounge-db
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: thelounge
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password # Change this to a strong, random password
+    restart: unless-stopped
+
+  loungeworker:
+    image: thelounge/thelounge-worker:latest
+    container_name: thelounge-worker
+    volumes:
+      - ./data:/data
+    environment:
+      WORKER_QUEUE: '*'
+    depends_on:
+      - loungeweb
+    restart: unless-stopped
+
+  letsencrypt:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - ./letsencrypt:/etc/letsencrypt
+    command: certonly --standalone --email your-email@example.com --agree-tos --expanded --non-interactive --force-renewal --no-eff-email -d thelounge.example.com
+    depends_on:
+      - loungeweb
+    restart: daily
+
+networks:
+  default:
+    driver: bridge

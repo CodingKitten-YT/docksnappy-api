@@ -2,47 +2,49 @@ version: '3.8'
 services:
   appflowy:
     image: appflowy/appflowy:latest
-    command: appflowy server start --backend.address=0.0.0.0 --port.http=80 --port.https=443 --database.type=mysql --database.uri=mysql://appflowy:appflowy@db:3306/appflowy?charset=utf8mb4&parseTime=True&loc=Local
+    container_name: appflowy
     ports:
-      - "80:80"
-      - "443:443"
-    depends_on:
-      - db
+      - "8000:8000" # AppFlowy frontend
     environment:
-      - SERVICE_FLAGS=--read_timeout=600 --client_max_connections=500 --client_idle_limit=1800
-      - MYSQL_ROOT_PASSWORD=rootpassword
-      - MYSQL_DATABASE=appflowy
-      - MYSQL_USER=appflowy
-      - MYSQL_PASSWORD=appflowy
+      - SERVICE_HOST=0.0.0.0
+      - SERVICE_PORT=8000
+      - SERVICE_NAME=appflowy
+      - DEBUG=true
+      - JWT_SECRET_KEY=very_secret_key # Replace with your own secret key
     volumes:
-      - ./appflowy:/appflowy
-      - appflowy-redis:/var/lib/mysql
-      - appflowy-logs:/logs/appflowy
-    depends_on:
-      - db
-      - redis
+      - ./appflowy-data:/appflowy-data
+      - ./appflowy-logs:/appflowy-logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "localhost:8000/health"]
+      timeout: 10s
+      interval: 30s
+      start_period: 5s
+      retries: 12
 
-  mysql:
-    image: mysql:5.7
-    command: --default-authentication-plugin=mysql_native_password
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: appflowy
-      MYSQL_USER: appflowy
-      MYSQL_PASSWORD: appflowy
+  postgres:
+    image: postgres:latest
+    container_name: appflowy_postgres
     volumes:
-      - db-data:/var/lib/mysql
-    ports:
-      - "3306:3306"
+      - ./appflowy-data/postgres:/var/lib/postgresql
+    environment:
+      POSTGRES_DB: appflowy
+      POSTGRES_USER: appflowy
+      POSTGRES_PASSWORD: very_secret_password # Replace with your own password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appflowy"]
+      timeout: 10s
+      interval: 5s
+      retries: 30
 
   redis:
-    image: redis:6-alpine
-    command: Redis-server --appendonly yes
-    volumes:
-      - redis-data:/data
+    image: redis:latest
+    container_name: appflowy_redis
+    healthcheck:
+      test: ["CMD", "REDIS-CLI", "PING"]
+      timeout: 10s
+      interval: 5s
+      retries: 30
 
-volumes:
-  appflowy-redis:
-  appflowy-logs:
-  db-data:
-  redis-data:
+networks:
+  default:
+    driver: bridge

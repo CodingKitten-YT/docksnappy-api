@@ -1,21 +1,51 @@
-version: '3.7'
+version: '3.8'
 
 services:
-  mirotalk-p2p:
-    image: 'mirotalk/mirotalk-p2p:latest' # Use the official MiroTalk P2P image
-    container_name: mirotalk-p2p
-    ports:
-      - "8080:8080" # HTTP API
-      - "8432:8432" # WebSocket server (optional, if you want to expose it)
-    volumes:
-      - "./mirotalk-data:/data" # Mount for data persistence
+  iris:
+    image: 'irisdata/iris:latest'
+    container_name: iris
     environment:
-      - PEERS=peer1.mirotalk.net:5006,peer2.mirotalk.net:5006 # Replace with actual peers
-      - NODE_ID=yournodeid # Set a unique ID for your node
-      - MY_EXTERNAL_IP=yourpublicip # Set your public IP or DNS if you want your network to be accessible from the internet
-    networks:
-      - mirotalk-network
+      - P2P_NETWORK=mirotalk
+      - DEFAULT_DATA_DIR=/data
+      - IRIS_HTTP_PORT=8080
+      - IRIS_WEBSOCKET_PORT=8090
+      - IRIS_P2P_EXTERNAL_IP=0.0.0.0
+    ports:
+      - "8080:8080"
+      - "8090:8090"
+    volumes:
+      - iris-data:/root/.iris
+      - ./mirotalk-config:/config
+
+  peerdb:
+    image: 'irisdata/peerdb:latest'
+    container_name: peerdb
+    environment:
+      - P2P_NETWORK=mirotalk
+      - DEFAULT_DATA_DIR=/data
+    ports:
+      - "5001:5001"
+    volumes:
+      - peerdb-data:/root/.peerdb
+
+  mnemonic_server:
+    image: 'irisdata/mnemonic_server:latest'
+    container_name: mnemonic_server
+    environment:
+      - DEFAULT_DATA_DIR=/data
+    ports:
+      - "5002:5002"
+    volumes:
+      - mnemonic-data:/root/.mnemonic_server
+
+volumes:
+  iris-data:
+  peerdb-data:
+  mnemonic-data:
 
 networks:
-  mirotalk-network:
-    driver: overlay
+  default:
+    external:
+      name: mirotalk-network
+      options:
+        address: "1.1.1.1"

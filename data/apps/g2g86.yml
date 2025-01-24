@@ -1,0 +1,41 @@
+version: '3.7'
+
+services:
+  plexripperservice:
+    image: linuxserver/plex_ripper:latest # Use the official or a custom image with PlexRipper pre-installed
+    container_name: plex_ripper
+    environment:
+      - PLEX_PATH=${PLEX_PATH}
+      - TAUTULLI_URL=http://${TAUTULLI_HOST}:8181
+      - TAUTULLI_TOKEN=${TAUTULLI_TOKEN}
+      - TAUTULLI_USERNAME=${TAUTULLI_USERNAME}
+      - TAUTULLI_WEBHOOKSECRET=${TAUTULLI_WEBHOOKSECRET}
+    volumes:
+      - /path/to/your/media:/config/plex_ripper/media # Replace with the path to your media
+      - /path/to/your/Plex:/config/plex_ripper/conf # Replace with the path to your Plex configuration
+    ports:
+      - 8090:8090 # The port PlexRipper listens on for server connections
+    restart: unless-stopped
+    depends_on:
+      - plex
+    networks:
+      - home-network
+
+  plex:
+    image: pleX/plex-server-security:latest # Use the official Plex image for your PMS
+    container_name: plex_server
+    environment:
+      - TZ=Your/Timezone
+      # Uncomment and set the following if you have a Plex Pass
+      # - PLEX_PASS=${PLEX_PASS}
+    volumes:
+      - /path/to/your/Plex/Library:/config/plex-server/Library # Replace with the path to your Plex server's Library
+    ports:
+      - 32400:32400 # The default port for PMS
+    restart: unless-stopped
+    networks:
+      - home-network
+
+networks:
+  home-network:
+    driver: bridge

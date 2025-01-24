@@ -1,34 +1,36 @@
 version: '3.8'
 
 services:
-  aptabase_app:
-    image: aptabase/aptabase:latest
-    container_name: aptabase_app
-    environment:
-      APBASE_SECRET_KEY: 'your_secret_key'
-      APBASE_POSTGRES_DATABASE: 'your_database_name'
-      APBASE_POSTGRES_USERNAME: 'your_postgres_username'
-      APBASE_POSTGRES_PASSWORD: 'your_postgres_password'
-      # Uncomment the following line if you want to enable LDAP authentication
-      # APBASE_LDAP_ENABLED: 'true'
-    ports:
-      - "8000:8000"
+  aptabase_db:
+    image: postgres:latest
+    command: 'postgres -c "fsync=off"'
     volumes:
-      - ./data:/code/data
-    depends_on:
-      - aptabase_db
+      - type: bind
+        source: ./data/db
+        target: /var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: aptabase_production
+      POSTGRES_USER: aptabase
+      POSTGRES_PASSWORD: change_this_password
+    ports:
+      - "5432:5432"
     networks:
       - aptabase_network
 
-  aptabase_db:
-    image: postgres:13
-    container_name: aptabase_db
-    environment:
-      POSTGRES_DB: 'your_database_name'
-      POSTGRES_USER: 'your_postgres_username'
-      POSTGRES_PASSWORD: 'your_postgres_password'
+  aptabase_app:
+    image: aptabase/aptabase:latest
     volumes:
-      - ./data/db:/var/lib/postgresql/data
+      - type: bind
+        source: ./data/aptabase
+        target: /var/lib/aptabase
+    environment:
+      DATABASE_URL: postgres://aptabase_db:5432/aptabase_production?user=aptabase&password=change_this_password
+      SECRET_KEY: change_this_secret_key
+      DEBUG: false
+    ports:
+      - "8080:80"
+    depends_on:
+      - aptabase_db
     networks:
       - aptabase_network
 

@@ -1,0 +1,30 @@
+version: '3.8'
+services:
+  svix-inbound-email:
+    image: svix/svix-inbound-email:latest # Use the latest official Svix image or a specific version
+    ports:
+      - "1025:1025" # Local port to expose for incoming SMTP traffic
+      - "993:993"   # Local port to expose for incoming IMAP traffic (optional, if you want to use IMAP)
+    environment:
+      SVIX_SERVICE_ID: your_svix_service_id # Set your Svix service ID
+      SVIX_API_KEY: your_svix_api_key     # Set your Svix API key
+    volumes:
+      - ./data:/data       # Mount a volume for email data (optional, for persistent storage)
+      - ./ssl:/etc/ssl       # Mount SSL certificates if you have them, otherwise, the service will generate its own
+    networks:
+      - svix-network
+
+  svix-outbound-email:
+    image: svix/svix-outbound-email:latest # Use the latest official Svix image or a specific version
+    environment:
+      SVIX_SERVICE_ID: your_svix_service_id # Set your Svix service ID
+      SVIX_API_KEY: your_svix_api_key     # Set your Svix API key
+    volumes:
+      - ./data:/data       # Mount a volume for email data (optional, for persistent storage)
+      - ./ssl:/etc/ssl       # Mount SSL certificates if you have them, otherwise, the service will generate its own
+    networks:
+      - svix-network
+
+networks:
+  svix-network:
+    driver: bridge

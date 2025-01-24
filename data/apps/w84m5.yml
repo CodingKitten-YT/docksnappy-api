@@ -1,0 +1,54 @@
+version: '3'
+
+services:
+  db:
+    image: postgres:12
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: solidus_store
+      POSTGRES_USER: solidus
+      POSTGRES_PASSWORD: change_this_password
+    command: postgres --utf8=true --client_encoding=utf8
+
+  web:
+    image: solidus/solidus
+    ports:
+      - "3000:3000"
+    depends_on:
+      - sidekiq
+      - db
+    volumes:
+      - ./config/initializers:/var/app/current/config/initializers
+      - ./app/uploaders:/var/app/current/app/uploaders
+      - ./vendor:/var/app/current/vendor
+    environment:
+      SOLIDUS_SECRET_KEY: change_this
+      RAILS_MASTER_KEY: 'master9282ce34'
+      SIDEKIQ_MEMORY: 500 # MB for Sidekiq memory limit
+      DB_HOST: db
+      DB_DATABASE: solidus_store
+      DB_USERNAME: solidus
+      DB_PASSWORD: change_this_password
+      REDIS_URL: redis://redis:6379/1
+      SOLIDUS_DEFAULT_TIMEZONE: 'UTC'
+    command: bundle exec rails server -b 0.0.0.0 -p 3000 -e production
+
+  sidekiq:
+    image: solidus/solidus-sidekiq
+    volumes:
+      - ./log/sidekiq:/var/log/sidekiq
+    environment:
+      REDIS_URL: redis://redis:6379/1
+      SIDEKIQ_MEMORY: 500 # MB for Sidekiq memory limit
+
+  redis:
+    image: redis:6
+    command: redis-server --tcp-keepalive 60
+
+volumes:
+  db_data:
+
+networks:
+  default:
+    driver: bridge

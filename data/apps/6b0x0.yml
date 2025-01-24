@@ -1,55 +1,63 @@
-version: '3.8'
-
+1 version: '3.8'
 services:
-  db:
-    image: postgres:12
-    command: 'postgres -c "listen_addresses = '*'"'
-    volumes:
-      - ./db-data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: baserow
-      POSTGRES_USER: baserow
-      POSTGRES_PASSWORD: change_this_password_123
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U baserow"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-
-  backend:
-    image: baserow/server:latest
+  app:
+    image: baserow/baserow:latest
     ports:
-      - "8000:8000"
+      - "80:80" # Map HTTP to port 80 on the host for access via http://localhost
+      - "8000:8000" # Map the admin interface (Django's `admin` app) to port 8000 on the host
+    environment:
+      - BASEROW_SECRET_KEY=<your-secret-key> # Set your secret key for production environments
+      - BASEROW_POSTGRES_HOST=db            # Database service name
+      - BASEROW_POSTGRES_USER=baserow       # Database username
+      - BASEROW_POSTGRES_PASSWORD=<your-password># Database password
+      - BASEROW_POSTGRES_DB=baserow         # Database name
+      - BASEROW_DATABASE_TYPE=postgresql     # Type of database used (e.g., postgresql, sqlite)
+      - BASEROW_LANGUAGE_CODE=en            # Language code (e.g., en, fr)
+      - BASEROW_TIME_ZONE=UTC                # Timezone to use
+      - BASEROW_ALLOWED_HOSTS=localhost,[::1] # Allowed hosts
+    volumes:
+      - .:/code            # Mount the current directory to /code in the container for local development (optional)
+      - baserow-media:/home/baserow/baserow/media  # Volume for media files
+      - baserow-static:/home/baserow/baserow/static   # Volume for static files
     depends_on:
       - db
-    environment:
-      DATABASE_URL: postgres://baserow:change_this_password_123@db:5432/baserow
-      GRAPHENE_ALLOWED_HOSTS: '*'
-      DEBUG: true
-      SECRET_KEY: change_it_as_insecure_Randomextraordinarylongkeyforthedevmode
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/graphql"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+    command: gunicorn --workers=4 --bind unix:///run/gunicorn.sock app.wsgi:application
 
-  frontend:
-    image: baserow/frontend:latest
-    ports:
-      - "3000:3000"
-    depends_on:
-      - backend
+  db:
+    image: postgres:latest
     environment:
-      BASEROW_GRAPHENE_URL: http://backend:8000/graphql
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+      - POSTGRES_USER=baserow
+      - POSTGRES_PASSWORD=<your-password> # Replace <your-password> with your actual database password
+      - POSTGRES_DB=baserow
+    volumes:
+      - baserow-db:/var/lib/postgresql/data  # Volume for database data persistence
 
+  redis:
+    image: redis:latest
+
+# The following services are optional, depending on your setup and needs.
+# Uncomment and configure them accordingly.
+
+  # worker:
+  #   image: baserow/baserow-worker:latest
+  #   environment:
+  #     - BASEROW_SECRET_KEY=<your-secret-key>
+  #     - BASEROW_REDIS_URL=redis://redis:6379
+  #     - BASEROW_POSTGRES_URL=postgres://db:5432
+  #   depends_on:
+  #     - db
+  #     - app
+
+# The following volume declarations are for persisting data. Uncomment as needed.
 volumes:
-  db-data:
+  baserow-media:
+  baserow-static:
+  baserow-db:
 
 networks:
   default:
     driver: bridge
+
+Remember to replace `<your-secret-key>` with a secret key for your installation and `<your-password>` with the database password you wish to use. Also, if you plan to use the worker service, uncomment and configure the `worker` service as well.
+
+This `docker-compose.yml` file sets up Baserow with PostgreSQL as the database backend and Redis as the task queue backend. It also includes an optional worker service for running background tasks. The media and static volumes are used to persist user uploaded files and static assets, respectively.

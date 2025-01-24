@@ -1,63 +1,52 @@
 version: '3.8'
-
 services:
-  klaus_web:
-    image: klausapp/klaus-web:latest
+  klaus-api:
+    image: klaus/klaus-server:latest
     ports:
-      - "8000:80"
+      - "5000:5000"
     environment:
-      - KLAUS_SECRET_KEY=secret_key_goes_here
-      - KLAUS_POSTGRES_HOST=klaus_db
-      - KLAUS_POSTGRES_DB=klaus
-      - KLAUS_POSTGRES_USER=klaus
-      - KLAUS_POSTGRES_PASSWORD=klaus_password
+      KL Aus API URL: http://localhost:5001
+      KL Aus Secret Key: secret_value_here
+      KL Aus Database Host: db
+      KL Aus Database Name: klaus_db
+      KL Aus Database Username: klaus_user
+      KL Aus Database Password: klaus_password
+      KL Aus Enable Email Sender: "true"
+      KL Aus SMTP Server: smtp
+      KL Aus SMTP Port: 25
+      KL Aus SMTP Username: smtp_user
+      KL Aus SMTP Password: smtp_password
     depends_on:
-      - klaus_db
-    volumes:
-      - ./klaus.conf.yml:/etc/klaus/klaus.conf.yml
-      - klaus_media:/home/klaus/.local/share/klaus/files
+      - db
+      - smtp
+    networks:
+      - klaus-network
 
-  klaus_celery_beat:
-    image: klausapp/klaus-worker:latest
-    command: celery --loglevel=info beat
+  klaus-db:
+    image: postgres:latest
     environment:
-      - KLAUS_SECRET_KEY=secret_key_goes_here
-      - KLAUS_CELERY_RESULT_BACKEND=rpc+amqp://klaus_worker:5672//
-      - KLAUS_POSTGRES_HOST=klaus_db
-      - KLAUS_POSTGRES_DB=klaus
-      - KLAUS_POSTGRES_USER=klaus
-      - KLAUS_POSTGRES_PASSWORD=klaus_password
-    depends_on:
-      - klaus_db
-      - klaus_worker
+      POSTGRES_USER: klaus_user
+      POSTGRES_PASSWORD: klaus_password
+      POSTGRES_DB: klaus_db
     volumes:
-      - ./klaus.conf.yml:/etc/klaus/klaus.conf.yml
+      - klaus-db-data:/var/lib/postgresql2
+    networks:
+      - klaus-network
 
-  klaus_celery_worker:
-    image: klausapp/klaus-worker:latest
-    command: celery --loglevel=info worker
+  klaus-smtp:
+    image: postmaster:latest
+    ports:
+      - "25:25"
     environment:
-      - KLAUS_SECRET_KEY=secret_key_goes_here
-      - KLAUS_CELERY_RESULT_BACKEND=rpc+amqp://klaus_worker:5672//
-      - KLAUS_POSTGRES_HOST=klaus_db
-      - KLAUS_POSTGRES_DB=klaus
-      - KLAUS_POSTGRES_USER=klaus
-      - KLAUS_POSTGRES_PASSWORD=klaus_password
-    depends_on:
-      - klaus_db
-      - klaus_worker
-    volumes:
-      - ./klaus.conf.yml:/etc/klaus/klaus.conf.yml
-
-  klaus_db:
-    image: postgres:13
-    environment:
-      - POSTGRES_DB=klaus
-      - POSTGRES_USER=klaus
-      - POSTGRES_PASSWORD=klaus_password
-    volumes:
-      - klaus_db_data:/var/lib/postgresql/data
+      TZ=Europe/Berlin
+      SMTP_USER: smtp_user
+      SMTP_PASSWORD: smtp_password
+    networks:
+      - klaus-network
 
 volumes:
-  klaus_media:
-  klaus_db_data:
+  klaus-db-data:
+
+networks:
+  klaus-network:
+    driver: bridge

@@ -1,0 +1,64 @@
+version: '3.7'
+
+services:
+  scm:
+    image: scm-manager:latest # or use a specific version like 'scm-manager:2.15.6'
+    container_name: scm-manager
+    ports:
+      - "8080:8080" # HTTP port
+      - "8443:8443" # HTTPS port (requires SSL/TLS setup)
+    volumes:
+      - scm-data:/opt/scm-manager/data
+      - scm-logs:/opt/scm-manager/logs
+      - scm-plugins:/opt/scm-manager/plugins
+      - scm-configs:/opt/scm-manager/configurations
+    environment:
+      JVM_OPTS: "-Xms512M -Xmx1024M"
+      SCM_HOSTNAME: "scm.example.com" # Set to your hostname or domain
+      DB_DRIVER: "org.h2.Driver"
+      DB_URL: "jdbc:h2:/opt/scm-manager/data/dbfile;DB_CLOSE_DELAY=-1"
+      DB_USERNAME: "sa"
+      DB_PASSWORD: "password" # Default password for H2 Database
+      SERVER_5000_USERNAME: "admin"
+      SERVER_5000_PASSWORD: "admin" # For the internal server (can be changed)
+      SCM_ADMIN_EMAIL: "admin@example.com"
+      SCM_ADMIN_FIRSTNAME: "Admin"
+      SCM_ADMIN_LASTNAME: "User"
+      MAIL_HOST: "mail.example.com" # If you want to configure the mail server
+      MAIL_USER: "scm-manager@example.com" # If you want to configure the mail server
+      MAIL_PASSWORD: "yourpassword" # If you want to configure the mail server
+    depends_on:
+      - db
+
+  db:
+    image: mysql:latest # or use a specific version like 'mysql:5.7'
+    container_name: scm-db
+    volumes:
+      - db-data:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: scm
+      MYSQL_USER: scm
+      MYSQL_PASSWORD: password # Default password for MySQL
+      MYSQL_ROOT_PASSWORD: rootpassword # Optional, if you want to access MySQL as root
+    expose:
+      - "3306"
+
+  adminer:
+    image: adminer:latest
+    container_name: scm-adminer
+    ports:
+      - "8000:8080"
+    volumes:
+      - adminer-data:/data
+
+volumes:
+  scm-data:
+  scm-logs:
+  scm-plugins:
+  scm-configs:
+  db-data:
+  adminer-data:
+
+networks:
+  default:
+    driver: bridge

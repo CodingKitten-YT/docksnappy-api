@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  portkey_frontend:
+    image: portkey/portkey-frontend:latest
+    ports:
+      - "8080:8080" # Assuming the frontend runs on port 8080, adjust if different
+    environment:
+      - REACT_APP_BACKEND_URL=http://portkey_backend:5000 # Assuming the backend service is named 'backend' and runs on port 5000, adjust accordingly
+    depends_on:
+      - portkey_backend
+    networks:
+      - portkey_network
+
+  portkey_backend:
+    image: portkey/portkey-backend:latest
+    ports:
+      - "5001:5000" # Assuming the backend runs on port 5000, adjust if different
+    environment:
+      - DATABASE_URL=postgres://portkey_db:5432 # Assuming a PostgreSQL database service named 'db' is defined
+    depends_on:
+      - portkey_db
+    networks:
+      - portkey_network
+
+  portkey_db:
+    image: postgres:13
+    volumes:
+      - portkey-db-volume:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=portkey_db
+      - POSTGRES_USER=portkey_user
+      - POSTGRES_PASSWORD=portkey_password
+    networks:
+      - portkey_network
+
+volumes:
+  portkey-db-volume:
+
+networks:
+  portkey_network:

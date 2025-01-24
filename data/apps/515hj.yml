@@ -2,39 +2,51 @@ version: '3.8'
 
 services:
   komga:
-    image: 'komga/komga:latest' # Use a specific tag if needed, e.g., 'komga/komga:v1.5.0'
+    image: komga/komga:latest
     container_name: komga
     ports:
-      - "8080:8080" # Web UI port
-      - "4040:4040" # Admin interface port
-      - "9000-9002:9000-9002" # Default range for Komga's built-in download server
-    environment:
-      KOMGA_INITDB_HOSTS: 'postgres' # Assume PostgreSQL service name
-      KOMGA_POSTGRES_HOST: â€˜postgres' # Match your PostgreSQL service name
-      KOMGA_POSTGRES_USER: 'komga'
-      KOMGA_POSTGRES_PASSWORD: 'your_password' # Set a strong password for security
-      KOMGA_POSTGRES_DB: 'komga'
-      JWT_SECRET: 'very_secret_key' # Change to a secure, random key
-      COMMON_SERVER_HOST: '0.0.0.0' # Allow connections from any network interface
+      - "80:80" # Expose Komga web UI on host port 80 (adjust as needed)
+      - "9000:9000" # Komga admin interface (optional, for remote access)
     volumes:
-      - './komga-data:/data' # Mount for user uploads and database backup
+      - "./komga-data:/data" # Path to your local storage (create a directory named komga-data)
+      - "./komga-config:/config" # Path to your local config files (create a directory named komga-config)
+    environment:
+      KOMGA_DB_HOST: db
+      KOMGA_DB_NAME: komga
+      KOMGA_DB_USER: komga
+      KOMGA_DB_PASSWORD: komgapassword
+      KOMGA_ADMIN_EMAIL: admin@example.com
+      KOMGA_ADMIN_PASSWORD: adminpassword
+      JWT_SECRET: change_this_on_production
     depends_on:
-      - postgres
-    networks:
-      - komga_network
+      - db
 
-  postgres:
-    image: 'postgres:latest' # Use a specific tag if needed, e.g., 'postgres:13-alpine'
-    container_name: postgres
+  db:
+    image: postgres:13
+    container_name: komga-db
     volumes:
-      - './komga-data/db:/var/lib/postgresql/data' # Mount for PostgreSQL data persistence
+      - "./komga-data/db:/var/lib/postgresql"
     environment:
-      POSTGRES_DB: 'komga'
-      POSTGRES_USER: 'komga'
-      POSTGRES_PASSWORD: 'your_password' # Same password as Komga, or set it via a secret
-    networks:
-      - komga_network
+      POSTGRES_DB: komga
+      POSTGRES_USER: komga
+      POSTGRES_PASSWORD: komgapassword
+
+  redis:
+    image: redis:6-alpine
+    container_name: komga-redis
+    volumes:
+      - "./komga-data/redis:/data"
+
+# Optionally, you can also define a service for sending emails if you want Komga to send email notifications.
+# email-service:
+#   image: komga/email-service:latest
+#   container_name: komga-email
+#   environment:
+#     EMAIL_USERNAME: your-email@example.com
+#     EMAIL_PASSWORD: your-password
+#   volumes:
+#     - "./komga-data/email:/config"
 
 networks:
-  komga_network:
+  default:
     driver: bridge

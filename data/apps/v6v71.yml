@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  sosse_api:
+    image: sosse/sosse-api:latest
+    ports:
+      - "5001:5000"
+    depends_on:
+      - sosse_db
+    environment:
+      DB_HOST: sosse_db
+      DB_USERNAME: sosse_user
+      DB_PASSWORD: sosse_password
+      DB_NAME: sosse_dbname
+    volumes:
+      - "./data:/var/lib/postgresql/data"
+
+  sosse_db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: sosse_user
+      POSTGRES_PASSWORD: sosse_password
+      POSTGRES_DB: sosse_dbname
+    volumes:
+      - "./data:/var/lib/postgresql/data"
+
+  redis:
+    image: "redis:6-alpine"
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:3.8-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_USER: sosse_user
+      RABBITMQ_PASSWORD: sosse_password
+      RABBITMQ_VHOST: /sosse
+
+  celery_worker:
+    image: sosse/celery-worker:latest
+    depends_on:
+      - sosse_api
+      - redis
+      - rabbitmq
+    environment:
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      CELERY_BROKER_URL: amqp://rabbitmq:5672//sosse
+      CELERY_TIMEZONE: UTC
+    volumes:
+      - "./data:/var/lib/postgresql/data"
+
+  celery_beat:
+    image: sosse/celery-beat:latest
+    depends_on:
+      - sosse_api
+      - redis
+      - rabbitmq
+    environment:
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      CELERY_BROKER_URL: amqp://rabbitmq:5672//sosse
+      CELERY_TIMEZONE: UTC
+    volumes:
+      - "./data:/var/lib/postgresql/data"
+
+volumes:
+  sosse-db-volume:
+    driver: local
+
+networks:
+  default:
+    external:
+      name: true

@@ -1,47 +1,22 @@
-version: '3'
+version: '3.8'
 
 services:
-  isponsorblocktv-backend:
-    image: isponsorblocktv/backend:latest
-    container_name: isponsorblocktv-backend
+  isponsorblocktv:
+    image: 'ghcr.iosponsorblock.com/isponsorblocktv/isponsorblocktv:stable' # Use the appropriate tag for the version you want
     ports:
-      - "5000:5000"
+      - "5000:5000" # Expose the necessary port if needed, e.g., for a web UI
+    restart: 'unless-stopped'
     environment:
-      API_SECRET_KEY: your_secret_key
-      DATABASE_URL: postgres://user:password@db:5432/database_name
-      REDIS_URL: redis://redis:6379/0
-    depends_on:
-      - db
-      - redis
+      - API_SECRET_KEY=your_secret_key # Set your own secret key for API usage
+      - AUTH_LDAP_HOST=ldap.example.com # If using LDAP, set the LDAP host
+      - AUTH_LDAP_USER_FILTER="(objectClass=inetOrgPerson)" # LDAP user filter if using LDAP auth
+      - AUTH_LDAP_GROUP_FILTER="(memberOf=CN=users,OU=Groups,DC=example,DC=com)" # LDAP group filter if using LDAP auth
     volumes:
-      - ./backend:/app
-    command: >
-      python manage.py runserver 0.0.0.0:5000 --insecure
+      - './config:/etc/isponsorblocktv' # Mount your local config directory to the container's config directory
+      - './data:/var/lib/isponsorblocktv' # Mount your local data directory to the container's data directory (if needed)
+    networks:
+      - isponsorblocktv_net
 
-  isponsorblocktv-frontend:
-    image: isponsorblocktv/frontend:latest
-    container_name: isponsorblocktv-frontend
-    ports:
-      - "8000:8000"
-    environment:
-      FRONTEND_URL: http://backend:5000
-    depends_on:
-      - backend
-
-  db:
-    image: postgres:13
-    container_name: isponsorblocktv-db
-    volumes:
-      - ./postgres:/var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: your_database_name
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
-      timeout: 10s
-      retries: 5
-
-  redis:
-    image: redis:6
-    container_name: isponsorblocktv-redis
+networks:
+  isponsorblocktv_net:
+    driver: bridge

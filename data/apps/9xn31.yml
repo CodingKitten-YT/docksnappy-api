@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  zincsearch:
+    image: 'zinctech/zincsearch:latest'
+    container_name: zincsearch
+    ports:
+      - "9200:9200"
+      - "9999:9999" # HTTP API
+    environment:
+      ZINCSEARCH_MAX_SHARDS: 1
+      ZINCSEARCH_HEAP_SIZE: 50mb
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    volumes:
+      - zincsearch-data:/tmp/zincsearch
+    networks:
+      - elasticnet
+
+volumes:
+  zincsearch-data:
+
+networks:
+  elasticnet:
+    driver: bridge

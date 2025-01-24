@@ -1,0 +1,36 @@
+version: '3.8'
+services:
+  sharry-web:
+    image: sharry/sharry-web:latest
+    ports:
+      - "8080:80"
+    depends_on:
+      - sherry-api
+    environment:
+      SHERRY_API_URL: http://sherry-api:8000
+    networks:
+      - sherry-network
+
+  sherry-api:
+    image: sharry/sharry-api:latest
+    ports:
+      - "8000:8000"
+    environment:
+      # Set your database configuration here
+      POSTGRES_DB: sherry
+      POSTGRES_USER: sherry
+      POSTGRES_PASSWORD: sherry_password
+    volumes:
+      - ./api/data:/data
+    networks:
+      - sherry-network
+
+  redis:
+    image: redis:6.2
+    networks:
+      - sherry-network
+
+# Define the network to be used by our services
+networks:
+  sherry-network:
+    driver: bridge

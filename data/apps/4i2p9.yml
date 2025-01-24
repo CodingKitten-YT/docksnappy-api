@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  plane-controller:
+    image: 'plane/plane:v0.15.1' # Replace with the desired version
+    container_name: plane-controller
+    command: >
+      plane init --bootstrap-kubeconfig-file=./bootstrapped-kubeconfig.yaml \
+        --kubeconfig-file=./kubeconfig.yaml \
+        --server-endpoint=http://plane-server:8080 \
+        --leader-election=true
+    restart: unless-stopped
+    ports:
+      - "8081:8080" # Plane API server
+    volumes:
+      - ./kubeconfig.yaml:/etc/plane/controller/kubeconfig.yaml
+      - ./bootstrapped-kubeconfig.yaml:/etc/plane/controller/bootstrapped-kubeconfig.yaml
+      - plane-controller-data:/var/lib/plane
+    resources:
+      limits:
+        memory: '256Mi'
+        cpu: '2'
+      requests:
+        memory: '128Mi'
+        cpu: '1'
+    environment:
+      - PL_CLUSTER_NAME=my-plane-fleet
+      - PL_CONTROLLER_TYPE=kubernetes
+      # Additional environment variables as needed
+
+  plane-server:
+    image: 'plane/plane:v0.15.1' # Replace with the desired version
+    container_name: plane-server
+    command: >
+      plane serve --http-listen-addr=0.0.0.0:8080
+    restart: unless-stopped
+    ports:
+      - "8080:8080" # Plane API server
+    volumes:
+      - plane-server-data:/var/lib/plane
+    resources:
+      limits:
+        memory: '512Mi'
+        cpu: '2'
+      requests:
+        memory: '256Mi'
+        cpu: '1'
+
+  etcd:
+    image: 'docker.io/library/etcd:3.4.10-linux-amd64' # Replace with the desired version
+    container_name: etcd
+    command: 'true'
+    restart: unless-stopped
+    volumes:
+      - etcd-data:/etc/etcd
+    environment:
+      - ETCD_NAME=plane-etcd
+      - ETCD_DATA_DIR="/var/lib/etcd"
+      - ETCD_LISTEN_PEER_URLS="http://0.0.0.0:2380"
+      - ETCD_LISTEN_client_URLS="http://0.0.0.0:2379"
+      - ETCD_ADVERTISE_CLIENT_URLS_V4="true"
+      - ETCD_INITIAL_ADVERTISING_PEER_URLS="http://$(this):2380"
+      - ETCD_INITIAL_CLUSTER_TOKEN="etcd-cluster-1"
+      - ETCD_LIST_TYPE=shared
+    resources:
+      limits:
+        memory: '1Gi'
+        cpu: '500m'
+      requests:
+        memory: '500Mi'
+        cpu: '250m'
+
+volumes:
+  plane-controller-data:
+  plane-server-data:
+  etcd-data:
+
+networks:
+  default:
+    driver: bridge

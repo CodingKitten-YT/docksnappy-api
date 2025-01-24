@@ -1,36 +1,56 @@
-version: '3'
-services:
-  # BifrÃ¶st service - Management plane for Kubernetes clusters
-  bifrÃ¶st-controlplane:
-    image: engity/bifrÃ¶st:v2.10.0-k3s4 # Use the appropriate tag for your version
-    container_name: bifrÃ¶st
-    environment:
-      K3S_URL: "https://your-k3s-cluster-ip"
-      BIFROST_NAMESPACE: "bifrÃ¶st"
-      BIFROST_DOMAIN: "example.local"
-      SERVICE_IPV4: "10.42.0.1(eth0)" # Replace with the appropriate interface IP if different
-    ports:
-      - "8080:8080" # HTTP API
-      - "6443:6443" # Kubernetes dashboard (if installed)
-      - "9099:9099" # Service Cathedral UI (if enabled and port forwarded from inside the container)
-    volumes:
-      - "./bifrÃ¶st-data:/var/lib/rancher"
-    networks:
-      - bifrÃ¶st_network
+version: '3.8'
 
-  # PostgreSQL service for BifrÃ¶st's database if you choose to use it
-  postgresql:
-    image: postgres:13.1-alpine
-    container_name: postgres
-    volumes:
-      - "./bifrÃ¶st-data/postgresql:/var/lib/postgresql"
+services:
+  bifröst:
+    image: engity/bifröst:latest
+    ports:
+      - "5000:5000" # HTTP API port
     environment:
-      POSTGRES_DB: bifrÃ¶st
-      POSTGRES_USER: bifrÃ¶st
-      POSTGRES_PASSWORD: change_this_password
+      BIFROST_DATABASE__HOST: db
+      BIFROST_DATABASE__USERNAME: bifröst
+      BIFROST_DATABASE__PASSWORD: changeit
+      BIFROST_REDIS__HOST: redis
+      # Other necessary environment variables for Bifröst
+    depends_on:
+      - db
+      - redis
     networks:
-      - bifrÃ¶st_network
+      - backend
+
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: bifröst
+      POSTGRES_PASSWORD: changeit
+      POSTGRES_DB: bifröst
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - backend
+
+  redis:
+    image: redis:6.2
+    networks:
+      - backend
+
+  traefik:
+    image: traefik:v2.5
+    ports:
+      - "80:80" # HTTP
+      - "443:443" # HTTPS
+    volumes:
+      - ./certs:/letsencrypt
+      - traefik-data:/traefik/data
+    networks:
+      - backend
+      - traffik
+
+volumes:
+  postgres-data:
+  traefik-data:
 
 networks:
-  bifrÃ¶st_network:
+  backend:
     driver: bridge
+  traffik:
+    external: true

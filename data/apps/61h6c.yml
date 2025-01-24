@@ -1,40 +1,44 @@
 version: '3.8'
-services:
-  marsserver:
-    image: marsserver/marsserver:latest # Use the official MarsServer image from Docker Hub
-    container_name: marsserver
-    ports:
-      - "5060:5060" # Expose Mars Server web interface on host port 5060
-    environment:
-      MARS_ADMIN_USERNAME: admin
-      MARS_ADMIN_PASSWORD: password
-      JAVA_TOOL_OPTIONS:-Xms2g -Xmx4g # Set initial and max Java heap size to 2GB and 4GB respectively
-    volumes:
-      - marsserver-data:/opt/mars/data
-      - marsserver-conf:/opt/mars/conf
-    networks:
-      - mars_network
-    depends_on:
-      - mariadb
 
-  mariadb:
-    image: mysql:5.7
-    container_name: mariadb
+services:
+  mars_server:
+    image: marsserver/mars-server:latest  # Use the official Mars Server Docker image
+    ports:
+      - "8080:8080"  # Expose Mars Server UI on port 8080 of the host
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_USER: marsuser
-      MYSQL_PASSWORD: marspassword
-      MYSQL_DATABASE: marsdb
-    volumes:
-      - mariadb-data:/var/lib/mysql
+      MARS_MODE: server  # Set Mars Server mode to 'server'
+      JVM_OPTS:-Xms512m -Xmx512m  # Set initial and maximum Java heap size
+      SERVER_HOST: 0.0.0.0  # Bind to all available network interfaces
     networks:
-      - mars_network
+      - mars-network
+
+  mongodb:
+    image: mongo:latest
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root  # MongoDB root username
+      MONGO_INITDB_ROOT_PASSWORD: example  # MongoDB root password (change this in production!)
+    ports:
+      - "127017:127017"  # Expose MongoDB instance A on port 127017 of the host
+    volumes:
+      - mongodata:/data/db  # Persist MongoDB data
+    networks:
+      - mars-network
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"  # Expose Redis on port 6379 of the host
+    volumes:
+      - redistore:/data  # Persist Redis data
+    networks:
+      - mars-network
 
 volumes:
-  marsserver-data:
-  marsserver-conf:
-  mariadb-data:
+  mongodata:
+    driver: local
+  redistore:
+    driver: local
 
 networks:
-  mars_network:
+  mars-network:
     driver: bridge

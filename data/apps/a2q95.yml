@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  part-db:
+    image: postgres:latest
+    container_name: part-db
+    environment:
+      POSTGRES_DB: partdb
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - part-db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+volumes:
+  part-db-data:

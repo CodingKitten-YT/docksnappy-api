@@ -1,26 +1,32 @@
-version: '3'
-services:
-  jina:
-    image: jinacloud/jina:latest
-    ports:
-      - "5000:5000" # Expose the default port of Jina on host
-    volumes:
-      - ./data:/data # Mount a local data directory to store flows and artifacts
-      - ./config.yaml:/app/config.yaml # Optional: mount your own configuration file
-    environment:
-      JINA_HOST: "0.0.0.0" # Allow access from the host
-    command: jina start --default-flow=your_flow_name # Start Jina with a specific flow
-  postgres:
-    image: postgres:latest
-    volumes:
-      - ./dbdata:/var/lib/postgresql # Persist database data to a local directory
-    environment:
-      POSTGRES_DB: jinadb # Database name
-      POSTGRES_USER: jinauser # Database user
-      POSTGRES_PASSWORD: jinapass # Database password
-  redis:
-    image: redis:latest
+version: '3.8'
 
+services:
+  flow:
+    image: jinaai/jina:latest  # Use the official Jina image
+    ports:
+      - "8080:8080"  # Expose Jina Flow UI on port 8080 host-side
+    volumes:
+      - ./data:/data  # Mount a local data directory to store dataset and models
+      - ./env:/env  # Mount a local environment file if you have custom configurations
+    environment:
+      - JINA_NO_TLS=True  # Disable TLS for Flow UI (not recommended for production)
+      - JINA_CLI_SKIP_WELCOME_MESSAGE=True  # Skip the welcome message when starting up
+    command: flow --port 8080  # Set the port for Jina Flow UI
+
+  adapter-my-adapter:
+    image: my/adapter:latest  # Replace with your adapter's image
+    environment:
+      - ADAPTER_NAME=my-adapter  # Set the adapter name
+      - MODEL_PATH=/path/to/model  # Set the path to your model within the container
+    depends_on:
+      - flow
+
+# Define the network, if needed (Jina uses a custom overlay network by default)
 networks:
-  default:
-    driver: bridge
+  jina-network:
+    driver: overlay
+
+# Define the volumes, if you want persistent storage for datasets and models
+volumes:
+  jinadata:
+  env_config:

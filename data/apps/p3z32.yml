@@ -1,69 +1,36 @@
-version: '3'
-services:
-  loomio:
-    image: loomio/loomio:latest
-    container_name: loomio
-    ports:
-      - "9292:9292" # HTTP interface
-    volumes:
-      - loomio-data:/var/lib/loomio
-      - loomio-config:/etc/loomio
-    environment:
-      - RAILS_ENV=production
-      - SECRETS_HOST=secrets-loomio
-      - HOST=0.0.0.0
-      - PORT=9292
-      - BASE_URL=http://loomio.yourdomain.com # Set this to your domain or subdomain
-    command: bundle exec rails server -b $HOST -p $PORT
-    depends_on:
-      - database
-      - redis
-      - secrets-loomio
+version: '3.8'
 
-  database:
-    image: postgres:latest
+services:
+  loomio_web:
+    image: loomio/loomio:latest
+    command: bundle exec rails server -b 0.0.0.0 -p 3000 --environment production
+    ports:
+      - "3000:3000"
+    depends_on:
+      - loomio_db
+    environment:
+      DATABASE_URL: 'postgres://loomio_db:5432'
+      REDIS_URL: 'redis://loomio_redis:6379/1'
+      RACK_ENV: production
+      SECRET_KEY_BASE: a long secret key base for production
     volumes:
-      - loomio-db:/var/lib/postgresql
+      - './config/secrets.yml:/etc/loomio/secrets.yml'
+
+  loomio_db:
+    image: postgres:latest
+    command: postgres -c 'fgd=true'
     environment:
       POSTGRES_DB: loomio_production
       POSTGRES_USER: loomio
-      POSTGRES_PASSWORD: change_this_password # You should change this password
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U loomio"]
-      timeout: 10s
-      retries: 5
+      POSTGRES_PASSWORD: change_this_password
+    volumes:
+      - 'loomio_db_data:/var/lib/postgresql/data'
 
-  redis:
+  loomio_redis:
     image: redis:latest
 
-  secrets-loomio:
-    image: ether/secrets:latest
-    volumes:
-      - loomio-secrets:/etc/secrets
-    environment:
-      - HOST=loomio
-      - SERVICE_PORT=7900
-
-  nginx:
-    image: loomio/nginx-proxy:latest
-    container_name: nginx
-    ports:
-      - "80:80" # HTTP, forwards to nginx proxy
-      - "443:443" # HTTPS, forwards to nginx proxy
-    volumes:
-      - loomio-data:/var/lib/nginx-proxy
-      - ./nginx.conf:/etc/nginx/nginx.conf
-    depends_on:
-      - loomio
-    environment:
-      - SERVICE_LOOMIO_PORT=9292
-      - SERVICE_DATABASE_HOST=database
-      - SERVICE_REDIS_HOST=redis
-
 volumes:
-  loomio-data:
-  loomio-db:
-  loomio-secrets:
+  loomio_db_data:
 
 networks:
   default:

@@ -1,60 +1,63 @@
 version: '3.8'
 
 services:
-  docmost:
-    image: docmost/docmost:latest  # Use the official Docmost image or specify a tag if available
-    container_name: docmost
-    ports:
-      - "8000:8000"  # Expose the default web port (may vary depending on Docmost's configuration)
-    volumes:
-      - ./documents:/var/www/html/documents  # Mount your local documents directory to the container (adjust path as needed)
-      - ./config:/etc/docmost  # Optional: Mount your local config directory to configure Docmost without Docker (if supported)
-      - ./logs:/var/log/docmost  # Optional: Mount your local logs directory to store logs from the container
-    restart: unless-stopped  # Restart the service unless it has been manually stopped
-    environment:
-      - TZ=Your/Timezone  # Set the timezone for Docmost (replace with your timezone)
-      # Additional environment variables specific to Docmost can be set here if needed
-
   db:
-    image: postgres:13  # Use an official PostgreSQL image, adjust version as needed
-    container_name: docmost_db
+    image: postgres:12
     volumes:
-      - ./db_data:/var/lib/postgresql/data  # Mount your local database data directory to persist data
+      - db_data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_DB=docmost  # Database name for Docmost
-      - POSTGRES_USER=docmost  # Username for the database
-      - POSTGRES_PASSWORD=yourpassword  # Password for the database (change yourpassword)
+      POSTGRES_DB: docmost
+      POSTGRES_USER: docmost
+      POSTGRES_PASSWORD: change_this_password
+    restart: unless-stopped
+
+  app:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./app:/code
+    environment:
+      DATABASE_URL: postgres://docmost:change_this_password@db:5432/docmost
+      SECRET_KEY: 'your-secret-key' # Replace with your actual secret key
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  worker:
+    image: python:3.9-slim
+    volumes:
+      - ./app:/code
+    command: celery -A app worker --loglevel=info
+    environment:
+      DATABASE_URL: postgres://docmost:change_this_password@db:5432/docmost
+      BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
+  webserver:
+    image: uvicorn:latest
+    ports:
+      - "8000:80"
+    volumes:
+      - ./app:/code
+    command: uvicorn app.main:app --host 0.0.0.0 --port 80
+    environment:
+      DATABASE_URL: postgres://docmost:change_this_password@db:5432/docmost
+      SECRET_KEY: 'your-secret-key' # Replace with your actual secret key
+    depends_on:
+      - app
     restart: unless-stopped
 
   redis:
-    image: redis:6-alpine  # Use an official Redis image, adjust version as needed
-    container_name: docmost_redis
-    volumes:
-      - ./redis_data:/data  # Mount your local Redis data directory to persist data (optional, for data persistence)
-    restart: unless-stopped
+    image: redis:6
+
+volumes:
+  db_data:
 
 networks:
   default:
     driver: bridge
-
-# If Docmost requires additional services like a front-proxy (nginx or traefik), you can define them here.
-# Example for nginx as a reverse proxy:
-services:
-  docmost_reverse_proxy:
-    image: nginx:latest
-    container_name: docmost_proxy
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf  # Mount your local nginx configuration file
-      - ./certs:/etc/ssl/certs  # Mount your local SSL certificates directory (if using HTTPS)
-    depends_on:
-      - docmost
-    restart: unless-stopped
-
-# If you are running this on a cloud provider or have a custom DNS, you can define a network with external drivers.
-# networks:
-#   mynetwork:
-#     driver: bridge
-#     external: true

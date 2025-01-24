@@ -1,0 +1,57 @@
+version: '3'
+services:
+  shiori:
+    image: shiori/shiori-web:latest  # Use the official Shiori Docker image
+    ports:
+      - "80:3000"  # Map the container's port 3000 to port 80 on the host for HTTP access
+    environment:
+      DB_URL: 'postgres://shiori-db:5432/shiori'  # Database URL
+      REDIS_URL: 'redis://shiori-redis:6379/0'  # Redis URL
+      JWT_SECRET: 'your_jwt_secret'  # A secret key for JWT authentication
+    depends_on:
+      - shiori-db
+      - shiori-redis
+    volumes:
+      - './config/shiori/:/data/shiori'  # Mount your configuration directory to the container
+
+  shiori-db:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: shiori
+      POSTGRES_USER: shiori
+      POSTGRES_PASSWORD: shiori_db_password
+    volumes:
+      - './data/shiori-db:/var/lib/postgresql/data'  # Persist database data
+
+  shiori-redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"  # Map Redis port to the host for client access if needed
+    volumes:
+      - './data/shiori-redis:/data'  # Persist Redis data
+
+# Optionally, you can also include a service for letting Let's Encrypt issue SSL certificates
+# for your Shiori instance using Certbot (requires domain configuration).
+certbot:
+  image: certbot/certbot:latest
+  volumes:
+    - './letsencrypt:/etc/letsencrypt'
+  depends_on:
+    - shiori
+  ports:
+    - "80:80"
+    - "443:443"
+  command: certonly --standalone --email your_email@example.com --agree-tos --no-eff-email --staging -d yourdomain.com
+
+# Uncomment and adjust the following if you want to set up an Nginx reverse proxy in front of Shiori
+# for HTTPS with SSL/TLS encryption.
+shiori-nginx:
+  image: nginx:latest
+  ports:
+    - "443:443"
+  volumes:
+    - './nginx/conf.d:/etc/nginx/conf.d'
+    - './data/shiori:/data/shiori'
+  depends_on:
+    - shiori
+  command: /bin/sh -c 'trap "pkill -f nginx" TERM; nginx -g "daemon of;"'

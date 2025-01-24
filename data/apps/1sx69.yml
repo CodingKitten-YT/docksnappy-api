@@ -1,25 +1,48 @@
 version: '3.8'
 
 services:
-  openmeteo:
-    image: openmeteogroup/open-meteo:latest
-    command: open-meteo/daemon.sh
+  openmeteo_api:
+    image: openmeteogroup/open-meteo-api
     restart: unless-stopped
     ports:
-      - "8000:8000" # HTTP API endpoint
-      - "5601:5601"  # Prometheus metrics (optional, if you want to monitor with Prometheus)
-      - "9090:9090"  # Grafana UI (optional, if you want to create dashboards using Open-Meteo data)
+      - "8000:8000" # Expose the Open-Meteo API on port 8000
     environment:
-      OPENMETEO_HOSTNAME: "0.0.0.0"
-      OPENMETEO_USER: "${OPENMETEO_USER:-openmeteo}"
-      OPENMETEO_PASSWORD: "${OPENMETEO_PASSWORD:-change_this_default_password}"
-      OPENMETEO_ENABLE_API: "true"
-    volumes:
-      - openmeteo-data:/var/lib/open-meteo
-      - openmeteo-config:/etc/open-meteo
-      - openmeteo-log:/var/log/open-meteo
+      - OPENMETEO_API_KEY=${OPENMETEO_API_KEY} # Set your Open-Meteo API key as an environment variable or define it in .env file
+      - OPENMETEO_HOSTNAME=0.0.0.0
+    healthcheck:
+      test: ["CMD", "curl", "--silent", "--fail", "http://localhost:8000/ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 7
+
+  redis:
+    image: redis:6-alpine
+    restart: unless-stopped
+    environment:
+      - REDIS_PASS=${REDIS_PASS} # Set your Redis password as an environment variable or define it in .env file (optional)
+    healthcheck:
+      test: ["CMD", "redis-cli", "--scan", "-1"]
+      timeout: 5s
+      retries: 30
+      interval: 5s
+
+  postgresql:
+    image: postgres:12
+    restart: unless-stopped
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRE_DB_PASS} # Set your PostgreSQL password as an environment variable or define it in .env file
+      - POSTGRES_USER=openmeteo
+      - POSTGRES_DB=openmeteo_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      timeout: 5s
+      retries: 30
+      interval: 5s
 
 volumes:
-  openmeteo-data:
-  openmeteo-config:
-  openmeteo-log:
+  openmeteo_data:
+    driver: local
+
+networks:
+  default:
+    name: true

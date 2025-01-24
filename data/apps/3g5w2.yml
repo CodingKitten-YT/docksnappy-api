@@ -1,77 +1,64 @@
 version: '3.8'
 
 services:
-  devicehive_master:
-    image: 'devicehive/devicehive-master:latest'
+  devicehive-master:
+    image: devicehive/devicehive:latest
     ports:
-      - "9001:9001" # HTTP API
-      - "5672:5672"   # AMQP (RabbitMQ)
-      - "8080:8080"  # Admin UI
+      - "8080:8080" # HTTP API
+      - "5672:5672"   # RabbitMQ
+      - "1883:1883"  # MQTT Broker
     environment:
-      - HOSTNAME=master
       - RABBITMQ_HOST=rabbitmq
-      - JETTY_HTTP_PORT=9001
-      - JETTY_ADMIN_PORT=8080
-      - LOGGING_LEVEL=INFO
+      - LOG_LEVEL_DEFAULT=info
+      - LOG_LEVEL_DEVICE_REGISTRY=debug
+      - LOG_LEVEL_EVENT_HANDLERS=debug
     depends_on:
-      - devicehive_db
       - rabbitmq
+      - mqtt-broker
       - redis
-      - devicehive_search
-
-  devicehive_worker:
-    image: 'devicehive/devicehive-worker:latest'
-    environment:
-      - HOSTNAME=worker
-      - WORKER_QUEUE=devicehive_queue
-      - LOGGING_LEVEL=INFO
-    depends_on:
-      - rabbitmq
-
-  devicehive_db:
-    image: 'postgres:13'
-    environment:
-      - POSTGRES_USER=devicehive
-      - POSTGRES_PASSWORD=devicehive
-      - POSTGES_DB=devicehive_db
-    volumes:
-      - devicehive-db-volume:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U devicehive"]
-      timeout: 10s
-      retries: 5
-
-  rabbitmq:
-    image: 'rabbitmq:3.8-management'
-    ports:
-      - "5672:5672" # AMQP
-      - "15672:15672" # STOMP
-      - "4369:4369"  # HuB/Messaging protocol on top of WebSocket
-      - "8080:8080"  # Management UI (optional)
-    volumes:
-      - rabbitmq-volume:/var/lib/rabbitmq
-    healthcheck:
-      test: ["CMD-SHELL", "rabbitmqctl status_request"]
-      timeout: 10s
-      retries: 5
+    command: devicehive.sh start-all
 
   redis:
-    image: 'redis:6'
-    volumes:
-      - redis-volume:/data
-
-  devicehive_search:
-    image: 'devicehive/elasticsearch-service:7.10.2'
-    ports:
-      - "9200:9200" # Elasticsearch HTTP API
-      - "9300:9300" # Elasticsearch TCP transport (default listening port)
+    image: redis:latest
     environment:
-      - ELASTIC_PASSWORD=change_this_pass
-      - ELASTICSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+      - REDIS_PORT=6379
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:latest
+    environment:
+      - RABBITMQ_ERLANG_COOKIE=rabcrc4ev1lqkpzgvjvq6t
+    command: rabbitmq-server --detached --monitor
+
+  mqtt-broker:
+    image: eclipse-mosquitto:latest
+    environment:
+      - MOSQUITTO_PASSWORD=devicehive
+      - MOSQUITTO_USER=devicehive
+    ports:
+      - "9001:9001" # WebSocket support
+
+  elasticsearch:
+    image: elasticsearch:latest
+    environment:
+      - discovery.type=single-node
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+
+  logstash:
+    image: logstash:latest
     depends_on:
-      - devicehive_db
+      - elasticsearch
+    command: logstash -f /dev/stdin
 
 volumes:
-  devicehive-db-volume:
-  rabbitmq-volume:
-  redis-volume:
+  devicehive-db:
+  postgres-data:
+    driver_opts:
+      driver: local
+
+networks:
+  default:
+    driver: bridge

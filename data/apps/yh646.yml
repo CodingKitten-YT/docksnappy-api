@@ -1,68 +1,46 @@
 version: '3.8'
 
 services:
-  grimoirelab:
-    image: grimoirelab/grimoirelab:latest  # or use a specific tag if needed
+  grimoire:
+    image: 'grimoiredb/grimoirelab:latest' # or use a specific tag if needed
     container_name: grimoirelab
     ports:
-      - "80:80"  # Expose GrimoireLab on port 80 of the host
-      - "443:443" # Optionally expose GrimoireLab on port 443 of the host with SSL/TLS
+      - "4000:4000" # Port where GrimoireLab will be accessible from the host
     volumes:
-      - "./data:/data"  # Mount a volume for data persistence
-      - "./uploads:/uploads"  # Mount a volume for uploaded files
-      - "./config:/etc/grimoirelab"  # Mount a volume for configuration files
+      - "./data/grimoire:/var/lib/grimoirelab" # Path to a local directory for GrimoireLab data (optional, depending on your storage needs)
+      - "./config/grimoire:/etc/grimoirelab" # Path to a local directory for GrimoireLab configuration (optional, if you want to manage configs locally)
     environment:
-      - GRIMOIRELAB_DATABASE__HOST=db  # Assuming you have a 'db' service defined for the database
-      - GRIMOIRELAB_DATABASE__NAME=grimoirelab
-      - GRIMOIRELAB_DATABASE__USER=grimoirelabuser
-      - GRIMOIRELAB_DATABASE__PASSWORD=grimoirelapassword
-      # Uncomment the following if you want to enable email notifications
-      # - GRIMOIRELAB_EMAIL_HOST=mailhog  # Assuming you have a 'mailhog' service defined for emails
-      # - GRIMOIRELAB_EMAIL_PORT=1025
-      # - GRIMOIRELAB_EMAIL_USERNAME=your-email@example.com
-      # - GRIMOIRELAB_EMAIL_PASSWORD=your-email-password
+      - "JUPYTERHUB_ENABLE=true"
+      - "JUPYTERHUB_ADMIN_USER=_your_admin_user_" # Set an admin user for JupyterHub
+      - "JUPYTERHUB_GENERATE_LOCAL_USER_DATA=True" # To generate user data on the fly (optional)
+    environmentFiles:
+      - "./config/grimoire/.env" # Path to a .env file with additional environment variables if needed
     depends_on:
-      - db  # Assuming you have a 'db' service defined for the database
-      - redis  # Assuming you have a 'redis' service defined for caching and queues
-    networks:
-      - grimoirelab_network
+      - postgres
 
-  db:
-    image: postgres:latest  # Use the official PostgreSQL image
+  postgres:
+    image: 'postgres:13' # Use the desired version of PostgreSQL
+    container_name: grimoirelab_postgres
     volumes:
-      - "./db_data:/var/lib/postgresql"  # Mount a volume for database data persistence
+      - "./data/grimoire_postgres:/var/lib/postgresql" # Path to a local directory for PostgreSQL data
     environment:
-      - POSTGRES_DB=grimoirelab
-      - POSTGRES_USER=grimoirelabuser
-      - POSTGRES_PASSWORD=grimoirelapassword
-    networks:
-      - grimoirelab_network
+      - "POSTGRES_DB=grimoirelab"
+      - "POSTGRES_USER=grimoirelab"
+      - "POSTGRES_PASSWORD=change_this_password" # Change this to a secure password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U grimoirelab"]
+      timeout: 10s
+      retries: 5
 
-  redis:
-    image: redis:latest
-    networks:
-      - grimoirelab_network
+  rediscord:
+    image: 'grimoiredb/rediscord:latest' # or use a specific tag if needed
+    container_name: rediscord
+    ports:
+      - "6379:6379" # Redis port for Redis (optional, if you want to access it from the host)
+    environment:
+      - "REDIIS_HOST=postgres"
+      - "JUPYTERHUB_URL=http://grimoirelab:4000" # Set JupyterHub URL (optional, but recommended for syncing with GitHub)
 
 networks:
-  grimoirelab_network:
+  default:
     driver: bridge
-
-# If you want to use Let's Encrypt for SSL/TLS, uncomment the following and replace placeholders:
-# services:
-#   grimoirelab_reverse_proxy:
-#     image: jwilder/nginx-proxy
-#     container_name: grimoirelab_proxy
-#     ports:
-#       - "80:80"
-#       - "443:443"
-#     volumes:
-#       - "./letsencrypt:/etc/letsencrypt"
-#       - "./data:/data"
-#       - "./uploads:/uploads"
-#       - "./config:/etc/grimoirelab"
-#     depends_on:
-#       - grimoirelab
-# environment:
-#   - LESSSECURE_ACCOUNT_EMAIL=your-email@example.com  # Email to register with Let's Encrypt
-#   - LESSSECURE_TERMS_OF_SERVICE_AGREED=1
-#   - LESSSECURE_AGREE_TO_TERMS=1

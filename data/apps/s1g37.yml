@@ -2,78 +2,50 @@ version: '3.8'
 
 services:
   flowforge:
-    image: 'flowforge/core:latest' # Use the latest tag or a specific version
+    image: flowforge/flowforge:latest
     container_name: flowforge
-    command: server --debug=true --dev=false
     environment:
-      - SERVER_HOSTNAME="0.0.0.0"
-      - SERVER_PORT=8080
-      - DB_TYPE=postgres
-      - DB_DATABASE=flowforge
-      - DB_USERNAME=flowforge
-      - DB_PASSWORD=secret
-      - REDIS_HOSTNAME=redis
-      - SECRET_MANAGEMENT_URI=http://secret:8500
+      FLOWFORGE_SECRETS_STORE_BACKEND: file
+      FLOWFORGE_SECRETS_STORE_FILE_PATH: /run/secrets.toml
+      JAVA_TOOL_OPTIONS:-Duser.timezone=UTC
     ports:
-      - "8080:8080"
+      - "8080:8080" # Web UI port
+      - "2222:22"     # SSH access to the FlowForge instance for access to underlying VMs
     volumes:
-      - "./config:/etc/flowforge"
-      - "./data:/var/lib/flowforge"
-      - "./logs:/var/log/flowforge"
-    depends_on:
-      - redis
-      - secret
-      - postgres
+      - ./flowforge-secrets.toml:/run/secrets.toml
+      - flowforge-data:/var/lib/flowforge
+      - flowforge-log:/var/log/flowforge
+    command: >
+      sh -c
+      "trap exit TERM;
+      java -Djava.awt.headless=true -jar /opt/flowforge.jar create --name my-stack --template template-id --size s
+      && flowforge ssh-keygen add"
     networks:
-      - flowforge-net
+      - flowforge_network
 
   postgres:
-    image: postgres:13
-    container_name: postgres
-    command: -c 'fsync=off'
+    image: postgres:latest
     volumes:
-      - "./data/postgres:/var/lib/postgres"
-      - ./scripts/pg_initialization.sh:/docker-entrypoint-initdb.d/pg_initialization.sh:ro
+      - postgres-data:/var/lib/postgresql/data
     environment:
+      POSTGRES_DB: flowforge
       POSTGRES_USER: flowforge
-      POSTGRES_PASSWORD: secret
-      POSTGES_DB: flowforge
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "flowforge"]
-      timeout: 5s
-      retries: 10
+      POSTGRES_PASSWORD: change_this_password # Change this to a strong password
+    networks:
+      - flowforge_network
 
   redis:
-    image: redis:6-alpine
-    container_name: redis
-    ports:
-      - "6379:6379"
-
-  secret:
-    image: vault:latest
-    container_name: secret
-    environment:
-      VAULT_API_LISTEN_ADDRESS=0.0.0.0:8500
-      VAULT_DEV_ROOT_TOKEN_GENERATION=true
-      VAULT_DEV_REMOTE_CONFIG_BUNDLE=false
-      VAULT_LOG_LEVEL=debug
-    ports:
-      - "8500:8500"
+    image: redis:latest
     volumes:
-      - "./secrets/vault-data:/var/lib/vault-server"
-      - "./secrets/vault-server-init.hcl:/etc/vault/vault-server-init.hcl"
+      - redis-data:/var/lib/redis
+    networks:
+      - flowforge_network
 
-  flowforge_db_backup:
-    image: tfk/pgbackrest-docker:latest
-    container_name: flowforge_db_backup
-    environment:
-      PGBACKREST_PGDATA: /var/lib/postgres
-      PGBR_RESTORE_COMMAND: 'cp -R %s/restore /var/lib/flowforge'
-      PGBR_FIND_COMMAND: 'find /var/lib/flowforge -type f -name "*.backup"'
-    volumes:
-      - "./data/postgres-backups:/var/lib/pgbackrest/share"
-      - "./scripts/pgbackrest.conf:/etc/pgbackrest.conf:ro"
+volumes:
+  flowforge-data:
+  flowforge-log:
+  postgres-data:
+  redis-data:
 
 networks:
-  flowforge-net:
-    driver: bridge
+  flowforge_network:

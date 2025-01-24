@@ -2,122 +2,79 @@ version: '3.8'
 
 services:
   ergo_node:
-    image: 'ergo/node:latest'
-    command: 'node --genesis false'
+    image: 'ergo/ergo-node'
+    container_name: ergo_node
     ports:
-      - "9071:9071" # RPC interface, change to your desired port if needed
-      - "8080:8080"  # Web interface (if enabled)
+      - "12701:12701" # Ergo Node default port for RPC (optional, if you want to access from the host)
     volumes:
-      - "./config/node.cfg:/etc/ergo/node.cfg" # Optional: custom configuration file
-      - "./data": "/root/.ergo" # Persistent storage for the node data
+      - "./data:/root/.ergo" # Mount your local data directory to store node data and blocks
+      - "./nodes.json:/etc/ergo/nodes.json" # Optional, mount nodes configuration file (if you have one)
     environment:
-      - "ERGO_NODE_SYNC=full" # Can be 'full' or 'light' (optional, for initial sync)
-      - "TZ_CLIENT_DEBUG=true" # Enables debug logging (optional)
-      - "TZ_CLIENT_LOGS=20" # Log level (verbose, info, warn, error, fatal), higher verbosity (optional)
-    networks:
-      - ergo_network
+      - "ERGO_NETWORK=${ERGO_NETWORK:-mainnet}" # Set network (testnet/mainnet), default to mainnet if not specified
+      - "ERGO_NODE_HTTP_EXPOSED=true" # Expose HTTP RPC (optional)
+      - "ERGO_RPC_LISTEN_ADDRESS=0.0.0.0" # Listen on all network interfaces for RPC (optional)
+      - "ERGO_TEZOS_MNMON_ACTIVE=false" # Disable Tezos Mnemonic (optional, if you don't use it)
+    restart: unless-stopped
 
-  # Optional PostgreSQL service for the blockchain data storage
-  ergo_db:
-    image: 'postgres:13'
-    command: 'postgres -c "fsync=off" -c "full_page_writes=off"'
-    volumes:
-      - "./data/db": "/var/lib/postgresql/data" # Persistent storage for the PostgreSQL data
+  ergo_explorer:
+    image: 'ergo/ergo-explorer'
+    container_name: ergo_explorer
+    ports:
+      - "12702:12702" # Ergo Explorer default port (optional, if you want to access from the host)
     environment:
-      POSTGRES_DB: ergo
-      POSTGRES_USER: ergo
-      POSTGRES_PASSWORD: change-this-password # Change this to a strong password
-    networks:
-      - ergo_network
-
-  # Optional Redis service for message queue and caching if needed
-  redis:
-    image: 'redis:6'
-    volumes:
-      - "./data/redis": "/data" # Persistent storage for Redis data
-
-networks:
-  ergo_network:
-    driver: bridge
-
-# Optional Traefik stack as a reverse proxy and ingress controller
-traefik_dashboard:
-  image: 'traefik:v2.5'
-  ports:
-    - "80:80" # HTTP dashboard interface
-    - "8081:8081" # Traefik API interface (optional)
-  command: -"--api.insecure=true" # Use with caution, set to false in production
-  volumes:
-    - "./data/traefik": "/etc/traefik"
-
-traefik:
-  image: 'traefik:v2.5'
-  command: -"--providers.kubernetescrd.enabled=false" # Disable Kubernetes CRD provider
-  volumes:
-    - "./data/traefik": "/etc/traefik"
-  networks:
-    - ergo_network
-    depends_on:
-      - traefik_dashboard
-
-# Optional Prometheus and Grafana for monitoring
-prometheus:
-  image: 'prom/prometheus:v2.4.0'
-  volumes:
-    - "./data/prometheus": "/etc/prometheus"
-  networks:
-    - ergo_network
-
-grafana:
-  image: 'grafana/grafana:latest'
-  ports:
-    - "3000:3000" # Grafana UI interface
-  volumes:
-    - "./data/grafana": "/etc/grafana"
-  networks:
-    - ergo_network
-
-# Optional logs and monitoring setup using Loki and Promtail
-loki:
-  image: 'grafana/loki:v2.4.0'
-  command: '-config.file=/etc/loki/loki-config.yaml' # Path to the Loki configuration file
-  volumes:
-    - "./data/loki": "/etc/loki"
-  networks:
-    - ergo_network
-
-promtail:
-  image: 'grafana/promtail:v2.4.0'
-  command: '-config.file=/etc/promtail/promtail-config.yaml' # Path to the Promtail configuration file
-  volumes:
-    - "./data/promtail": "/etc/promtail"
-  networks:
-    - ergo_network
-
-# Optional portainer for managing containers and volumes
-portainer:
-  image: 'portainer/portainer:2.15.3-Alpine'
-  ports:
-    - "9000:9000" # Portainer UI interface
-  volumes:
-    - "./data/portainer": "/data"
-  networks:
-    - ergo_network
+      - "ERGO_NODE_HOST=ergo_node" # Reference to the ergo_node service
+      - "ERGO_NODE_PORT=12701" # Port where ergo_node is listening (if different from the exposed port)
+      - "ERGO_RPC_USERNAME=user" # Username for RPC authentication (optional, configure as needed)
+      - "ERGO_RPC_PASSWORD=password" # Password for RPC authentication (optional, configure as needed)
     depends_on:
       - ergo_node
-      - traefik
+    restart: unless-stopped
 
-# Optional Longhorn for persistent storage management
-longhorn:
-  image: 'longhorn/longhorn:v1.3.0'
-  command: '-unsafe-storage=true -data-dir="/etc/longhorn"' # Allow using local disk directly as data disk
-  volumes:
-    - "./data/longhorn": "/etc/longhorn"
-  networks:
-    - ergo_network
+  prometheus:
+    image: 'prom/prometheus'
+    container_name: prometheus
+    volumes:
+      - "./prometheus:/etc/prometheus"
+    ports:
+      - "9090:9090" # Prometheus default port (optional, if you want to access from the host)
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    restart: unless-stopped
 
-# Optional backup solution (e.g., Restic)
-restic:
-  image: 'restic/restic:latest'
-  volumes:
-    - "./backup:/backup" # Your local backup repository directory
+  grafana:
+    image: 'grafana/grafana'
+    container_name: grafana
+    ports:
+      - "3000:3000" # Grafana default port (optional, if you want to access from the host)
+    volumes:
+      - "./grafana:/etc/grafana"
+    environment:
+      - "GF_SECURITY_ADMIN_PASSWORD=admin-password" # Set your admin password for Grafana
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  ergo_fullnode_monitoring:
+    image: 'ergo/ergo-telemetry'
+    container_name: ergo_fullnode_monitoring
+    volumes:
+      - "./prometheus/data:/prometheus" # Mount the Prometheus data directory to store metrics
+    depends_on:
+      - ergo_node
+      - prometheus
+    restart: unless-stopped
+
+# Uncomment the following services if you want to enable them
+# ergo_web_wallet:
+#   image: 'ergo/ergo-web-wallet'
+#   container_name: ergo_web_wallet
+#   ports:
+#     - "12345:80"
+#   environment:
+#     - "ERGO_NODE_HOST=ergo_node"
+#     - "ERGO_NODE_PORT=12701"
+#   depends_on:
+#     - ergo_node
+#   restart: unless-stopped
+
+# Note: Adjust the image tags to the latest versions or specific tags you need.

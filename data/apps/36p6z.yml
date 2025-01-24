@@ -1,32 +1,33 @@
 version: '3.8'
-
 services:
   claper:
-    image: claper/claper:latest
+    image: claper/claper:latest # Use the official Claper image from Docker Hub
+    container_name: claper
     ports:
-      - "8080:8080" # HTTP server port
-    volumes:
-      - "./claper-config.yml:/etc/claper/config.yml" # Configuration file for Claper
-      - claper-data:/var/lib/claper
-      - claper-logs:/var/log/claper
-
-  postgres:
-    image: postgres:latest
+      - "8080:8080" # Expose Claper UI on port 8080 of the host
     environment:
-      POSTGRES_USER: claper
-      POSTGRE_PASSWORD: change_this_password
-      POSTGRES_DB: claper
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/claper?useSSL=false
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=secret
+      - SERVER_PORT=8080
+    depends_on:
+      - db
     volumes:
-      - claper-postgres-data:/var/lib/postgresql
+      - claper-data:/tmp/claper-data # Persistent storage for Claper data
 
-  redis:
-    image: redis:latest
+  db:
+    image: mysql:5.7
+    container_name: claper_db
+    environment:
+      MYSQL_DATABASE: claper
+      MYSQL_USER: root
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: secret
+    ports:
+      - "3306:3306" # Expose MySQL on port 3306 of the host for backup and management tools like MySQL Workbench
+    volumes:
+      - claper-db-data:/var/lib/mysql # Persistent storage for MySQL data
 
 volumes:
   claper-data:
-  claper-logs:
-  claper-postgres-data:
-
-networks:
-  default:
-    driver: bridge
+  claper-db-data:

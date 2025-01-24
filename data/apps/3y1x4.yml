@@ -3,52 +3,56 @@ version: '3.8'
 services:
   db:
     image: postgres:12
-    command: --cpuset_affinity='CPU0' --no-client-certs
+    command: 'postgres -c "fsync=off"'
     volumes:
       - db_data:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: docassemble
-      POSTGES_USER: docassemble
-      POSTGRES_PASSWORD: secret
+      POSTGRES_USER: docassemble
+      POSTGRES_PASSWORD: docassemble
     restart: unless-stopped
 
   web:
     image: docassemble/docassemble:latest
+    depends_on:
+      - db
     environment:
-      DOCASSEMBLE_SECRET_KEY: a very long random key for production which includes numbers, special chars and letters
-      DOCASSEMBLE_POSTGRES_URL: postgresql://docassemble:secret@db:5432/docassemble
-      DOCASSEMBLE_ALLOWED_HOSTS: '*'  # Use with caution; for production use a whitelist of allowed hosts
-      DOCASSEMBLE_EMAIL_BACKEND: 'django.core.mail.backends.smtp.EmailBackend'
-      DOCASSEMBLE_EMAIL_HOST: 'smtp.example.com'  # Replace with your email service provider
-      DOCASSEMBLE_EMAIL_PORT: '587'  # Replace with your email service provider's port
-      DOCASSEMBLE_EMAIL_USE_TLS: true
-      DOCASSEMBLE_EMAIL_USE_SSL: false
-      DOCASSEMBLE_EMAIL_ Johnny: 'johnny@example.com'  # Replace with your email address
+      DOCASSEMBLE_DATABASE_URL: postgresql://docassemble:docassemble@db:5432/docassemble
+      DOCASSEMBLE_SECRET_KEY: 'your_secret_key'  # Change this to a secret key for your installation
+    volumes:
+      - ./docs:/usr/src/app/docs
+      - web_data:/usr/src/app/data
     ports:
       - "8000:8000"
-    depends_on:
-      - db
-    restart: unless-stopped
-
-  celery:
-    image: docassemble/docassemble_celery:latest
     environment:
-      DOCASSEMBLE_SECRET_KEY: a very long random key for production which includes numbers, special chars and letters
-      DOCASSEMBLE_REDIS_URL: redis://redis:6379/0
-    depends_on:
-      - db
-      - web
+      GUNICORN_WORKERS: 3
+      GUNICORN_BIND: '0.0.0.0:8000'
     restart: unless-stopped
 
-  redis:
-    image: redis:6
-    command: --protected-mode yes --port 6379
-    expose:
-      - "6379"
+  celery_worker:
+    image: docassemble/docassemle:latest
+    command: celery -A docassemble worker --loglevel=info
+    depends_on:
+      - db
     volumes:
-      - redis_data:/data
+      - web_data:/usr/src/app/data
+    environment:
+      DOCASSEMBLE_DATABASE_URL: postgresql://docassemble:docassemble@db:5432/docassemble
+      DOCASSEMBLE_SECRET_KEY: 'your_secret_key'  # Change this to a secret key for your installation
+    restart: unless-stopped
+
+  celery_beat:
+    image: docassemble/docassemble:latest
+    command: celery -A docassemble beat --loglevel=info
+    depends_on:
+      - db
+    volumes:
+      - web_data:/usr/src/app/data
+    environment:
+      DOCASSEMBLE_DATABASE_URL: postgresql://docassemble:docassemble@db:5432/docassemble
+      DOCASSEMBER_SECRET_KEY: 'your_secret_key'  # Change this to a secret key for your installation
     restart: unless-stopped
 
 volumes:
   db_data:
-  redis_data:
+  web_data:

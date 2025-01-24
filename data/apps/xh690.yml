@@ -1,74 +1,81 @@
 version: '3.7'
-
 services:
   homeassistant:
     image: homeassistant/home-assistant:stable
     container_name: homeassistant
-    ports:
-      - "8123:8123" # HTTP API is available on port 8123
-      - "32394:32394" # Long Polling frontend port (if in use)
-      - "5000:5000"  # Home Assistant API for automation and scripting
     volumes:
-      - "./config:/config" # Mount your local configuration directory to the container
-      - "./addons:/addons"   # Optional, for add-on integration (if you use them)
-      - "/tmp/homeassistant.db:/config/db.json" # Ensures persistent storage of the Home Assistant state
+      - ./config:/config
+      - ./addons:/addons
+      - ./logs:/logs
+      - ./data:/data
+      - ./ssl:/etc/letsencrypt
+    ports:
+      - "8123:8123" # Home Assistant UI port
+      - "6443:6443" # Home Assistant API port (HTTPS)
+      - "32768:32768" # Optional port for mDNS service
     environment:
-      TZ: "Europe/London" # Set your timezone to avoid issues with time-dependent automations
+      TZ: "Europe/London" # Set your timezone as appropriate
+      PUID: "1000" # Use the user ID that Home Assistant should run as (optional)
+      PGID: "1000" # Use the group ID that Home Assistant should run as (optional)
     restart: unless-stopped
     networks:
       - homeassistant_network
 
-  postgres:
-    image: postgres:13
+  mysql:
+    image: mariadb:latest
+    container_name: homeassistant_mysql
+    volumes:
+      - ./db_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_USER: hass_user
+      MYSQL_PASSWORD: hasspassword
+      MYSQL_DATABASE: hass
+    restart: unless-stopped
+    networks:
+      - homeassistant_network
+
+  postgresql:
+    image: postgres:latest
     container_name: homeassistant_postgres
     volumes:
-      - "./db:/var/lib/postgresql/data" # Persist your database data (optional, use if you want persistence)
+      - ./db_data_postgres:/var/lib/postgresql
     environment:
-      POSTGRES_USER: homeassistant
-      POSTGRES_PASSWORD: homeassistant
+      POSTGRES_USER: hass_user
+      POSTGRES_PASSWORD: hasspassword
+      POSTGES_DB: hass
+    restart: unless-stopped
     networks:
       - homeassistant_network
 
-  mongodb:
-    image: mongo:4.4
-    container_name: homeassistant_mongodb
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy:alpine
+    container_name: homeassistant_nginx-proxy
+    ports:
+      - "80:80" # NGINX HTTP port
+      - "443:443" # NGINX HTTPS port
     volumes:
-      - "./mongo:/data/db" # Persist your MongoDB data (optional, use if you want persistence)
-    networks:
-      - homeassistant_network
-
-  homeassistant.addon.:
-    image: homeassistant/conjure:latest
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./data/acme.json:/etc/letsencrypt/acme.json
+      - ./ssl:/etc/letsencrypt
     depends_on:
       - homeassistant
-    ports:
-      - "8081:80"
+    networks:
+      - homeassistant_network
+
+  lettsr:
+    image: letsencrypt/lettsr:latest
+    container_name: homeassistant_lettsr
     volumes:
-      - "./addons/conjure:/config/addons/conjure"
-      # Set the environment variables for the add-on as needed (e.g., API keys, configuration settings)
+      - ./data/acme.json:/etc/letsencrypt/acme.json
+      - ./ssl:/etc/letsencrypt
+    environment:
+      EMAIL: your-email@example.com # Set your email address for Let's Encrypt notifications
+    depends_on:
+      - homeassistant_nginx-proxy
+    networks:
+      - homeassistant_network
 
 networks:
   homeassistant_network:
     driver: bridge
-
-# Optionally, you can enable SSL to secure your Home Assistant instance
-services:
-  homeassistant_nginx:
-    image: linuxserver/letsencrypt-nginx:latest
-    container_name: homeassistant_nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - "./letsencrypt:/etc/letsencrypt"
-      - "./config:/config"
-      - "./addons:/addons"
-    environment:
-      DOMAIN: example.com # Set your domain or subdomain here
-      EMAIL: you@example.com # Your email address for Let's Encrypt
-    depends_on:
-      - homeassistant
-    networks:
-      - homeassistant_network
-
-# Add any additional services or configurations as needed.

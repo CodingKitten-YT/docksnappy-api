@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  webapp:
+    image: takah_webapp:latest # Replace with your actual TakahÄ“ WebApp image tag
+    build: ./webapp
+    ports:
+      - "5000:5000" # Expose the port the application runs on if different from the container port
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=db://db:5432/takah_db # Replace with actual database connection string
+
+  db:
+    image: postgres:13 # Use the desired PostgreSQL image version
+    command: --ctlc-cmd='USR1' --ctlc-interval=30
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: takah_user # Replace with your desired username
+      POSTGRES_PASSWORD: takah_password # Replace with your desired password
+      POSTGRES_DB: takah_db # Replace with your desired database name
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:

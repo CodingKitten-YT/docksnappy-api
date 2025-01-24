@@ -1,36 +1,36 @@
-version: '3'
-
+version: '3.8'
 services:
   flipt-server:
     image: flipt/flipt-server:latest
     ports:
-      - "4001:4001" # The default port for the Flipt API
-    command: >
-      flipd --config.host="0.0.0.0" --config.port=4001 --config.db.uri="postgres://flipt_user:flipt_password@db:5432/flipt?sslmode=disable" --config.redis.uri="redis:6379"
+      - "4671:4671" # HTTP server port
+      - "4672:4672" # gRPC server port (optional, if you want to enable gRPC)
     environment:
-      FLIPT_DB_URI: "postgres://flipt_user:flip@db:5432/flipt?sslmode=disable"
-      FLIPT_REDIS_URI: "redis:6379"
-      FLIPT_JWT_SECRET: "your_jwt_secret" # Change this to a secure, random secret
+      FLIPT_SERVER_JWT_SECRET: your_jwt_secret # A secret key for JWT authentication
+      FLIPT_SERVER_DB_HOSTNAME: db # The service name of the database server (if using an external DB, replace with 'external')
+      FLIPT_SERVER_DB_DATABASE: flipt # Database name
+      FLIPT_SERVER_DB_USERNAME: flipt_user # Database user
+      FLIPT_SERVER_DB_PASSWORD: flipt_password # Database password
+      FLIPT_SERVER_DB_ENFORCE_SSL: "false" # Set to 'true' if SSL is enforced for the database connection (optional)
+    command: >
+      sh -c
+      "trap exit TERM; while :; do sleep 1 & wait $${!}; done && executive start"
+    volumes:
+      - flipt-server-storage:/tmp/flipt
+      - flipt-server-data:/var/lib/flipt
     depends_on:
       - db
-      - redis
-    volumes:
-      - ./data/flipt:/root/.local/share/flipt
 
-  postgres:
-    image: postgres:latest
+  db:
+    image: postgres:13
     environment:
-      POSTGRES_DB: flipt
       POSTGRES_USER: flipt_user
       POSTGRES_PASSWORD: flipt_password
-      PGDATA: /root/data
+      POSTGRES_DB: flipt
     volumes:
-      - ./data/postgres:/root/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U flipt_user"]
-      timeout: 5s
-      retries: 5
+      - flipt-db-data:/var/lib/postgresql
 
-  redis:
-    image: redis:latest
-    command: RedisStart --protected-mode no
+volumes:
+  flipt-server-storage:
+  flipt-server-data:
+  flipt-db-data:

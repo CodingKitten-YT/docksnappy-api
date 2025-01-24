@@ -1,83 +1,106 @@
 version: '3.8'
 
 services:
-  # Mediacms service with persistent storage
   mediacms:
     image: mediacms/mediacms:latest
     container_name: mediacms
-    volumes:
-      - ./media:/var/www/html
-      - ./media/cache:/var/cache/mediacms
-      - ./media/uploads:/var/uploads
-    ports:
-      - "8001:80"
     environment:
+      MEDIACMS_LICENSE_KEY: your_license_key # Replace with your actual license key
       MEDIACMS_DB_HOST: db
+      MEDIACMS_DB_PORT: 5901
+      MEDIACMS_DB_USER: mediacms
+      MEDIACMS_DB_PASSWORD: your_db_password # Replace with a secure password
       MEDIACMS_DB_NAME: mediacms
-      MEDIACMS_DB_USER: root
-      MEDIACMS_DB_PASSWORD: secret
-      MEDIACMS_ADMIN_EMAIL: admin@example.com
-      MEDIACMS_ADMIN_FIRSTNAME: Admin
-      MEDIACMS_ADMIN_LASTNAME: User
-      MEDIACMS_SITE_TITLE: "Example Site"
-      MEDIACMS_SITE_URL: "https://example.com"
-      MEDIACMS_MAILER_DRIVER: smtp
-      MEDIACMS_MAILER_HOST: mailhog
-      MEDIACMS_MAILER_PORT: 8025
-      MEDIACMS_MAILER_ENCRYPTION: none
+      JAVA_OPTS: -Xmx8g -Xms4g
+    ports:
+      - "8081:8080" # MediaCMS Web UI port
     depends_on:
       - db
-      - mailhog
-    networks:
-      - mediacms-net
+    volumes:
+      - ./mediacms-data:/var/lib/media-cms
+      - ./mediaocms-deploy:/opt/mediaocms/deploy
+      - ./mediaocms-config:/opt/mediaocms/config
 
-  # Database service (MySQL)
   db:
-    image: mysql:5.7
-    volumes:
-      - ./db:/var/lib/mysql
+    image: postgres:13
+    container_name: mediacms_db
     environment:
-      MYSQL_DATABASE: mediacms
-      MYSQL_USER: root
-      MYSQL_PASSWORD: secret
-      MYSQL_ROOT_PASSWORD: secret
-    networks:
-      - mediacms-net
+      POSTGRES_USER: mediacms
+      POSTGRES_PASSWORD: your_db_password # Same password as above
+      POSTGRES_DB: mediacms
+    volumes:
+      - ./mediacms-data:/var/lib/postgresql/data
 
-  # Nginx proxy service
-  nginx-proxy:
-    image: jwilder/nginx-proxy:stable
-    container_name: nginx-proxy
+  php:
+    image: mediaocms/php:8.0
+    container_name: mediacms_php
+    environment:
+      MYSQL_HOST: db
+      MYSQL_USER: mediacms
+      MYSQL_PASSWORD: your_db_password # Same password as above
+      MYSQL_DB: mediacms
     ports:
-      - "80:80"
-      - "443:443"
-    depends_on:
-      - mediacms
+      - "8082:80" # MediaOCMS Web UI port
     volumes:
-      - ./nginx:/etc/nginx/conf.d
-    networks:
-      - mediacms-net
+      - ./mediaocms-deploy:/opt/mediaocms/deploy
+      - ./mediaocms-config:/opt/mediaocms/config
 
-  # Let's Encrypt client for automatic SSL certificate generation
-  letty:
-    image: certbot/certbot:latest
-    container_name: letty
-    volumes:
-      - ./letsencrypt:/etc/letsencrypt
+  redis:
+    image: redis:6.0
+    container_name: mediacms_redis
+
+  nginx:
+    image: mediaocms/nginx:stable
+    container_name: mediacms_nginx
+    ports:
+      - "80:80" # HTTP port to access MediaCMS from the host network
     depends_on:
-      - nginx-proxy
+      - php
+    volumes:
+      - ./mediaocms-deploy:/opt/mediaocms/deploy
+      - ./mediaocms-config:/opt/mediaocms/config
 
-  # Mailcatcher for testing emails
   mailhog:
-    image: mailhog/mailhog:latest
-    container_name: mailhog
+    image: mailhog/mailhog
+    container_name: mediacms_mailhog
     ports:
-      - "8025:8025"
-    environment:
-      MAILCATCHER_HOST_NAME: localhost
-    networks:
-      - mediacms-net
+      - "8025:8025" # SMTP port to interact with MailHog
+      - "8001:8001" # Admin UI port for MailHog
 
-networks:
-  mediacms-net:
-    driver: bridge
+  search:
+    image: mediacms/elasticsearch:7.13.1
+    container_name: mediacms_search
+    environment:
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+    ports:
+      - "9200:9200" # Elasticsearch HTTP port
+      - "9300:9300" # Elasticsearch TCP port
+
+  logsender:
+    image: mediacms/logsender:latest
+    container_name: mediacms_logsender
+    environment:
+      LOGSENDER_URL: "http://monitoring-stack:8080/api/v1/receives" # Replace with the Monitoring Stack service URL
+
+  monitoring-stack:
+    image: prom/prometheus:v2.3.1
+    container_name: mediacms_monitoring
+    volumes:
+      - ./prometheus:/etc/prometheus
+    ports:
+      - "9090:9090" # Prometheus UI port
+
+  grafana:
+    image: grafana/grafana:7.5.3
+    container_name: mediacms_grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: your_grafana_password # Replace with a secure password
+    ports:
+      - "3000:3000" # Grafana UI port
+    depends_on:
+      - monitoring-stack
+
+volumes:
+  mediacms-data:
+  mediaocms-deploy:
+  mediaocms-config:

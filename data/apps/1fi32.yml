@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  restreamer:
+    image: 'restreamer/restreamer:latest' # Use the official Restreamer image or a specific tag/version
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/London # Set your timezone, e.g., Europe/London for UTC+1
+      - OBS_SERVER_PORT=6443 # Port for the OBS server (default is 6443)
+      - RESTRAMER_WEBSOCKET_ENABLED=true # Enable WebSocket interface for controlling Restreamer
+    ports:
+      - "8080:8080" # Expose the admin UI on port 8080 of the host
+      - "5432:5432"  # PostgreSQL database (if using as a database service)
+      - "6443:6443"  # OBS Server (if you are running OBS Studio on the same Docker host)
+    volumes:
+      - './restreamer-data:/root/.config/restreamer' # Persist Restreamer data to the specified host path
+      - './obs-data:/root/.local/share/obs-studio' # Persist OBS Studio settings and recordings if running OBS Server
+    networks:
+      - restream_network
+
+  postgres: # If using PostgreSQL as a database service
+    image: 'postgres:latest'
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=restreamer # The name of the database to create (default: 'postgres')
+      - POSTGRES_USER=restreamer # The username for the database (default: 'postgres')
+      - POSTGRES_PASSWORD=changeit # The password for the database (default: 'postgres')
+    volumes:
+      - './obs-data:/root/.local/share/obs-studio' # Same as above, if using PostgreSQL
+    networks:
+      - restream_network
+
+networks:
+  restream_network:

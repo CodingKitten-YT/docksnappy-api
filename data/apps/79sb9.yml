@@ -1,19 +1,23 @@
-version: '3.8'
+version: '3'
 services:
   lighttpd:
-    image: lighttpd/lighttpd:1.46.2-alpine
+    image: lighttpd/lighttpd:1.45.2-alpine
     container_name: lighttpd
     ports:
-      - "80:80" # Map HTTP port 80 to the container
-      - "443:443": # Map HTTPS port 443 to the container if using SSL
+      - "80:80" # Map HTTP port 80 on the host to port 80 in the container
     volumes:
-      - ./data:/var/www/html # Mount a volume for the web files (adjust the path as needed)
-      - lighttpd-conf.conf:/etc/lighttpd/lighttpd.conf # Mount custom Lighttpd configuration file (optional)
-    environment:
-      - LIGHTTPD_USER=www-data # Set the user for the web server processes
-      - LIGHTTPD_GROUP=www-data # Set the group for the web server processes
-    networks:
-      - webnet
+      - ./data:/var/www/html # Mount your project directory to the Lighttpd document root
+    depends_on:
+      - php-fpm
 
-networks:
-  webnet:
+  php-fpm:
+    image: php:7.4-fpm
+    container_name: php-fpm
+    volumes:
+      - ./data:/var/www/html # Same volume as Lighttpd to share the PHP code
+    ports:
+      - "9000:9000" # Map PHP-FPM port 9000 on the host to the same port in the container
+    user: "www-data"
+    environment:
+      - PHP_TIMEZONE=UTC
+      - APP_ENV=prod # or any other environment variable you want to set for your application

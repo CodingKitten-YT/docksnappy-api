@@ -1,46 +1,46 @@
-version: '3.7'
+version: '3.8'
 
 services:
   ejabberd:
-    image: ejabberd/ejabberd:latest # Use a specific tag if needed
+    image: ejabberd/ejabberd
     container_name: ejabberd
     ports:
-      - "5222-5280:5222-5280" # XMPP client ports (canonical and non-canonical)
-      - "443:444" # HTTPS port for admin web interface (if configured)
-      - "5281:5281" # Administrative interfaces (EjabberdCP, AdminCP)
+      - "5222-5223:5222-5223" # XMPP client ports (C2S)
+      - "5198-5199:5198-5199" # XMPP server admin interface
+      - "4430:4430"              # Admin web interface (HTTPS)
+      - "5445:5445"              # XMPP MUC ports (pubsub)
     volumes:
-      - ejabberd-data:/var/lib/ejabberd
-      - ejabberd-config:/etc/ejabberd
-      - ejabberd-logs:/var/log/ejabberd
+      - ./ejabberd/conf.d:/etc/ejabberd/conf.d:ro
+      - ./ejabberd/logs:/var/log/ejabberd:rw
+      - ./ejabberd/plugins:/etc/ejabberd/plugins:rw
+      - ./ejabberd/cacerts:/etc/ejabberd/cacerts:ro
     environment:
-      EJABBERD_CREATE_ADMIN: "admin" # Create an admin user upon first run
-      EJABBERD_HOSTNAME: "0.0.0.0" # Bind to all interfaces
-      TZ: "Europe/London" # Timezone for logs and such (set your preferred timezone)
-    command: start
-    restart: unless-stopped
+      EJABBERD_HOSTNAME: 'example.com' # Set to your domain
+      EJABBERD_SERVER_DOMAIN: 'example.com' # Set to your domain
+      TZ: 'Europe/London'                # Set to your timezone
+      EJABBERD_ADMIN_PASSWORD: 'adminpassword' # Set your admin password
+      EJABBERD_SSL_SUPPORT: 'true'
+      SSL_CERT_FILE: '/etc/ejabberd/ssl/ejabberd.crt'
+      SSL_KEY_FILE: '/etc/ejabberd/ssl/ejabberd.key'
     networks:
-      - ejabberd_network
+      - ejabberd-network
+    healthcheck:
+      test: ["CMD", "curl", "--silent", "--fail", "localhost:5222"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
 
-volumes:
-  ejabberd-data:
-  ejabberd-config:
-  ejabberd-logs:
+  postgres:
+    image: postgres:latest
+    volumes:
+      - ./ejabberd/db:/var/lib/postgresql/data:rw
+    environment:
+      POSTGRES_DB: ejabberd
+      POSTGRES_USER: ejabberd
+      POSTGRES_PASSWORD: ejabberdpw
+    networks:
+      - ejabberd-network
 
 networks:
-  ejabberd_network:
-
-# Optionally, you can define a separate service for PostgreSQL if you're not using an existing database
-# postgres:
-#   image: postgres:latest
-#   volumes:
-#     - postgres-data:/var/lib/postgresql
-#   environment:
-#     POSTGRES_DB: ejabberd
-#     POSTGRES_USER: ejabberd
-#     POSTGRES_PASSWORD: secret
-#   restart: unless-stopped
-
-# Optionally, mount the configuration directory from the host to allow for easy editing of configuration files
-# ejabberd-config:
-#   binds:
-#     - ./ejabberd-config:/etc/ejabberd
+  ejabberd-network:
+    driver: bridge

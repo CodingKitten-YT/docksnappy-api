@@ -1,80 +1,78 @@
 version: '3.8'
 
 services:
-  # PostgreSQL database
-  db:
-    image: postgres:12
-    volumes:
-      - type: volume
-        source: castopod-db
-        target: /var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: castopod
-      POSTGRES_USER: castopod
-      POSTGRES_PASSWORD: change_this_password
-    ports:
-      - "5432:5432"
-
-  # Redis cache
-  redis:
-    image: redis:6-alpine
-    volumes:
-      - type: volume
-        source: castopod-redis
-        target: /data
-
-  # CastoPod application server with HTTPS enabled by default
-  app:
-    image: castopod/castopod:latest
+  castopod:
+    image: 'ghcr.io/castopod/castopod:latest'
+    container_name: castopod
     restart: unless-stopped
+    ports:
+      - "80:80" # HTTP
+      - "443:443" # HTTPS (requires a valid SSL certificate)
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ="Europe/Paris" # Set to your timezone
+      - SERVICE_SECRET=secret
+      - DB_HOST=db
+      - DB_USER=castopod
+      - DB_PASSWORD=change_me
+      - DB_DATABASE=postgres
+      - REDIS_HOST=redis
+    volumes:
+      - "castopod:/data"
+      - "castopod_config:/config"
     depends_on:
       - db
       - redis
-    volumes:
-      - type: bind
-        source: "${HOME}/.local/share/castopod:/home/castopod/.local/share/castopod"
-      - type: volume
-        source: castopod-app
-        target: /var/www/castopod
-    environment:
-      # Database
-      DATABASE_URL: "postgres://castopod:change_this_password@db:5432/castopod"
-      # Redis
-      REDIS_URL: "redis://redis:6379"
-      # Path to store media files, should be a docker volume
-      SERVICE_UPLOAD_DIR: /var/www/castopod/uploads
-      # Default protocol (http or https)
-      DEFAULT_PROTOCOL: https
-      # CastoPod specific environment variables
-      APP_ENV: production
-    ports:
-      - "80:80"
-      - "443:443"
+      - filer
+    networks:
+      - castopod_net
 
-  # Nginx for HTTPS proxy
-  nginx-proxy:
-    image: jwilder/nginx-proxy:alpine
+  database:
+    image: 'postgres:latest'
+    container_name: castopod_db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=castopod
+      - POSTGRES_PASSWORD=change_me
+      - POSTGRES_DB=castopod
+    volumes:
+      - "castopod_db:/var/lib/postgresql/data"
+    networks:
+      - castopod_net
+
+  redis:
+    image: 'redis:latest'
+    container_name: castopod_redis
+    restart: unless-stopped
+    volumes:
+      - "castopod_redis:/data"
+    networks:
+      - castopod_net
+
+  filer:
+    image: 'linuxserver/deluge:latest'
+    container_name: filer
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UPLOAD_DIRS=/srv/deluge/incomplete,/srv/deluge/downloads
+    volumes:
+      - "castopod_filer:/srv/deluge"
+    ports:
+      - "5141:5141" # Deluge Web UI
     depends_on:
-      - app
-    volumes:
-      - ./letsencrypt:/letsencrypt
-      - castopod-app:/var/www/castopod
-    ports:
-      - "32768:80"
-      - "32769:443"
-    environment:
-      NGROK_PANID: your_ngrok_panid # Optional, for link authorization with Let's Encrypt
-      NGROK_HOST_HEADER: 0.0.0.0:32768, 0.0.0.0:32769
+      - redis
+    networks:
+      - castopod_net
 
-  # Optionally you can use Certbot to get a free SSL certificate from Let's Encrypt
-  letsencrypt:
-    image: certbot/certbot
-    volumes:
-      - ./letsencrypt:/letsencrypt
-      - castopod-app:/var/www/castopod
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;}
+networks:
+  castopod_net:
+    driver: bridge
 
 volumes:
-  castopod-db:
-  castopod-redis:
-  castopod-app:
+  castopod:
+  castopod_config:
+  castopod_db:
+  castopod_filer:

@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  txtdot-server:
+    image: 'txtdot/txtdot-server:latest'
+    ports:
+      - '5000:5000' # HTTP API
+    command: '/app/run_server.sh --host=0.0.0.0'
+    volumes:
+      - './data:/app/data'
+      - './config:/app/config'
+    environment:
+      - POSTGRES_USER=txtdot
+      - POSTGRES_PASSWORD=changeme
+      - DB_DATABASE=txtdotdb
+      - DB_HOST=postgres
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  postgres:
+    image: 'postgres:13'
+    volumes:
+      - './data/db:/var/lib/postgresql/data'
+    environment:
+      - POSTGRES_USER=txtdot
+      - POSTGRES_PASSWORD=changeme
+      - POSTGRES_DB=txtdotdb
+    healthcheck:
+      test: ["cmd", "pg_isready", "-U", "postgres"]
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  celery_worker:
+    image: 'txtdot/txtdot-celery-worker:latest'
+    volumes:
+      - './data:/app/data'
+      - './config:/app/config'
+    environment:
+      - BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+      - DB_DATABASE=txtdotdb
+      - POSTGRES_USER=txtdot
+      - POSTGES_PASSWORD=changeme
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+
+  redis:
+    image: 'redis:6'
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ["cmd", "redis-cli", "-h", "localhost", "ping"]
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  nginx-proxy:
+    image: 'jwilder/nginx-proxy:stable'
+    ports:
+      - '80:80'
+      - '443:443'
+    depends_on:
+      - txtdot-server
+    volumes:
+      - '/var/run/docker.sock:/tmp/docker.sock'
+    restart: unless-stopped
+
+  letsencrypt-manager:
+    image: 'jrcsob/letsencrypt-nginx-proxy-companion:stable'
+    depends_on:
+      - nginx-proxy
+    volumes:
+      - '/var/run/docker.sock:/tmp/docker.sock'
+      - './letsencrypt:/etc/letsencrypt'
+    restart: unless-stopped

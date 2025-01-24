@@ -1,51 +1,47 @@
 version: '3.8'
 services:
   app:
-    image: forgejo/forgejo-server:latest
-    container_name: forgejo-server
-    environment:
-      FORGEJO_ENVIRONMENT: production # or use another mode like development, testing, etc.
-      JWT_SECRET: your_jwt_secret # replace with a strong secret key
-      DATABASE_HOST: db
-      DATABASE_NAME: forgejo
-      DATABASE_USER: forgejo_user
-      DATABASE_PASSWORD: forgejo_password
+    image: forgejo/forgejo:latest # Use the official ForgeJo image from Docker Hub
     ports:
-      - "8080:8080"
+      - "80:80" # Map HTTP port 80 on the host to port 80 in the container
+    environment:
+      FORGEJO_APP_API_KEY: your_api_key # Set your ForgeJo application API key here
+      FORGEJO_DB_HOST: db # Reference the database service
+      FORGEJO_DB_USERNAME: your_db_user # Your database username
+      FORGEJO_DB_PASSWORD: your_db_password # Your database password
+      FORGEJO_DB_DATABASE: your_db_name # Your database name
+      FORGEJO_SMTP_HOST: smtp # If using SMTP for emails, reference the SMTP service if configured
+      FORGEJO_SMTP_PORT: 587 # If using SMTP for emails, set the correct port
+      FORGEJO_SMTP_USERNAME: your_smtp_user # Your SMTP username if needed
+      FORGEJO_SMTP_PASSWORD: your_smtp_password # Your SMTP password if needed
+    volumes:
+      - ./app:/var/www/html # Mount your local application directory to the container's application directory
     depends_on:
       - db
-    volumes:
-      - ./app:/var/app
-      - ./data:/var/data
-    restart: unless-stopped
+      - smtp # Depends on database and SMTP services if configured
+    restart: unless-stopped # Ensure the app restarts automatically on failure
 
   db:
-    image: postgres:13
-    container_name: forgejo-db
-    environment:
-      POSTGRES_DB: forgejo
-      POSTGRES_USER: forgejo_user
-      POSTGRES_PASSWORD: forgejo_password
-      POSTGRES_HOST: db # this is the default and should match the service name
+    image: postgres:latest # Use the official PostgreSQL image from Docker Hub
     volumes:
-      - ./db:/var/lib/postgresql/data
-    restart: unless-stopped
+      - ./db:/var/lib/postgresql # Mount your local database directory to the container's database directory
+    environment:
+      POSTGRES_DB: your_db_name # Your database name
+      POSTGRES_USER: your_db_user # Your database username
+      POSTGRES_PASSWORD: your_db_password # Your database password
+    restart: unless-stopped # Ensure the db restarts automatically on failure
 
-  worker:
-    image: forgejo/forgejo-worker:latest
-    container_name: forgejo-worker
+  smtp:
+    image: smtplife/smtplife:stable-alpine # Use the official SMTP service image from Docker Hub (example using smtplife)
     environment:
-      WORKER_QUEUES: "default" # specify your queues here
-      WORKER_MODE: worker # or set it to 'daemon' if you prefer daemon mode
-      FORGEJO_ENVIRONMENT: production
-      JWT_SECRET: your_jwt_secret
-    depends_on:
-      - db
-      - app
-    volumes:
-      - ./app:/var/app
-    restart: unless-stopped
+      SMTPLIFE_SMTPSERVER_HOSTNAME: your_email_server # Your email server hostname
+      SMTPLIFE_SMTPSERVER_PORT: 587 # Your email server port
+      SMTPLIFE_SMTPSERVER_USERNAME: your_smtp_user # Your SMTP username if needed
+      SMTPLIFE_SMTPSERVER_PASSWORD: your_smtp_password # Your SMTP password if needed
+    ports:
+      - "25:25" # Map SMTP port 25 on the host to port 25 in the container (example using smtplife)
+    restart: unless-stopped # Ensure the smtp service restarts automatically on failure
 
 networks:
-  forgejo_net:
+  default:
     driver: bridge

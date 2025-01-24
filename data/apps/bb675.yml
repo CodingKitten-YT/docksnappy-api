@@ -1,52 +1,77 @@
 version: '3.8'
 
 services:
-  hi_events_backend:
-    image: hi_events_backend:latest
+  hi_events_web:
+    image: hi_events_web:latest
     build:
-      context: ./backend
+      context: .
+      dockerfile: Dockerfile-web
     ports:
-      - "5000:5000"
-    command: dotnet run --no-build --configuration Release
-    environment:
-      - DOTNET_ENVIRONMENT=Production
+      - "5000:80"
     depends_on:
-      - hi_events_db
-    volumes:
-      - ./backend:/app
+      - hi_events_api
+      - hi_events_job_queue
+    environment:
+      - DOTNET_ENVIRONMENT=Development
     networks:
-      - hi_events_network
+      - hi-events-network
 
-  hi_events_frontend:
-    image: hi_events_frontend:latest
+  hi_events_api:
+    image: hi_events_api:latest
     build:
-      context: ./frontend
-    ports:
-      - "80:80"
-    command: npm run start
+      context: .
+      dockerfile: Dockerfile-api
     environment:
-      - REACT_APP_BACKEND_URL=http://hi_events_backend:5000
-    depends_on:
-      - hi_events_backend
-    volumes:
-      - ./frontend:/app
+      - DOTNET_ENVIRONMENT=Development
+      - DATA:/"{ \"connectionStrings\": { \"DefaultConnection\": \"Server=(localdb)\\mssqllocaldb;Database=HiEvents-Dev-Db;Trusted_Connection=True;\""}"
     networks:
-      - hi_events_network
+      - hi-events-network
 
-  hi_events_db:
+  hi_events_job_queue:
+    image: hi_events_job_queue:latest
+    build:
+      context: .
+      dockerfile: Dockerfile-job-queue
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_USER=user
+      - RABBITMQ_PASS=password
+      - DOTNET_ENVIRONMENT=Development
+    networks:
+      - hi-events-network
+
+  rabbitmq:
+    image: rabbitmq:3.8-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USERNAME=user
+      - RABBITMQ_DEFAULT_PASSWORD=password
+    networks:
+      - hi-events-network
+
+  redis:
+    image: redis:alpine
+    networks:
+      - hi-events-network
+
+  postgres:
     image: postgres:13
     environment:
-      - POSTGRES_DB=hi_events_db
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
+      - POSTGRES_USER=sa
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=HiEvents-Dev-Db
+    ports:
+      - "5432:5432"
     volumes:
-      - hi_events_db_data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data/
     networks:
-      - hi_events_network
+      - hi-events-network
 
 volumes:
-  hi_events_db_data:
+  postgres-data:
 
 networks:
-  hi_events_network:
+  hi-events-network:
     driver: bridge

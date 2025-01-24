@@ -1,19 +1,41 @@
-version: '3.8'
+version: '3.7'
 
 services:
   hortusfox:
-    image: hortus/hortusfox:latest # Use the official HortusFox image from Docker Hub
+    image: 'hortus/hortusfox:latest' # Use the official HortusFox image from Docker Hub
     container_name: hortusfox
     ports:
-      - "5000:5000" # Expose the port HortusFox uses for its UI (typically 5000)
-    environment:
-      - PGDATA=/var/lib/postgresql/data # Essential for data persistence
-      - POSTGRES_USER=hortusfox # Username for PostgreSQL within HortusFox
-      - POSTGRES_PASSWORD=hortusfox123 # Password for PostgreSQL within HortusFox, change this!
-      - POSTGRES_DB=hortusfox # Default database name for new databases
+      - "5901:5901" # Expose the default port HortusFox uses for its web interface
     volumes:
-      - hortusfox-data:/var/lib/postgresql/data # Mount a volume for data persistence
-      - ./config.json:/etc/hortusfox/appsettings.json # Mount your custom config file if you have one
+      - type: bind
+        source: ./hortusfox-data
+        target: /var/lib/hortusfox
+    environment:
+      POSTGIS_DB: postgres # Name of the existing PostgreSQL database to connect to
+      POSTGIS_USER: user # PostgreSQL username to connect with
+      POSTGIS_PASSWORD: password # PostgreSQL password
+    depends_on:
+      - postgres
 
+  postgres:
+    image: 'postgres:13' # Use the official PostgreSQL image
+    container_name: postgres
+    volumes:
+      - type: bind
+        source: ./postgres-data
+        target: /var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: hortusfox # Name of the database to create for HortusFox
+      POSTGRES_USER: user # Username for PostgreSQL
+      POSTGRES_PASSWORD: password # Password for PostgreSQL
+    init: true # Initialize the database when the container starts
+
+# Optional volumes to persist data, make sure the host directories exist
 volumes:
   hortusfox-data:
+  postgres-data:
+
+# Network setup (optional, default is fine for most setups)
+networks:
+  default:
+    driver: bridge

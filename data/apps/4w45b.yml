@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  remark4j:
+    image: "remark4j/remark4j:latest" # Use the official remark4j Docker image
+    ports:
+      - "8080:8080" # Expose the default HTTP port
+    environment:
+      JAVA_OPTS: "-Xms512m -Xmx1g" # Set initial and max heap size (optional, depending on your needs)
+      SERVICE_MODE: "standalone" # Operating mode (can be 'standalone', 'cluster' or 'single-node')
+    volumes:
+      - remark-data:/tmp/data # Mount a volume for data persistence
+
+  postgres:
+    image: "postgres:13" # Use the official PostgreSQL image
+    environment:
+      POSTGRES_DB: "remark"
+      POSTGRES_USER: "remark"
+      POSTGRES_PASSWORD: "remark42"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data # Mount a volume for PostgreSQL data persistence
+
+networks:
+  default:
+    driver: bridge
+
+volumes:
+  remark-data:
+  postgres-data:

@@ -1,56 +1,51 @@
 version: '3.8'
-
 services:
-  hyperswitch:
-    image: 'hyperhq/hyperswitch:latest' # Use the official HyperSwitch Docker image
+  hyper_switch:
+    image: 'hyperorchestrator/hyperswitch:latest'
     container_name: hyperswitch
-    ports:
-      - "8080:8080" # Expose HyperSwitch UI on port 8080 of the host
     environment:
-      HYPERSWITCH__API__TOKEN__ADMIN: 'your_admin_token' # Set an admin token for API access
-      HYPERSWITCH__DB__HOST: 'db' # Specify the service name for the database (defined below)
-      HYPERSWITCH__DB__NAME: 'hyperswitch' # Database name
-      HYPERSWITCH__DB__USER: 'hyperuser' # Database user
-      HYPERSWITCH__DB__PASSWORD: 'hyperpass' # Database password
+      - ENABLE_WEB_UI=1
+      - DB_TYPE=mysql
+      - DB_USERNAME=hyperdbuser
+      - DB_PASSWORD=hyperdbpass
+      - DB_DATABASE=hyperswitch
+      - DB_HOST=hyperdb_1
+      - REDIS_URL=redis_1:6379
+    ports:
+      - "8080:8080" # Web UI
+      - "5432:5432"  # PostgreSQL (optional, if using PostgreSQL)
+      - "6379:6379"  # Redis (optional, if using Redis)
     volumes:
-      - './data:/data' # Mount a volume for data persistence (optional, but recommended)
+      - './hyper_switch/:/data'
     depends_on:
-      - db
+      - hyperdb_1
+      - redis_1
+    networks:
+      - hyperswitch_network
 
-  db:
-    image: 'postgres:latest' # Use the official PostgreSQL Docker image
+  hyper_switch_db:
+    image: 'mysql:latest'
     container_name: hyperdb
     environment:
-      POSTGRES_DB: 'hyperswitch' # Database name
-      POSTGRES_USER: 'hyperuser' # Database user
-      POSTGRES_PASSWORD: 'hyperpass' # Database password
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: hyperswitch
+      MYSQL_USER: hyperdbuser
+      MYSQL_PASSWORD: hyperdbpass
     volumes:
-      - './db_data:/var/lib/postgresql/data' # Mount a volume for database data persistence (optional, but recommended)
+      - './hyper_switch_db/:/var/lib/mysql'
+    networks:
+      - hyperswitch_network
 
   redis:
-    image: 'redis:latest' # Use the official Redis Docker image
-    container_name: hyperredis
+    image: 'redis:latest'
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - './hyper_switch_redis/:/data'
+    networks:
+      - hyperswitch_network
 
-# Define networks to be used by each service
 networks:
-  hyperswitch_net:
+  hyperswitch_network:
     driver: bridge
-
-# Define a custom network for HyperSwitch and its dependencies
-networks:
-  hyperswitch_custom_net:
-    driver: bridge
-
-# Link services to the same network (optional, if using `networks` as defined above)
-services:
-  hyperswitch:
-    networks:
-      - hyperswitch_custom_net
-
-  db:
-    networks:
-      - hyperswitch_custom_net
-
-  redis:
-    networks:
-      - hyperswitch_custom_net

@@ -1,45 +1,27 @@
 version: '3.8'
 
 services:
-  db:
-    image: postgres:12
-    volumes:
-      - db_data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: chirpy
-      POSTGRES_USER: chirpy
-      POSTGRES_PASSWORD: change_this_password
-    ports:
-      - "5432:5432"
-
   chirpy:
-    image: chrislott.github.io/chirpy/chirpy-celery:latest
-    environment:
-      CHIRPY_DB_URL: postgres://chirpy:change_this_password@db:5432/chirpy
-      CHIRPY_SECRET_KEY: 'CHANGE_THIS'
-      CHIRPY_EMAIL_BACKEND: 'django.core.mail.backends.smtp.EmailBackend'
-      CHIRPY_EMAIL_HOST: 'localhost'
-      CHIRPY_EMAIL_PORT: 1025
-      CHIRPY_EMAIL_USE_TLS: true
+    image: chirpy/chirpy:latest  # Using the official Chirpy Docker image
     ports:
-      - "8000:8000"
+      - "5000:5000"  # Expose Chirpy's web server on host port 5000
+    volumes:
+      - "./data:/code/data"  # Mount a local data volume to store the database, etc.
+      - "./chirpy:/code/chirpy"  # Mount the chirpy directory in the container to store user-generated content
+    environment:
+      - "DB_HOST=db"  # Set the database host to 'db' service
+      - "DB_USER=chirpy"  # Database username
+      - "DB_PASSWORD=chirpy"  # Database password
+      - "DB_NAME=chirpy"  # Database name
+      - "SECRET_KEY=secret"`# Secret key for Chirpy's session management
     depends_on:
       - db
-      # - worker
-    volumes:
-      - chirpy_media:/code/chirpy/media
 
-  worker:
-    image: chrislott.github.io/chirpy/chirpy-celery:latest
-    command: celery -A chirpy.celery_app worker --loglevel=info
-    depends_on:
-      - chirpy
+  db:
+    image: postgres:latest  # Using the official PostgreSQL Docker image
     environment:
-      CHIRPY_DB_URL: postgres://chirpy:change_this_password@db:5432/chirpy
-      CHIRPY_SECRET_KEY: 'CHANGE_THIS'
+      - "POSTGRES_DB=chirpy"  # Database name
+      - "POSTGRES_USER=chirpy"  # Database username
+      - "POSTGRES_PASSWORD=chirpy"  # Database password
     volumes:
-      - chirpy_media:/code/chirpy/media
-
-volumes:
-  db_data:
-  chirpy_media:
+      - "./db_data:/var/lib/postgresql/data"  # Mount a local db_data volume to store database data persistently

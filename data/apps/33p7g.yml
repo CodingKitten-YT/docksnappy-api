@@ -1,29 +1,35 @@
 version: '3.8'
+
 services:
-  briefkasten-postgres:
-    image: postgres:13
-    command: postgres -c 'listen_addresses = 0.0.0.0'
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+  briefkasten_db:
+    image: postgres:12
     environment:
       POSTGRES_DB: briefkasten
-      POSTGES_USER: briefkasten
-      POSTGRES_PASSWORD: your_secret_password
+      POSTGRES_USER: briefkasten
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "briefkasten"]
+      timeout: 10s
+      retries: 5
     ports:
       - "5432:5432"
 
-  briefkasten-app:
-    image: briefkasten/briefkasten
-    depends_on:
-      - briefkasten-postgres
+  briefkasten_app:
+    image: briefkasten/briefkasten:latest
     environment:
-      DATABASE_URL: postgres://briefkasten:your_secret_password@localhost:5432/briefkasten
-      JWT_SECRET: your_jwt_secret
+      DATABASE_URL: postgres://briefkasten:secret@briefkasten_db:5432/briefkasten
+      SECRET_KEY: a-very-secret-key
+      DEBUG: false
+    depends_on:
+      - briefkasten_db
     ports:
-      - "8080:8080"
-    volumes:
-      - briefkasten_data:/tmp/cache
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/ || exit 1"]
+      timeout: 10s
+      retries: 5
 
 volumes:
-  postgres_data:
-  briefkasten_data:
+  briefkasten_media:

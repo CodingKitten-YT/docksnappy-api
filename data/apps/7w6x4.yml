@@ -1,60 +1,48 @@
 version: '3.8'
-
 services:
   audiobookshelf:
-    image: audiobookshelf/audiobookshelf:latest  # Use the latest official release or a specific tag if needed
+    image: audiobookshelf/audiobookshelf:latest
     container_name: audiobookshelf
     ports:
-      - "8000:8000"  # Expose Audiobookshelf's default web interface port (host:container)
+      - "8000:8000" # HTTP interface, change if you want to use a different host port
+    volumes:
+      - "./audiobookshelf:/data" # Path to your local data, where Audiobookshelf will store its files. Make sure this directory exists and has the necessary permissions.
+      - audiobookshelf_media:/media     # Media storage
     environment:
-      - TZ=Europe/London  # Set the timezone, change as needed
-      - SECRET_KEY=changeme  # You should set this to a random secret key for security purposes
-      - POSTGRES_DB=audiobookshelf  # Database name for PostgreSQL
-      - POSTGRES_USER=audiobookshelf  # Username for the PostgreSQL database
-      - POSTGRES_PASSWORD=changeme  # Password for the PostgreSQL database
-    volumes:
-      - ./data:/code/data  # Persist Audiobookshelf data to a host directory (create this directory)
-      - ./audiobookshelf.db.sql:/docker-entrypoint-initdb.d/audiobookshelf.db.sql  # Optional: import SQL on first run
-    depends_on:
-      - postgres
+      - TZ=Europe/London  # Timezone, change to your local timezone if needed
+      - USER=user           # Default user, you can change this to any username you prefer
+      - PGID=100             # Default user's group ID
+      - PGDG=100             # Default user's primary group ID
+    restart: unless-stopped
+    networks:
+      - audiobookshelf_network
 
-  postgres:
-    image: postgres:latest
-    container_name: postgres
-    volumes:
-      - ./data/postgres:/var/lib/postgresql/data  # Persist PostgreSQL data to a host directory (create this directory)
-    environment:
-      - POSTGRES_DB=audiobookshelf
-      - POSTGRES_USER=audiobookshelf
-      - POSTGRES_PASSWORD=changeme
-    ports:
-      - "5432:5432"  # Optional: Expose PostgreSQL port (host:container) for direct database access
-
-  redis:
-    image: redis:latest
-    container_name: redis
-
-  celery_beat:
-    image: audiobookshelf/audiobookshelf:latest
-    container_name: audiobookshelf_celery_beat
-    command: celery -A audiobookshelf worker --loglevel=info --concurrency=1 --detached
-    volumes:
-      - ./data:/code/data
-    depends_on:
-      - postgres
-      - audiobookshelf
-
-  celery_worker:
-    image: audiobookshelf/audiobookshelf:latest
-    container_name: audiobookshelf_celery_worker
-    command: celery -A audiobookshelf worker --loglevel=info --concurrency=1 --detached
-    volumes:
-      - ./data:/code/data
-    depends_on:
-      - postgres
-      - audiobookshelf
-      - redis
+volumes:
+  audiobookshelf_media:
 
 networks:
-  default:
-    driver: bridge
+  audiobookshelf_network:
+
+# Optionally, you can define a 'db' service if you want to run PostgreSQL separately:
+# db:
+#   image: postgres:latest
+#   volumes:
+#     - postgres_data:/var/lib/postgresql/data
+#   environment:
+#     POSTGRES_DB: audiobookshelf
+#     POSTGRES_USER: user
+#     POSTGRES_PASSWORD: password
+#   restart: unless-stopped
+#   healthcheck:
+#     test: ["CMD", "pg_isready", "-U", "user"]
+#     interval: 10s
+#     timeout: 5s
+#     retries: 5
+
+# Then, you would need to update the 'audiobookshelf' service to connect to this 'db' service:
+#   depends_on:
+#     - db
+#   environment:
+#     DATABASE_URL: postgresql://user:password@db:5432/audiobookshelf
+
+# If you want to use a custom PostgreSQL image, uncomment the 'db' service and update the image name.

@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  pingvin:
+    image: 'pingvin/share:latest' # Use the official image from Pingvin Share
+    container_name: pingvin-share
+    ports:
+      - "8080:8080" # Expose the default web interface port
+    volumes:
+      - ./config:/etc/pingvin-share
+      - ./data:/var/lib/pingvin-share
+      - ./fileshare:/srv/fileshare
+    environment:
+      - TZ=Europe/Berlin # Set the timezone, adjust to your needs
+      - USER=user # Default user for the web interface (change with a valid username)
+      - PASSWORD=password # Default password for the web interface (change with a secure password)
+    restart: unless-stopped # Restart policy to ensure service is always running
+
+  postgres:
+    image: 'postgres:13' # Use PostgreSQL 13 as database server
+    volumes:
+      - ./data/db:/var/lib/postgresql
+    environment:
+      - POSTGRES_DB=pingvin_share
+      - POSTGRES_USER=pingvinuser
+      - POSTGRES_PASSWORD=pingvinpass
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pingvinuser"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+networks:
+  default:
+    driver: bridge

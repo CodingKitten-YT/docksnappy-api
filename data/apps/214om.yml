@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  tyk_gateway:
+    image: tykbase/tyk-gateway:latest
+    command: /bin/sh -c "trap exit TERM; while :; do Tyk main -config-file=/tyk/tyk.yaml -log-level=debug & wait ; done;"
+    ports:
+      - "80:8080" # HTTP
+      - "81:8090" # HTTPS (default is 8081, if you want to use the default change this line)
+      - "9000:9000" # Tyk dashboard
+    volumes:
+      - ./tyk.yaml:/tyk/tyk.yaml
+      - tykdata:/tyk/data
+      - tyklibs:/tyk/libs
+    environment:
+      TYK_LOG_LEVEL: debug
+      TYK_ETCD_HOSTS: etcd # Assuming you have an Etcd service defined
+      TYK_METRICS_HOSTNAME: gateway # For Tyk Metrics Add-on
+      TYK_LOGSTORE_ENABLED: "true"
+      TYK_LOGSTORE_HOSTNAME: logstore # For Tyk Logstore Add-on
+    depends_on:
+      - etcd
+      - redis
+      - logstore # If you're using Tyk Logstore Add-on
+    networks:
+      - tyknet
+
+  tyk_logstore:
+    image: tykio/tyk-logstore:latest
+    command: /bin/sh -c "trap exit TERM; while :; do Tyk Logstore main -config-file=/tyk/tyk.yaml & wait ; done;"
+    volumes:
+      - ./tyk.yaml:/tyk/tyk.yaml
+      - tykdata:/tyk/data/logstore
+    environment:
+      TYK_LOGSTORE_HOSTNAME: logstore
+      TYK_ETCD_HOSTS: etcd # Assuming you have an Etcd service defined
+    depends_on:
+      - etcd
+    networks:
+      - tyknet
+
+  tyk_etcd:
+    image: quay.io/coreos/etcd:v3.4.5
+    volumes:
+      - etcddata:/var/etcd
+    command: --advertise-client-urls http://0.0.0.0:2379
+    environment:
+      TYK_ETCD_HOSTS: localhost # Assuming Tyk is set to use 'localhost'
+    networks:
+      - tyknet
+
+  redis:
+    image: redis:6-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redisdata:/data
+
+  logstore:
+    image: tykio/tyk-logstore:latest
+    command: /bin/sh -c "trap exit TERM; while :; do Tyk Logstore main -config-file=/tyk/tyk.yaml & wait ; done;"
+    volumes:
+      - ./tyk.yaml:/tyk/tyk.yaml
+      - tykdata:/tyk/data/logstore
+    environment:
+      TYK_LOGSTORE_HOSTNAME: logstore
+      TYK_ETCD_HOSTS: etcd # Assuming you have an Etcd service defined
+    depends_on:
+      - etcd
+    networks:
+      - tyknet
+
+volumes:
+  tykdata:
+  redisdata:
+  etcddata:
+
+networks:
+  tyknet:
+    driver: bridge

@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  ovmsa:
+    image: 'linuxacademy/ovenmediaengine-sa:latest'
+    ports:
+      - "4444:4444" # RTP/RTCP ports
+      - "8000:8000" # Web UI on HTTP (optional)
+      - "8001:8001" # Web UI on HTTPS (optional, requires SSL setup)
+    environment:
+      OVMSA_LICENSE: 'YOUR_LICENSE_KEY' # Set your own license key if required
+      TZ: 'Europe/London' # Timezone for the logs and system
+    networks:
+      - ovmsa_net
+    volumes:
+      - ./ovmsa:/etc/ovenmediaengine
+      - /etc/passwd:/etc/passwd:ro
+      - /etc/group:/etc/group:ro
+      - ovsdb:/var/lib/openvswitch
+      - ovmsa_data:/var/log/ovmsa
+    command: --allow-pulse-source
+
+  openvswitch1:
+    image: openvswitch
+    networks:
+      - ovmsa_net
+    volumes:
+      - ovsdb:/etc/openvswitch/conf.d
+
+volumes:
+  ovsdb:
+  ovmsa_data:
+
+networks:
+  ovmsa_net:
+    driver: bridge

@@ -1,54 +1,29 @@
 version: '3.8'
 
 services:
-  bigcapital-web:
-    image: bigcapital/web:latest
-    ports:
-      - "80:80" # Map HTTP port 80 on the host to port 80 in the container
-      - "443:443": # Map HTTPS port 443 on the host to port 443 in the container
-    depends_on:
-      - bigcapital-app
-    environment:
-      - SERVICE_ENV=production
-    volumes:
-      - ./web:/usr/src/app/static
-      - ./web/templates:/usr/src/app/templates
-
   bigcapital-app:
-    image: bigcapital/app:latest
-    depends_on:
-      - bigcapital-db
+    image: bigcapital/bigcapital-app:latest
+    ports:
+      - "80:80"
     environment:
-      - DATABASE_HOST=bigcapital-db
-      - DATABASE_USER=user
-      - DATABASE_PASSWORD=password
-      - DATABASE_NAME=bigcapitaldb
-      - SERVICE_ENV=production
+      - DB_HOST=db
+      - DB_USER=bigcapital_user
+      - DB_PASSWORD=bigcapital_password
+      - DB_NAME=bigcapital_dbname
+    depends_on:
+      - db
     volumes:
-      - bigcapital-app-persistent-storage:/var/lib/postgres
+      - ./app/static:/usr/src/app/static
+      - ./app:/usr/src/app
 
   bigcapital-db:
     image: postgres:13
     environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=bigcapitaldb
-      - SERVICE_ENV=production
+      - POSTGRES_USER=bigcapital_user
+      - POSTGRES_PASSWORD=bigcapital_password
+      - POSTGRES_DB=bigcapital_dbname
     volumes:
-      - bigcapital-db-persistent-storage:/var/lib/postgresql
-
-  redis:
-    image: redis:6-alpine
-    environment:
-      - REDIS_PASSWORD=redispassword
-    volumes:
-      - redis-data:/data
+      - bigcapital-db-data:/var/lib/postgresql/data
 
 volumes:
-  bigcapital-app-persistent-storage:
-  bigcapital-db-persistent-storage:
-  redis-data:
-
-networks:
-  default:
-    driver: bridge
+  bigcapital-db-data:

@@ -1,38 +1,51 @@
-version: '3.7'
+version: '3'
 
 services:
   appsmith:
     image: appsmith/appsmith
     container_name: appsmith
     ports:
-      - "90:3000" # Expose Appsmith UI on host port 90
+      - "90:3000"
     environment:
-      - AS_METRICS_COLLECTOR=false
-      - AS_LOGS_COLLECTOR=true
-      - AS_LOGS_GCP_PROJECT=your-gcp-project-id # Set to your GCP project ID if you want logs to be sent to Google Cloud Logging
-      - AS_LOGS_AWS_BUCKET=your-s3-bucket-name # Set to your S3 bucket name if you want logs to be stored in AWS S3
+      - MS_APPSIFT_REGISTRY=localhub.dgpl.io/appsmith
+      - MS_LICENSE_KEY=${APPSMITH_LICENSE_KEY}
+      - JWT_SECRET=${JWT_SECRET}
     volumes:
-      - ./appsmith-data:/data/appsmith
-      - ./appsmith-logs:/data/appsmith/logs  # Optional: For storing logs locally
+      - ./appsmith-data:/data
+      - ./appsmith-local-hub:/root/.local/share/microservice-hub/appsmith
     command: >
-      /entrypoint.sh register \
-      --email your@email.com \ # Set with a valid email for receiving alerts and notifications
-      --password appsmith_password \ # Set your own password
-      appsmith
+      sh -c "trap exit TERM; while :; do sleep 1 & wait $${!}; done;
+      until nc -z ${APPSMITH_HOST:-localhost} 3000; do echo 'Appsmith is unavailable...'; sleep 2; done;
+      exec /usr/local/bin/tini -- appsmith-cli up"
     networks:
       - appsmith-network
 
   postgres:
-    image: postgres:12
+    image: postgres:13
     container_name: postgres
     volumes:
       - ./appsmith-data/postgres:/var/lib/postgresql/data
     environment:
-      - POSTGRES_USER=appsmith
-      - POSTGRES_PASSWORD=appsmith_password # Must match the password used for Appsmith registration
       - POSTGRES_DB=appsmith
+      - POSTGES_USER=appsmith
+      - POSTGRES_PASSWORD=appsmithpassword
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["tcp", "0.0.0.0:5432"]
+      interval: 10s
+      timeout: 2s
+       
     networks:
       - appsmith-network
+
+  redis:
+    image: redis:6-alpine
+    container_name: redis
+    volumes:
+      - ./appsmith-data/redis:/data
+    ports:
+      - "6379:6379"
 
 networks:
   appsmith-network:

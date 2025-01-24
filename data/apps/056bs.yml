@@ -2,55 +2,34 @@ version: '3.8'
 
 services:
   immich:
-    image: 'immich/immich:latest'
+    image: immich/immich:latest  # You can also specify a tag if you want a specific version
     ports:
-      - '5000:5000' # HTTP port, necessary for UI access
-      - '5101:5101' # Authentication service port (optional, if enabled)
-    command: --debug
-    environment:
-      - VIRTUAL_HOST=immich.yourdomain.com  # Set your domain or subdomain
-      - VIRTUAL_PORT=5000
-      - VIRTUAL_PROTOCOL=http  # Change to https if you are using SSL
-      - VIRTUAL_SSL_EMAIL=admin@immich.yourdomain.com  # Email for SSL certificate (optional)
-      - VIRTUAL_SSL_DOMAIN=immich.yourdomain.com  # Domain for SSL certificate (optional)
-      # Optionally, set these for a PostgreSQL database if you want to use it instead of SQLite
-      - POSTGRES_DB=immich
-      - POSTGRES_USER=immich
-      - POSTGRES_PASSWORD=yourpassword
+      - "80:80"  # Expose Immich on port 80 of the host for HTTP access (optional, default is port 8080)
+      - "443:443"  # Expose Immich on port 443 of the host for HTTPS access (optional, with a reverse proxy like nginx)
+    command: --data-dir /immich/data  # Set the data directory path (default is /var/lib/immich)
     volumes:
-      - 'immich-data:/opt/immich/data'  # Persistent storage for Immich data
-      - 'immich-media:/opt/immich/media'  # Persistent storage for media files (optional)
-    restart: unless-stopped
+      - ./immich-data:/immich/data  # Mount your local Immich data directory to the container (create this directory on the host)
+      - ./immich-conf:/immich/conf  # Mount your local Immich configuration directory to the container (create this directory on the host for custom config files)
+      - type: bind  # Allow Immich to access the host's files to upload (optional, default is /home/user)
+        source: ~/Pictures  # Path to your pictures on the host
+        target: /root/.local/share/file-manager/Downloading  # Corresponding path inside the container
+    environment:
+      - TZ=Europe/Berlin  # Set timezone (adjust to your timezone)
+      - JWT_SECRET=change_this_for_production  # A secret key for JWT tokens (change this for security)
+    restart: unless-stopped  # Ensure Immich restarts on failure or system reboot
 
-  nginx-proxy:
-    image: 'nginxproxy/nginx-proxy:stable'
+  nginx:
+    image: nginx:latest
     ports:
-      - '80:80'
-      - '443:443'
+      - "80:80"  # Map HTTP port if you exposed Immich on host port 80
+      - "443:443"  # Map HTTPS port if you exposed Immich on host port 443
+    volumes:
+      - ./immich-nginx/conf.d:/etc/nginx/conf.d  # Custom Nginx configuration (create this directory and add your config files)
     depends_on:
       - immich
-    volumes:
-      - '/var/run/docker.sock:/var/run/docker.sock'
-      - './nginx.conf:/etc/nginx/nginx.conf'  # Optional, custom nginx configuration file (if you have one)
-    command: >
-       sh -c "trap 'kill0' SIGTERM; while :; do sleep 1; done;"
-
-  postgres:
-    image: 'postgres:latest'
-    environment:
-      POSTGRES_DB: immich
-      POSTGRES_USER: immich
-      POSTGRES_PASSWORD: yourpassword
-    volumes:
-      - 'immich-db:/var/lib/postgresql/data'  # Persistent storage for PostgreSQL database
-    restart: unless-stopped
-
-volumes:
-  immich-data:
-  immich-media:
-  immich-db:
+    networks:
+      - immich_network
 
 networks:
-  default:
-    external:
-      name: wtfpl_net  # Replace with your own custom network if you have one already configured
+  immich_network:
+    driver: bridge

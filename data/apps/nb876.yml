@@ -1,73 +1,27 @@
 version: '3.8'
 
 services:
-  bitmagnet-core:
-    image: bmag/bitmagnet-core
-    container_name: bitmagnet-core
-    restart: always
+  bitmagnet_app:
+    image: bitmagnet/bitmagnet:latest # Use the official BitMagnet image or a specific tag
     ports:
-      - "8333:8333" # Bitcoin Core default RPC port (adjust if needed)
-      - "9999:9999" # Bitcoin Core default port for incoming connections (adjust if needed)
-    command:
-      - 'bitmagnet-core'
-      - 'safe'
-      - 'true'
-      - 'txindex'
-      - 'true'
+      - "5000:5000" # Expose the port where the Flask app is running (default for Flask)
     environment:
-      - BITMAGNET_CORES=2 # Adjust the number of core instances as needed
-      - RUST_LOG=debug
-      - LOG_LEVEL=info
+      - APIKEY=your_api_key # Set the API key if required by your application
     volumes:
-      - './data:/data'
-
-  electrs:
-    image: bmag/bitmagnet-electrs
-    container_name: bitmagnet-electrs
-    restart: always
-    ports:
-      - "18621:18621" # Electrs default port (adjust if needed)
-    environment:
-      - BITMAGNET_CORE_HOST=bitmagnet-core
-      - RUST_LOG=debug
-      - LOG_LEVEL=info
+      - "./bitmagnet:/app" # Mount your local BitMagnet directory to the container's directory
     depends_on:
-      - bitmagnet-core
-    volumes:
-      - './data/electrs:/data/electrs'
+      - bitmagnet_db
 
-  postgres:
-    image: postgres:13
-    container_name: postgres
-    restart: always
+  bitmagnet_db:
+    image: postgres:13 # Use PostgreSQL official image with version 13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # Use a named volume for persisting database data
+
     environment:
-      POSTGRES_DB: bitmagnet
-      POSTGES_USER: bitmagnet
-      POSTGRES_PASSWORD: change_this_password
-    volumes:
-      - './data/postgres:/var/lib/postgresql/data'
+      - POSTGRES_DB=bitmagnet # Define the database name
+      - POSTGRES_USER=bitmagnet # Define the PostgreSQL username
+      - POSTGRES_PASSWORD=your_db_password # Define the PostgreSQL password
 
-  electrs-wallet:
-    image: bmag/bitmagnet-electrs-wallet
-    container_name: bitmagnet-electrs-wallet
-    restart: always
-    ports:
-      - "18622:18622" # Electrs Wallet default port (adjust if needed)
-    environment:
-      - BITMAGNET_CORE_HOST=bitmagnet-core
-      - ELECTRS_HOST=bitmagnet-electrs
-      - POSTGRES_HOST=postgres
-      - POSTGRES_DB=bitmagnet
-      - POSTGRES_USER=bitmagnet
-      - POSTGRES_PASSWORD=change_this_password
-      - RUST_LOG=debug
-      - LOG_LEVEL=info
-    depends_on:
-      - bitmagnet-core
-      - postgres
-    volumes:
-      - './data/electrs-wallet:/data/electrs-wallet'
-
-networks:
-  default:
-    driver: bridge
+volumes:
+  postgres_data:
+    driver: "local" # Use local volume driver to persist data on your host machine

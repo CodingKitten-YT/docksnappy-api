@@ -1,43 +1,72 @@
-version: '3.7'
+version: '3.8'
 
 services:
-  kasm-hub:
-    image: kasm/kasm-hub:latest
-    command: -config=/etc/kasm/hub/hub-config.yml -storage=mongodb://kasm-db:27017/kasmHub?replicaSet=rs0
+  # Kasm Workspaces backend services
+  kasm-backend:
+    image: kasm/kasm-backend:latest
+    command: >
+      sh -c
+      "trap exit TERM; wait-for-it --timeout 2m --strict-hosts -- retries 30
+      nc_pipehttpd &
+      tiller &
+      wait $! && wait $2;"
     ports:
-      - "8000:80"
+      - "8080:8080" # Pipework API (Kasm Desktop Connector)
+      - "9001:9001" # Tiller API
+    environment:
+      - KASM_CONFIG_PATH=/etc/kasm/config.yaml
+      - ALLOWED_DOMAINS=localhost,127.0.0.1
+      - DB_URI=mysql://root:password@tcp(db:3306)/kasm?charset=utf8mb4&parseTime=True&loc=Local
     depends_on:
-      - kasm-mongo
-    environment:
-      KASM_HUB_ENABLE_WATCHDOG: "true"
-      KASM_HUB_SECRET: "<hub_secret>" # Replace with your actual secret
+      - mysql
     volumes:
-      - ./kasm/hub/hub-config.yml:/etc/kasm/hub/hub-config.yml
-      - kasm-hub-data:/var/lib/kasm/hub
+      - ./kasm/config.yaml:/etc/kasm/config.yaml
 
-  kasm-mongo:
-    image: mongo:latest
-    command: --replSet rs0
-    volumes:
-      - db-data:/data/db
+  # Kasm Workspaces database (MySQL)
+  db:
+    image: mysql:5.7
+    command: mysqld --transaction-isolation=READ-COMMITTED
     environment:
-      MONGO_INITDB_ROOT_USERNAME: "kasm"
-      MONGO_INITDB_ROOT_PASSWORD: "<mongo_root_password>" # Replace with your actual password
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: kasm
+      MYSQL_USER: kasmuser
+      MYSQL_PASSWORD: kasmpassword
     ports:
-      - "27017:27017"
-
-  kasm-agent:
-    image: kasm/kasm-agent:latest
-    command: -hub=http://kasm-hub:80/api/v1/hub
-    depends_on:
-      - kasm-hub
-    environment:
-      KASM_AGENT_SECRET: "<agent_secret>" # Replace with your actual secret
-      KASM_AGENT_HOSTNAME: "kasm-agent"
+      - "3306:3306"
     volumes:
-      - kasm-agent-data:/var/lib/kasm/agent
+      - db-data:/var/lib/mysql
+
+  # Kasm Workspaces frontend (Kasm Desktop Connector)
+  kasm-desktop-connector:
+    image: kasm/kasm-desktop-connector:latest
+    command: sh -c "trap exit TERM; wait-for-it --timeout 2m -- retries 30 && tiller &
+      until nc -z ${KASM_BACKEND_HOSTNAME} 8080 9001; do echo 'Waiting for Kasm backend...'; sleep 2; done;
+      kdc-run-server"
+    environment:
+      - KASM_BACKEND_HOSTNAME=${DOCKER_MACHINE_IP:-localhost}
+      - KASM_BACKEND_PORT=8080
+      - TILLER_HOST=db:9001
+      - TILLER_CONFLICT_RESOLUTION=WaitForKasmBackend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - kasm-backend
 
 volumes:
-  kasm-hub-data:
   db-data:
-  kasm-agent-data:
+
+# Optional NGINX proxy if you want to expose Kasm Desktop Connector externally
+nginx:
+  image: nginx:latest
+  ports:
+    - "80:80"
+    - "443:443"
+  volumes:
+    - ./nginx.conf:/etc/nginx/nginx.conf
+    - ngm-data:/var/log/nginx
+    - nginx-certs:/etc/ssl/certs
+
+volumes:
+  db-data:
+  ngm-data:
+  nginx-certs:

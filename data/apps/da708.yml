@@ -1,0 +1,26 @@
+version: '3.7'
+services:
+  sonarr:
+    image: 'linuxserver/sonarr' # Optionally use the official image: 'nh15818/sonarr'
+    container_name: sonarr
+    ports:
+      - "8920:8920" # Web interface, if you want to access it from the host
+      - "54320-54321:54320-54321" # NZBGet API if you're running it in another container and they're communicating
+    volumes:
+      - "${APPDATA}sonarr":/data/sonarr
+      - ./sonarr.toml:/etc/sonarr/config.yml
+    environment:
+      - PUID=1000 # Use your user ID for better security (optional but recommended)
+      - PASSWORD=change_this # Set a password for the web interface
+      - TZ=Europe/London # Set your timezone, e.g., America/New_York
+    ports:
+      - "54321:54321" # Sonarr HTTP RPC (if you need it)
+    depends_on:
+      - nzbget # If you're using nzbget for downloads
+    restart: unless-stopped
+    networks:
+      - sonarr_net
+
+networks:
+  sonarr_net:
+    driver: bridge

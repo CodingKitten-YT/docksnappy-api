@@ -1,41 +1,26 @@
 version: '3.8'
 
 services:
-  app:
-    image: hiccup/hiccup:latest  # Use the official Hiccup Docker image
-    build:
-      context: .
-      dockerfile: Dockerfile  # Make sure you have a Dockerfile in your project root
+  hiccup_web:
+    image: hiccuphq/hiccup:latest
     ports:
-      - "4000:4000"  # Expose the default port Hiccup uses for server UI and API
-    volumes:
-      - .:/app  # Mount the current directory to /app inside the container
-      - app/logs:/app/logs  # Mount logs to a specific volume for persistence
+      - "8000:8000" # Expose Hiccup's web UI on port 8000 of the host
     environment:
-      DB_HOST: db  # Set the database host to 'db' which is the name of the database service
-      DB_USER: hiccup  # Database username
-      DB_PASSWORD: yourpassword  # Database password (replace with your actual password)
-      DB_NAME: hiccup  # Database name
-      DB_PORT: 5432  # PostgreSQL default port
+      # Required for storing tokens securely
+      POSTGRES_DB: hiccup
+      POSTGRES_USER: hiccup
+      POSTGRES_PASSWORD: change_this_password
+      SECRET_KEY: 'your_secret_key' # Use Django's `manage.py secrets` to generate a secret key
     depends_on:
       - db
+    volumes:
+      - ./hiccup/data:/data
+      - ./hiccup/hiccup.conf.py:/code/hiccup/hiccup.conf.py # Optional: Override default settings with a custom hiccup.conf.py
 
   db:
     image: postgres:latest
     volumes:
-      - postgres_data:/var/lib/postgresql/data  # Use a named volume for data persistence
-    environment:
-      POSTGRES_USER: hiccup
-      POSTGRES_PASSWORD: yourpassword  # Replace with a secure password of your choice
-      POSTGRES_DB: hiccup
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U hiccup"]
-      timeout: 10s
-      retries: 30
-
-networks:
-  default:
-    driver: bridge
+      - db_data:/var/lib/postgresql/data
 
 volumes:
-  postgres_data:
+  db_data:

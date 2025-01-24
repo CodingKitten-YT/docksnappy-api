@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:12
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: past_events
+      POSTGRES_USER: pastuser
+      POSTGRES_PASSWORD: pastpassword
+    ports:
+      - "5432:5432"
+
+  frontend:
+    image: nginx:stable-alpine
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+  backend:
+    build: ./backend
+    volumes:
+      - .pythonerct:/code/.pyerct
+      - backend_data:/code/data
+    environment:
+      DATABASE_URL: postgres://pastuser:pastpassword@db:5432/past_events
+    expose:
+      - "8000"
+    depends_on:
+      - db
+
+  worker:
+    image: redis:latest
+    command: Redis-server --save . /nonexistent/redis.conf
+    volumes:
+      - redis_data:/data
+
+  celery_worker:
+    image: celery:1.11
+    command: celery -A past_project.celery_app worker --loglevel=info
+    depends_on:
+      - backend
+      - redis
+
+volumes:
+  db_data:
+  backend_data:
+  redis_data:
+
+networks:
+  default:
+    name: past_network

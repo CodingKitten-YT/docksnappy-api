@@ -1,40 +1,41 @@
-version: '3'
-
+version: '3.8'
 services:
-  fusio_api_gateway:
-    image: 'fusio/fusio-apigateway:latest'
-    depends_on:
-      - fusio_postgres
-      - fusio_redis
+  api:
+    image: fusio/fusio:latest
+    container_name: fusio_api
     ports:
-      - "8080:8080" # Expose Fusio API Gateway on host port 8080
+      - "8080:8080" # Expose the API on port 8080
     environment:
-      FUSIO__POSTGRES__URI: 'fusio_postgres://fusio_postgres'
-      FUSIO__REDIS__URI: 'redis://fusio_redis'
-      JWT_SECRET: 'your-jwt-secret' # Set your own JWT secret for security purposes
-    commandReview:
-      - '-X'
-      - '--strictProperties'
-      - 'true'
-      - 'api-gateway'
-
-  fusio_postgres:
-    image: 'postgres:latest'
-    environment:
-      POSTGRES_DB: 'fusio'
-      POSTGRES_USER: 'fusio'
-      POSTGRES_PASSWORD: 'fusio-password' # Set your own PostgreSQL password
-      PGDATA: '/var/lib/postgresql/data/fusio'
+      FUSIO__DATABASE__TYPE: mariadb # Database type (mariadb, mysql, pgsql)
+      FUSIO__DATABASE__HOST: db                # Database host
+      FUSIO__DATABASE__NAME: fusio              # Database name
+      FUSIO__DATABASE__USER: fusio                # Database user
+      FUSIO__DATABASE__PASSWORD: your_db_password  # Database password
+      FUSIO__ENVIRONMENT__APP_ENV: production        # Application environment (production, test, etc.)
+      FUSIO__CORE__LANGUAGES: en,fr              # Core languages
+      FUSIO__CORE__COUNTRIES: FR                       # Core countries
+      FUSIO__SECURITY__ENABLE_LOGIN: true         # Enable login
+      FUSIO__SECURITY__USERNAME: admin                # Default username for the admin user
+      FUSIO__SECURITY__PASSWORD: your_admin_password  # Default password for the admin user
     volumes:
-      - 'fusio_postgres_data:/var/lib/postgresql/data'
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U fusio']
-      timeout: 10s
-      retries: 30
+      - ./data:/var/lib/fusio  # Persist data with a host directory
+    depends_on:
+      - db
 
-  fusio_redis:
-    image: 'redis:latest'
-    command: 'RedisStart'
+  db:
+    image: mysql:5.7
+    container_name: fusio_db
+    environment:
+      MYSQL_DATABASE: fusio
+      MYSQL_USER: fusio
+      MYSQL_PASSWORD: your_db_password
+      MYSQL_ROOT_PASSWORD: root_password # Optional, only if you need root access to the database
+    volumes:
+      - db_data:/var/lib/mysql  # Persist database data with a named volume
 
 volumes:
-  fusio_postgres_data:
+  db_data:
+
+networks:
+  default:
+    driver: bridge

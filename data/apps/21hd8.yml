@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  retro_db:
+    image: postgres:12
+    environment:
+      POSTGRES_DB: retro_db
+      POSTGRES_USER: retro_user
+      POSTGRES_PASSWORD: retro_password
+    volumes:
+      - retro_db_data:/var/lib/postgresql/data
+    command: 'postgres -c "listen_addresses = '*'"'
+
+  retro_backend:
+    build: .
+    depends_on:
+      - retro_db
+    environment:
+      DATABASE_URL: postgres://retro_user:retro_password@localhost:5432/retro_db
+      SECRET_KEY: 'your_secret_key'
+      DEBUG: false
+    ports:
+      - "8001:8000"
+    volumes:
+      - .:/code
+
+  retro_frontend:
+    image: nginx:alpine
+    ports:
+      - "3000:3000"
+    volumes:
+      - retro_frontend_static:/usr/share/nginx/html
+      - .:/code
+    depends_on:
+      - retro_backend
+
+volumes:
+  retro_db_data:
+  retro_frontend_static:

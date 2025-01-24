@@ -1,42 +1,37 @@
 version: '3.8'
+
 services:
   homegallery:
-    image: homegallery/homegallery:latest # Use the official HomeGallery image from Docker Hub
+    image: homegallery/homegallery:latest
     container_name: homegallery
     ports:
-      - "80:80" # Expose HTTP on the host, default HomeGallery port is 80
+      - "80:80" # Expose HomeGallery web interface on host port 80
     environment:
-      TZ: "Europe/London" # Set the timezone, change to your desired timezone
+      TZ: "Your/Timezone,e.g.,Europe/Paris"
+      PGID: "100"
+      PGUSER: "homegallery"
+      PGPASSWORD: "yourpassword" # Set a password for the HomeGallery database user
     volumes:
-      - "./data:/data" # Mount a volume for user data and configuration (optional, for data persistence)
-      - "./uploads:/uploads" # Mount a volume for uploaded files (optional, for file persistence)
-    restart: unless-stopped # Restart the container if it stops
-
-  nginx-proxy:
-    image: 'nginx:latest'
-    container_name: nginx-proxy
-    ports:
-      - "80:80" # Expose HTTP on the host, forward to HomeGallery
-      - "443:443" # Expose HTTPS on the host (if using Let's Encrypt or similar)
-    volumes:
-      - "./letsencrypt:/etc/letsencrypt" # Mount for Let's Encrypt certificates (optional)
-      - "nginx-data:/var/lib/nginx" # Volume for Nginx proxy mode (optional)
-    command: proxy # Run in proxy mode, reverse proxying to HomeGallery
+      - "./config:/etc/homegallery"
+      - "./data:/var/lib/postgresql/data"
+      - "./media:/srv/homegallery/media"
     depends_on:
-      - homegallery
-    restart: unless-stopped
+      - db
+    networks:
+      - homegallery_network
 
   db:
-    image: postgres:latest
+    image: postgres:13
     container_name: homegallery_db
-    environment:
-      POSTGRES_DB: homegallery # Database name
-      POSTGRES_USER: homegallery # Username
-      POSTGRES_PASSWORD: changeit # Password (change 'changeit' to your desired password)
     volumes:
-      - "postgres-data:/var/lib/postgresql" # Volume for PostgreSQL data (optional, for database persistence)
-    restart: unless-stopped
+      - "./data:/var/lib/postgresql/data"
+    environment:
+      POSTGRES_DB: "homegallery"
+      POSTGRES_USER: "homegallery"
+      PGID: "100" # Same PGID as HomeGallery service
+    networks:
+      - homegallery_network
 
-volumes:
-  postgres-data:
-  nginx-data:
+networks:
+  homegallery_network:
+    driver: bridge

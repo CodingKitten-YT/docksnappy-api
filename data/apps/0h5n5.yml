@@ -1,112 +1,51 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database Service
-  database:
-    image: postgres:12
-    volumes:
-      - ./data/librephoto-db:/var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: librephoto
-      POSTGRES_USER: librephoto
-      POSTGRES_PASSWORD: your_secret_password
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
-      timeout: 10s
-      retries: 5
-
-  # Redis Cache Service (Optional, for performance improvements)
-  redis:
-    image: redis:6.2
-    healthcheck:
-      test: ["CMD-SHELL", "redis-cli -h $HOSTNAME ping"]
-      timeout: 10s
-      retries: 5
-
-  # File Server Service (for storing media files)
-  # Note: You should provide a volume or NFS share here to persist your data.
-  fileserver:
-    image: linuxserver/docker-storage-proxy
-    volumes:
-      - ./data/librephoto-files:/mnt/data
-    environment:
-      USER: nobody
-      MEDIA_ROOT: /mnt/data
-      PUID: 100
-      PLUVID: 101
-    healthcheck:
-      test: ["CMD", "tail", "/dev/urandom", "| head -n 1"]
-      interval: 30s
-      timeout: 30s
-      retries: 5
-
-  # LibrePhoto Service
-  librephoto:
-    image: ghcr.io/vegurium/librephoto:latest
-    depends_on:
-      - database
-      - redis
-      - fileserver
-    volumes:
-      - ./data/librephoto-app:/data/librephoto
-      - ./data/librephoto-config:/data/librephoto/.config
-    environment:
-      DB_HOST: database
-      REDIS_HOST: redis
-      FILES_ROOT: /moves/TO/THE/DESIRED/MOUNT/POINT
-      LIBREPHOTO_ADMIN_EMAIL: your_email@example.com
-      LIBREPHOTO_ADMIN_USERNAME: admin
-      LIBREPHOTO_ADMIN_PASSWORD: your_secret_password
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:80/health"]
-      timeout: 10s
-      retries: 5
+  liblephotos:
+    image: linuxserver/liblephos-docker:latest
+    container_name: liblephotos
     ports:
-      - "80:80" # HTTP
-      - "443:443" # HTTPS (if you have a reverse proxy like Traefik or Nginx set up)
+      - "6421:6421" # Admin Interface (WebUI)
+      - "5000:5000" # Goldmansachs OMV/Database (if enabled)
+    volumes:
+      - "./config:/config" # Configuration and Import Maps
+      - "./data:/data"     # Main Application Data
+      - "./cache:/cache"   # Cached files and thumbnails
+      # Uncomment the following if you want to enable the backup feature
+      # - "./backups:/backups"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ="Europe/London"
+      # Optional, replace with your domain or subdomain
+      - DOMAIN=yourdomain.tld
+      # Uncomment to enable LDAP
+      #- ENABLELDAP=true
+      # Uncomment and provide the necessary credentials if you want to enable LDAP
+      #- LDAP_SERVER=ldapserver.com
+      #- LDAP_USER=CN=username,OU=Users,DC=example,DC=com
+      #- LDAP_PASSWORD=password
+      # Uncomment and provide the necessary credentials for PostgreSQL if you want to enable it
+      #- PGDATABASE=yourdbname
+      #- PGUSER=yourdbuser
+      #- PGPASSWORD=yourdbpassword
+    restart: unless-stopped
+    networks:
+      - home-network
 
-# Optional: Load Balancer Service (if you need to balance the load)
-# This is just an example, you can use any load balancer of your choice.
-loadbalancer:
-  image: traefik:v2.5
-  ports:
-    - "80:80"
-    - "443:443"
-  volumes:
-    - ./certs/letsslabs-x3-staging:/letsencrypt
-    - ./data/traefik-acme.json:/traefik.toml:ro
-    - ./data/traefik-encrypted:/etc/traefik/traefik-encrypted
-  command:
-    - "--api.insecure=true"
-    - "--providers.docker.exposedByDefault=false"
-  environment:
-    - Traefik__Providers__Docker__ExposedByDefault=false
-  labels:
-    - "traefik.enable=true"
-    - "traefik.http.routers.web-router.rule=Host(`librephoto.local`)"
-    - "traefik.http.routers.web-router.service=librephoto"
-    - "traefik.http.middlewares.secure-header.headers.X-Forwarded-Proto=["X-Forwarded-Proto: https"]"
-    - "traefik.http.routers.web-router.entrypoints=web-secure-tls"
-    - "traefik.http.routers.web-router.tls-honor-request-header=true"
-  depends_on:
-    - librephoto
+  database:
+    image: postgres:latest
+    container_name: liblephotos_database
+    volumes:
+      - "./data/db:/var/lib/postgresql"
+    environment:
+      - POSTGRES_DB=liblephos
+      - POSTGRES_USER=liblephos
+      - POSTGRES_PASSWORD=liblephosphotpass
+    restart: unless-stopped
+    networks:
+      - home-network
 
-# Optional: Reverse Proxy Service (if you already have a reverse proxy like Nginx or HAProxy)
-# This is just an example, you can use any reverse proxy of your choice.
-reverseproxy:
-  image: nginx:latest
-  volumes:
-    - ./nginx/conf.d:/etc/nginx/conf.d
-  ports:
-    - "80:80" # HTTP
-    - "443:443" # HTTPS
-  depends_on:
-    - librephoto
-
-# Optional: Let's Encrypt Client Service (for automated SSL/TLS certificates)
-# This is just an example, you can use any ACME client of your choice.
-letscert:
-  image: certbot/certbot
-  volumes:
-    - ./data/letsencrypt:/etc/letsencrypt
-  entrypoint: /bin/sh -c "trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;"
+networks:
+  home-network:
+    driver: bridge

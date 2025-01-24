@@ -1,49 +1,51 @@
 version: '3.8'
+
 services:
   bar_assistant_api:
-    image: "bar_assistant_api:latest"
-    build:
-      context: .
-      dockerfile: Dockerfile-api
+    image: "barassistant/api:latest"
     ports:
-      - "5001:5000" # Expose API on host port 5001
+      - "5000:5000"
+    command: api
+    depends_on:
+      - db
     environment:
       - DB_HOST=db
       - DB_USER=baruser
-      - DB_PASSWORD=barpass
-      - DB_NAME=barassistant
-    depends_on:
-      - db
-    volumes:
-      - ./api:/usr/src/app
+      - DB_PASSWORD=barpassword
+      - DB_NAME=bardatabase
+    expose:
+      - "5000"
 
   bar_assistant_worker:
-    image: "bar_assistant_worker:latest"
-    build:
-      context: .
-      dockerfile: Dockerfile-worker
-    environment:
-      - QUEUE_URL=http://queue_service:5002 # Replace with actual queue service URL and port
+    image: "barassistant/worker:latest"
     depends_on:
-      - db
-      - queue_service
+      - mqtt
+    environment:
+      - MQTT_HOST=mqtt
+      - MQTT_PORT=1883
+      - WORKER_QUEUE_NAME=barqueue
+    expose:
+      - "5001"
+
+  bar_assistant_frontend:
+    image: "barassistant/frontend:latest"
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    environment:
+      - REACT_APP_API_URL=http://api:5000
 
   db:
     image: "postgres:13"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - "./dbdata:/var/lib/postgresql/data"
     environment:
       - POSTGRES_USER=baruser
-      - POSTGRES_PASSWORD=barpass
-      - POSTGRES_DB=barassistant
+      - POSTGRES_PASSWORD=barpassword
+      - POSTGRES_DB=bardatabase
 
-  queue_service: # This service assumes you're using RabbitMQ as the message broker
-    image: "rabbitmq:3.8-management"
-    ports:
-      - "5002:5672" # Expose RabbitMQ on host port 5002
+  mqtt:
+    image: "eaboute/mosquitto:latest"
     volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-
-volumes:
-  postgres_data:
-  rabbitmq_data:
+      - "./mqttdata:/var/lib/mosquitto"

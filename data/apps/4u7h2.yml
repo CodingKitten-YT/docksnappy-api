@@ -1,20 +1,42 @@
 version: '3.8'
-
 services:
   code-server:
-    image: codemicro.com/code server:latest  # Official image from Codespace
+    image: codemicro.dev/code server/stable:latest  # or use 'codercom/code-server:stable' if necessary
     ports:
-      - "8080:22"  # Map the SSH port to host, default is 22
-      - "8081:8080"  # Map the web UI port to host, for monitoring and debugging
+      - "8080:22"  # Map the CodeServer port to your local port (here: 8080)
+      - "8081:8080"  # Map the Jupyter Notebooks port to your local port (here: 8081)
     volumes:
-      - "/path/to/your/code:/home/codeserver/project"  # Your local code directory
-      - "/tmp"  # Provide temporary space in the container
+      - "${HOME}/code-server-oidc:/home/mainuser/.local/share/code-server/auth"  # OIDC auth data volume
+      - "./workspace:/workspace"  # Map your local workspace to the container (optional, but recommended for persistent work)
     environment:
-      - SHELL=/bin/zsh  # Set your preferred shell (optional)
-      - CODER_SKIP_WELCOME=true  # Skip the welcome screen on startup (optional)
-      # Uncomment the following line to enable password authentication for SSH
-      # - PASSWORD="your-password"  # Set a password for SSH access (optional, for security reasons do not use default passwords)
-    cap_add:
-      - ALL  # Grant all capabilities to avoid permission issues (not recommended for production without understanding the implications)
-    restart: unless-stopped  # Restart the container when it stops (use with caution)
-    user: codeserver  # Default user for code-server
+      - SHELL=/bin/zsh  # Optional, set your preferred shell
+      - VS_CODE_WORKING_DIRECTORY=/workspace  # Set the working directory inside the container
+      - VS_CODE_SERVER_MEMORY=4096  # Optional: Set memory limit (in MB)
+      - VS_CODE_USE_PLAYGROUNDS=true  # Optional: Enable GitHub Playgrounds if you have a GitHub account
+    securityOpt:
+      - "apparmor:w"  # Optional: Allow the container to interact with the host's AppArmor profile
+    capAdd:
+      - "SYS_ADMIN"  # Optional: Provide full access to all admin capabilities for the container (use with caution)
+    user: "1000"  # Optional: Set a specific UID inside the container, make sure it matches your host configuration
+    restartPolicy:
+      - "unless-stopped"  # Optional: Restart the container unless it has been manually stopped
+    dependsOn:
+      - nginx  # Optional: Depends on an nginx reverse proxy if you're setting one up
+
+  nginx:
+    image: nginx:stable-alpine
+    ports:
+      - "80:80"  # Map HTTP port to your local port (here: 80)
+      - "443:443"  # Map HTTPS port to your local port (here: 443), if using SSL/TLS
+    volumes:
+      - "./certs:/etc/nginx/ssl"  # Optional: Map your certificates to the container, if using SSL/TLS
+    dependsOn:
+      - code-server
+
+# Uncomment the following section if you need to configure a proxy.
+# proxy:
+#   image: softprops/transparent-proxy
+#   environment:
+#     http_proxy: "http://myproxy"
+#     https_proxy: "https://myproxy"
+#     no_proxy: "localhost,127.0.0.1,.local"

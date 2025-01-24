@@ -1,49 +1,47 @@
-version: '3.8'
-
+version: '3'
 services:
-  holoplay-server:
-    image: holoplay/holoplay-game-server:latest
-    ports:
-      - "5000:5000" # Game server HTTP port
-      - "5001:5001" # Game server websockets port (optional, if your game uses WebSockets)
-    volumes:
-      - "./game-server/configs:/opt/middleware/configs"
-      - "./game-server/plugins:/opt/middleware/plugins"
-      - "./game-server/cache:/opt/middleware/cache" # Optional, for Redis cache
+  db:
+    image: postgres:latest
     environment:
-      SERVICE_NAME: game-server
-      AUTH_BACKEND: auth-backend
-      DATABASE_URL: db-postgres:5432/holoplay_db
-      CACHE_URL: redis-cache:6379/0
-      ENABLE_AUTHENTICATION: "true" # Set to "false" if you don't use authentication
-    depends_on:
-      - db-postgres
-      - redis-cache # Optional, only if using Redis cache
-      - auth-backend # Uncomment if you have an auth backend service
-
-  holoplay-auth-backend:
-    image: your-auth-backend-image:latest # Replace with your auth backend Docker image
-    environment:
-      SERVICE_NAME: auth-backend
-      JWT_SECRET: "your_jwt_secret" # A secret key for JWT tokens
-    ports:
-      - "5002:5002" # Auth backend HTTP port (optional, if your auth backend has a UI)
-
-  db-postgres:
-    image: postgres:13
-    environment:
+      POSTGRES_DB: holoplay
       POSTGRES_USER: holoplay
-      POSTGRES_PASSWORD: holoplay
-      POSTGRES_DB: holoplay_db
+      POSTGRES_PASSWORD: change_this_password
     volumes:
-      - "./game-server/db:/var/lib/postgresql/data"
+      - holoplay-db-data:/var/lib/postgresql/data
+    command: postgres -c 'fsync=1' -c 'full_page_writes=off'
 
-  redis-cache:
-    image: redis:6.2-alpine
-    command: redis-server --appendonly yes
+  redis:
+    image: redis:latest
+    command: redis-server --save /tmp/redis.rdb
     volumes:
-      - "./game-server/cache:/data" # Optional, for Redis data persistence
+      - holoplay-redis-data:/data
 
-networks:
-  default:
-    driver: bridge
+  hc-api:
+    image: holoplay/hc-api:latest
+    environment:
+      DB_HOST: db
+      REDIS_HOST: redis
+      DB_NAME: holoplay
+      DB_USER: holoplay
+      DB_PASSWORD: change_this_password
+    depends_on:
+      - db
+      - redis
+    ports:
+      - "8080:8080" # Adjust the host port as needed
+
+  hc-app:
+    image: holoplay/hc-app:latest
+    environment:
+      REDIS_HOST: redis
+      API_HOST: hc-api
+      API_PORT: 8080
+    depends_on:
+      - hc-api
+      - redis
+    ports:
+      - "3000:3000" # Adjust the host port as needed
+
+volumes:
+  holoplay-db-data:
+  holoplay-redis-data:

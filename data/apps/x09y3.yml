@@ -1,38 +1,30 @@
-version: '3'
+version: '3.8'
 
 services:
   cloudbeaver:
-    image: docker.getcloudbeaver.com/cloudbeaver:latest # Use the official CloudBeaver image
+    image: 'cloudbeaver/enterprise:latest' # or use 'cloudbeater/free' for the free version
     container_name: cloudbeaver
     ports:
-      - "8080:80" # Expose CloudBeaver on port 8080 of the host
+      - "6401:6401" # Web UI port, default is 6401
+      - "6101:6101" # Adminer (if enabled) default is 6101
     environment:
-      DB_JDBC_DRIVERS_URL: http://download.mysql.com/update-system/jdbc-8.0.27.zip # Update if using a different MySQL version
-      DB_CONNECTION_DEFAULT_DATASOURCE_HOSTNAME: your-database-host # Replace with your database host
-      DB_CONNECTION_DEFAULT_DATASOURCE_PORT: 3306 # Replace with your database port (default is 3306 for MySQL)
-      DB_CONNECTION_DEFAULT_DATASOURCE_USERNAME: your-database-user # Replace with your database username
-      DB_CONNECTION_DEFAULT_DATASOURCE_PASSWORD: your-database-password # Replace with your database password
-      CLOUDBEAVER_HOSTNAME: cloudbeaver # The hostname for CloudBeaver instance
+      LICENSE_KEY: your_license_key_here # If you have an enterprise license
+      DB_USER: 'admin'
+      DB_PWD: 'admin'
+      DB_SID: 'CloudBeaverSample'
+      AUTH_TYPE: 'basic' # Can be 'ldap', 'saml', 'oauth2', or 'basic'
     volumes:
-      - "./cloudbeaver-data:/dbdeployr" # Mount a volume for CloudBeaver data (optional, but recommended to preserve configurations and connections)
-      - "./cloudbeaver-connections:/home/dbadmin/.dbdeployr" # Mount a volume for CloudBeaver connections (optional, but recommended to preserve connections)
-    environment:
-      TZ: "Europe/London" # Set the timezone (change to your desired timezone or remove this line)
-    depends_on:
-      - mysql # If you are using MySQL or another service that CloudBeaver depends on
+      - cloudbeaver-data:/opt/cloudbeaver/data
+      - ./cloudbeaver.ini:/opt/cloudbeaver/.cloudbeaver.ini # Optional, for custom configuration
+      - type: bind
+        source: ./dbs
+        target: /opt/cloudbeaver/dbs
+    networks:
+      - cloudbeaver_network
+    restart: unless-stopped
 
-# If you are using MySQL as the database, you would also define a MySQL service like this:
-mysql:
-  image: mysql:latest
-  environment:
-    MYSQL_DATABASE: your_database_name
-    MYSQL_USER: your-database-user
-    MYSQL_PASSWORD: your-database-password
-    MYSQL_ROOT_PASSWORD: root-password # If you need root access to the database
-  ports:
-    - "3306:3306"
-  volumes:
-    - ./mysql-data:/var/lib/mysql
-  restart: unless-stopped
+volumes:
+  cloudbeaver-data:
 
-# Note: The `restart: unless-stopped` will ensure that your MySQL service restarts unless it has been explicitly stopped.
+networks:
+  cloudbeaver_network:

@@ -1,55 +1,71 @@
 version: '3.8'
 
 services:
-  web:
-    image: homebox/web:latest
-    container_name: homebox_web
-    ports:
-      - "80:80" # HTTP (configure the internal port if different)
-      - "443:443" # HTTPS (configure the internal port if different, and ensure you have SSL certificates)
-    environment:
-      - DJANGO_SETTINGS_MODULE=homebox.settings.production
-      - SECRET_KEY=changeme
-      - DEBUG=False
-    volumes:
-      - ./data:/usr/src/app/data
-      - ./media:/usr/src/app/media
-    depends_on:
-      - db
-    networks:
-      - webnet
-
   db:
-    image: postgres:13
-    container_name: homebox_db
+    image: postgres:13-alpine
+    command: 'postgres -c "listen_addresses = '*'"'
     volumes:
-      - ./data/db:/var/lib/postgresql/data
+      - type: bind
+        source: ./data/db
+        target: /var/lib/postgresql/data
     environment:
-      - POSTGRES_USER=homebox
-      - POSTGRES_PASSWORD=changeit
-      - POSTGRES_DB=homebox_production
-    networks:
-      - webnet
-
-  worker:
-    image: homebox/worker:latest
-    container_name: homebox_worker
-    environment:
-      - REDIS_URL=redis://localhost:6379/0
-    depends_on:
-      - redis
-    networks:
-      - webnet
+      POSTGRES_DB: homebox
+      POSTGRES_USER: homebox
+      POSTGRES_PASSWORD: changeit
 
   redis:
-    image: redis:6
-    container_name: homebox_redis
+    image: redis:6-alpine
+    command: redis-server --appendonly yes
+
+  rabbitmq:
+    image: rabbitmq:3.8-management
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: password
+
+  hb-worker1:
+    image: homebox/homebox-worker:latest
+    command: celery -A homebox worker --loglevel=info --concurrency=1
+    environment:
+      CELERY_BROKER_URL: amqp://rabbitmq:5672//
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      DJANGO_SETTINGS_MODULE: homebox.settings.production
+    depends_on:
+      - db
+      - rabbitmq
+      - redis
+    command: celery -A homebox worker --loglevel=info --concurrency=1
+
+  hb-worker2:
+    image: homebox/homebox-worker:latest
+    command: celery -A homebox worker --loglevel=info --concurrency=1
+    environment:
+      CELERY_BROKER_URL: amqp://rabbitmq:5672//
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      DJANGO_SETTINGS_MODULE: homebox.settings.production
+    depends_on:
+      - db
+      - rabbitmq
+      - redis
+    command: celery -A homebox worker --loglevel=info --concurrency=1
+
+  hb-web:
+    image: homebox/homebox:latest
     ports:
-      - "6379:6379" # Redis port (configure the internal port if different)
-    volumes:
-      - ./data/redis:/data
-    networks:
-      - webnet
+      - "8000:8000"
+    environment:
+      DJANGO_SETTINGS_MODULE: homebox.settings.production
+      SECRET_KEY: changeit
+      ALLOWED_HOSTS: '*'
+    depends_on:
+      - db
+      - rabbitmq
+      - redis
+
+volumes:
+  postgres_data:
+    driver: local
 
 networks:
-  webnet:
+  homebox_net:
+    driver: bridge

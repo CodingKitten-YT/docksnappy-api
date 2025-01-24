@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  adventurlog_web:
+    image: adventurelog/adventurlog:latest
+    ports:
+      - "8000:8000" # Expose the port where the web application runs (default is often 8000)
+    env_file:
+      - .env.prod  # Use a different environment file for production settings
+    volumes:
+      - ./data:/var/lib/adventurlog
+      - ./data/adventures:/var/lib/adventurlog/adventures
+      - ./data/characters:/var/lib/adventurlog/characters
+    environment:
+      - PG_USER=postgres
+      - PG_PASSWORD=your_secure_password
+      - PG_DBNAME=adventurlog
+      # PostgreSQL connection parameters
+      - DATABASE_URL=postgresql://postgres:your_secure_password@db/adventurlog?client_encoding=utf8&timezone=UTC&sslmode=require
+    depends_on:
+      - db
+    command: --settings production
+
+  db:
+    image: postgres:13
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=your_secure_password
+      - PGDATA=/var/lib/postgresql/data/postgres.db # Ensure data persistence
+      - TZ=UTC
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      timeout: 5s
+      retries: 5
+
+# Uncomment the following if you need to use Redis (optional)
+# redis:
+#   image: redis:6.2
+#   volumes:
+#     - ./data/redis:/data
+
+# Uncomment the following if you need to use a caching mechanism like Memcached (optional)
+# memcached:
+#   image: memcached:1.5-alpine
+
+# Uncomment the following if you are using RabbitMQ for message queuing (optional)
+# rabbitmq:
+#   image: rabbitmq:3.8-management
+#   ports:
+#     - "5672:5672" # AMQP
+#     - "15672:15672" # Management UI (optional)
+
+# Uncomment the following if you need to use a file server or similar (optional)
+# fileserver:
+#   image: tiangolo/fileserver
+#   volumes:
+#     - ./data/fileserver:/app/cache
+
+# Add more services as needed, each with their own configuration.

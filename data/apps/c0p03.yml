@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  syncthing:
+    image: 'syncthing/syncthing:latest' # Use the official Syncthing Docker image
+    container_name: syncthing
+    ports:
+      - "8384:8384" # Expose the Syncthing web UI on host port 8384 (default)
+      - "22022-22028:22022-22028" # Range of client ports, one per client connection
+    volumes:
+      - '/path/to/local/config:/root/.config/syncthing' # Mount your configuration directory
+      - '/path/to/local/data:/root/.syncthing' # Mount your data directory (optional, for data persistence)
+      - '/dev/shm:/root/.syncdata' # Optional, for faster peer data transfer, especially important for large files
+    restart: 'unless-stopped' # Restart the container unless it has been explicitly stopped
+    environment:
+      - HOSTID=unique_hostname # Set a unique hostname for this instance (required for multi-node setup)
+      - PREFEREDADDRESS=your.public.ip.address # Your public IP address or domain name
+    networks:
+      - syncthing_network
+
+networks:
+  syncthing_network:
+    driver: bridge

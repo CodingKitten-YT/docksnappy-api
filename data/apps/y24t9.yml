@@ -1,19 +1,58 @@
 version: '3.8'
 
 services:
-  homepage:
-    image: "gethomepage/homepage:latest"
-    container_name: homepage
+  web:
+    image: gethomepage/homepage:latest
     ports:
-      - "80:80" # Expose the homepage on port 80 of the host
-    volumes:
-      - "./data:/usr/src/app/data" # Mount your data directory to the app's data directory
-      - "./uploads:/usr/src/app/uploads" # Mount your uploads directory to the app's uploads directory (if you're using it)
+      - "80:80" # Map HTTP port 80 on the host to port 80 in the container
     environment:
-      - HOMEPAGE_LICENSE_KEY="${HOMEPAGE_LICENSE_KEY}" # Set your license key as an environment variable, if required by your license
-    networks:
-      - homepage_net
+      - GOOGLE_ANALYTICS_TRACKING_ID=your_tracking_id # Set your Google Analytics tracking ID if needed
+      - GRAVITY_PLUGINS=markdown,extras,bootstrapcss,disquscommentspage # Enable plugins if necessary
+    volumes:
+      - "./data:/var/www/html" # Mount your local data directory to the container's homepage directory
+    command: -c /var/www/html --enforce-systemd-cgroups false # Ensure Homepage can run correctly in Docker
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: homepage
+      POSTGRES_USER: homepage
+      POSTGRES_PASSWORD: your_password # Replace with a secure password
+    volumes:
+      - "./db_data:/var/lib/postgresql" # Mount your local database data directory to the container's
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U homepage"]
+      timeout: 10s
+      retries: 5
+
+# Optional Redis service if you use caching or other features that require a cache
+redis:
+  image: redis:6.2
+  volumes:
+    - "./redis_data:/data" # Mount your local redis data directory to the container's
+
+# Optional Nginx reverse proxy in front of Homepage for SSL termination and load balancing
+nginx:
+  image: nginx:latest
+  ports:
+    - "443:443" # Map HTTPS port 443 on the host to port 443 in the container
+    - "8080:80" # Optional admin interface (if enabled in Homepage)
+  volumes:
+    - "./nginx_conf.d:/etc/nginx/conf.d" # Mount your custom Nginx configuration files
+  depends_on:
+    - web
+  networks:
+    - homepage_network
+
+# Optional Let's Encrypt certificate management with Certbot
+letsencrypt:
+  image: certbot/certbot:latest
+  command: certonly --standalone --email your_email@example.com --agree-tos --no-eff-email --staging --preferred-challenges http --non-interactive
+  volumes:
+    - "./letsencrypt":/etc/letsencrypt
+  depends_on:
+    - web
 
 networks:
-  homepage_net:
+  homepage_network:
     driver: bridge

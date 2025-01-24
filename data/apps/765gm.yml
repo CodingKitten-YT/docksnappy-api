@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  schoco:
+    image: schocobuild/schoco:latest
+    container_name: schoco
+    volumes:
+      - ./schoco.yml:/app/configs/schoco.yml:ro
+      - schoco-cache:/root/.cache/schoco
+    environment:
+      - SCHOCO_VERSION=v2
+      # Optionally set the GITHUB_TOKEN if you want to use Schoco with GitHub repositories
+      # - GITHUB_TOKEN=your_github_token
+    restart: unless-stopped
+
+volumes:
+  schoco-cache:

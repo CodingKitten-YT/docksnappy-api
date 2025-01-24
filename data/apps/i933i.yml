@@ -1,69 +1,63 @@
 version: '3.8'
 
 services:
-  automatisch_web:
-    image: automatisch/automatisch-web:latest
+  automatisch-frontend:
+    image: automatisch/frontend:latest
     ports:
-      - "8001:80"
-    environment:
-      - DJANGO_SETTINGS_MODULE=automatisch.settings
-      - SECRET_KEY=your_secret_key
-      - DATABASE_URL=postgres://user:password@db:5432/dbname
-      # Add other environment variables as needed
+      - "80:80" # Map the frontend service to port 80 on the host for HTTP access
     depends_on:
-      - automatisch_db
-    volumes:
-      - ./data:/data
+      - automatisch-backend
+    networks:
+      - automatisch-network
 
-  automatisch_worker:
-    image: automatisch/automatisch-worker:latest
-    environment:
-      - INSTALL_POSTGRES=True
-      - DATABASE_URL=postgres://user:password@db:5432/dbname
-      # Add other environment variables as needed
-    depends_on:
-      - automatisch_db
-
-  automatisch_db:
-    image: postgres:13
-    volumes:
-      - ./data/postgres:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=dbname
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
-      timeout: 10s
-      retries: 5
-
-  automatisch_redis:
-    image: redis:6-alpine
-    healthcheck:
-      test: ["CMD-SHELL", "redis-cli -h 0 ping"]
-      timeout: 10s
-      retries: 5
-
-  automatisch_mailhog:
-    image: mailhog/mailhog:latest
+  automatisch-backend:
+    image: automatisch/backend:latest
     ports:
-      - "8025:8025"
-      - "1025:1025"
+      - "5000:5000" # Map the backend service to port 5000 on the host for a web API
+    depends_on:
+      - automatisch-database
+    networks:
+      - automatisch-network
     environment:
-      - HOST_EMAIL=admin@automatisch.local
+      DATABASE_URL: "postgres://automatisch-database:5432"
 
-  automatisch_celery_beat:
-    image: automatisch/automatisch-worker:latest
-    command: celery -A automatisch worker beat --loglevel=info
-    depends_on:
-      - automatisch_db
+  automatisch-database:
+    image: postgres:latest
+    ports:
+      - "5432:5432" # Map the database port to the host for direct access (optional)
+    networks:
+      - automatisch-network
+    environment:
+      POSTGRES_DB: automatisch
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
 
-  automatisch_celery_worker:
-    image: automatisch/automatisch-worker:latest
-    command: celery -A automatisch worker consumer --loglevel=info
-    depends_on:
-      - automatisch_db
+  # Optional Redis service if Automatisch uses caching or message queuing
+  automatisch-redis:
+    image: redis:latest
+    networks:
+      - automatisch-network
+
+  # Optional RabbitMQ service for message queue if needed by Automatisch
+  automatisch-rabbitmq:
+    image: rabbitmq:latest
+    networks:
+      - automatisch-network
 
 networks:
-  default:
-    name: automatisch_net
+  automatisch-network:
+    driver: bridge
+
+volumes:
+  automatich-data:
+    driver: local
+
+# Optional configurations for persistent volumes or secrets
+# For secrets, use `docker-compose -f docker-compose.yml -f docker-compose.secrets.yml up`
+# secrets.yml example:
+# version: 3.8
+# services:
+#   automatisch-backend:
+#     environment:
+#       SECRET_KEY:
+#         file: ./secrets/secret_key.txt

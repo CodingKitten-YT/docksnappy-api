@@ -2,67 +2,49 @@ version: '3.8'
 
 services:
   geoserver:
-    image: geoserver:latest
-    container_name: geoserver
+    image: geoapplied/geoserver
     ports:
-      - "8080:8080" # GeoServer web UI and REST services
-      - "7080:7080"  # GeoServer's embedded PostGIS database (if using the PostGIS extension)
-      - "4289:4289"  # GeoWebCache service (optional, for caching WMS/WMTS requests)
-    volumes:
-      - type: bind
-        source: ./data/data
-        target: /opt/geoserver/data_dir/data
-      - type: bind
-        source: ./data/workspace
-        target: /opt/geoserver/workspace
-      - type: bind
-        source: ./logs
-        target: /opt/geoserver/logs
+      - "8080:8080" # GeoServer web admin interface
+      - "8090:8090" # REST and WMS services (Note: If you need SSL, this should be 4090)
     environment:
-      GEOSERVER_LEGAL_GIS_COPYRIGHT: "Copyright and usage terms"
-      GEOSERVER_LEGAL_HARVEST_NOTICE: "Data served by this GeoServer is Copyright (c) its creators."
-    networks:
-      - geonetwork
-      - postgis
-    restart: unless-stopped
+      - GEOSERVER_DATA_STORE_STORE=appdata # Optional data store container to be created below
+      - GEOSERVER_DB_URL=jdbc:mysql://dbserver:5432/geodb
+      - GEOSERVER_DB_USERNAME=geouser
+      - GEOSERVER_DB_PASSWORD=yourpassword
+    volumes:
+      - geoserver-data:/opt/geoserver/data_dir
+      - geoserver-logs:/opt/geoserver/logs/
+      - ./webapps/geoshop:/opt/geoserver/webapps/geoshop/
+    depends_on:
+      - dbserver
 
-  postgis:
-    image: postgis:latest
-    container_name: postgis
+  postgis_dbserver: # Alternative to MySQL if PostgreSQL is preferred
+    image: postgis:13-2.5
     volumes:
-      - type: bind
-        source: ./data/postgresql
-        target: /var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
     environment:
-      POSTGIS_DB: geoserver
-      POSTGIS_USER: geoserver
-      POSTGIS_PASSWORD: geoserver
-    networks:
-      - postgis
-    restart: unless-stopped
+      - POSTGRES_DB=geodb
+      - POSTGRES_USER=geouser
+      - POSTGRES_PASSWORD=yourpassword
 
-  geonetwork:
-    image: geonetwork:latest
-    container_name: geonetwork
-    ports:
-      - "8090:8090" # GeoNetwork web UI
-    volumes:
-      - type: bind
-        source: ./data/geostore
-        target: /opt/geonetwork/data_dir/geostore
-      - type: bind
-        source: ./logs
-        target: /opt/geonetwork/logs
+  geoserver_appdata: # Optional data store service for GeoServer
+    image: geoapplied/gda_store_geoserver
     environment:
-      GEO Network Initial Catalog: "/opt/geonetwork/data_dir/geostore/geonetwork.postgresql.db"
-      GEO Network PostGIS Database: "geoserver"
-      GEO Network User: "geoserver"
-      GEO Network Password: "geoserver"
-    networks:
-      - geonetwork
-    restart: unless-stopped
+      - GDASTORE_GS_HOME=/opt/geoserver
+      - GDASTORE_TYPE=postgis # or 'mysql' if using MySQL
+      - GDASTORE_DB_USERNAME=geouser
+      - GDASTORE_DB_PASSWORD=yourpassword
+    depends_on:
+      - dbserver # or geoserver if using MySQL
+    volumes:
+      - appdata-volume:/opt/gda_store/data
+
+volumes:
+  geoserver-data:
+  geoserver-logs:
+  postgres-data:
+  appdata-volume:
 
 networks:
-  geonetwork:
-  postgis:
+  geo2tz_default:
     driver: bridge

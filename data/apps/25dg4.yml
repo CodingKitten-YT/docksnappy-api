@@ -1,0 +1,57 @@
+version: '3'
+
+services:
+  sftpgo:
+    image: sftpgo/sftpgo:latest
+    container_name: sftpgo
+    ports:
+      - "2222:22" # SFTP port mapping, you can change the host port as needed
+      - "8022:8022" # SFTP over Web for file transfers through a web browser
+    volumes:
+      - "./config/sftpgo.conf:/etc/sftpgo/sftpgo.conf" # Configure your SFTPGo settings here
+      - "./certificates/rsa_key.pub:/root/.ssh/authorized_keys" # Public key for SSH access to the container
+      - sftpgo_data:/var/lib/sftpgo
+    environment:
+      - SFTPGO_PASSWORD=random_password # Set your initial admin password here
+      - SERVICE_NAME=sftpgo
+      - SERVICE_HOST=0.0.0.0
+      - SERVICE_PORT=22
+      # Additional environment variables for advanced configurations
+    networks:
+      - sftpgo_net
+
+  nginx-proxy:
+    image: nginx:latest
+    container_name: nginx-proxy
+    ports:
+      - "80:80" # HTTP
+      - "443:443" # HTTPS (requires Let's Encrypt certificates)
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./certificates/nginx.crt:/etc/nginx/ssl/nginx.crt
+      - ./certificates/nginx.key:/etc/nginx/ssl/nginx.key
+      - nginx-proxy_data:/var/lib/nginx-proxy
+    networks:
+      - sftpgo_net
+      - nginx_net
+
+  db:
+    image: postgres:latest # or use 'mysql:latest' for MySQL
+    container_name: db
+    volumes:
+      - db_data:/var/lib/postgresql # or change to the appropriate volume for MySQL
+    environment:
+      - POSTGRES_DB=sftpgo
+      - POSTGRES_USER=sftpgo
+      - POSTGRES_PASSWORD=sftpgo_dbpassword # Set your database password here
+    networks:
+      - sftpgo_net
+
+volumes:
+  sftpgo_data:
+  nginx-proxy_data:
+  db_data:
+
+networks:
+  sftpgo_net:
+  nginx_net:

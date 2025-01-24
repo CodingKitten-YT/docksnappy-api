@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  swetrix_web:
+    image: swetrix/swetrix:latest
+    container_name: swetrix_web
+    ports:
+      - "8001:80" # HTTP port (default)
+    volumes:
+      - ./config.json:/app/config.json
+      - ./data:/var/www/html
+    environment:
+      - DB_HOST=swetrix_db
+      - DB_USER=swetrix
+      - DB_PASSWORD=yourpassword
+      - DB_NAME=swetrix
+    depends_on:
+      - swetrix_db
+
+  swetrix_api:
+    image: swetrix/swetrix-api:latest
+    container_name: swetrix_api
+    ports:
+      - "8002:80" # API port (default)
+    volumes:
+      - ./api_config.json:/app/config.json
+      - ./data/api:/var/www/html
+    environment:
+      - DB_HOST=swetrix_db
+      - DB_USER=swetrix
+      - DB_PASSWORD=yourpassword
+      - DB_NAME=swetrix
+    depends_on:
+      - swetrix_db
+
+  swetrix_db:
+    image: postgres:13-alpine
+    container_name: swetrix_db
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=swetrix
+      - POSTGRES_PASSWORD=yourpassword
+      - POSTGRES_DB=swetrix
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
+      timeout: 10s
+      retries: 5
+
+# Optional: If you want to use a persistent volume for data and logs
+volumes:
+  swetrix_data:
+    driver: local
+
+networks:
+  swetrix_net:
+    driver: bridge

@@ -1,45 +1,22 @@
-version: '3.7'
-
+version: '3.8'
 services:
   bookstack:
     image: bookstack/bookstack:latest
     container_name: bookstack
     ports:
-      - "8080:80" # HTTP on host, port 80 exposed within the container
-      - "4439:443" # HTTPS on host (optional, requires SSL)
-    environment:
-      EMAIL_HOST: mailhog://localhost:1025 # For SMTP integration with MailHog
-      EMAIL_PORT: 1025                        # For SMTP integration with MailHog
-      EMAIL_USER: postmaster@default            # For SMTP integration with MailHog
-      EMAIL_PASSWORD: easypass                   # For SMTP integration with MailHog (optional)
+      - "8080:80" # HTTP
+      - "4439:443" # HTTPS (if you want to use SSL)
     volumes:
-      - "./data:/data"
-      - "./uploads:/uploads"
-    networks:
-      - bookstack-net
-    depends_on:
-      - mysql
-      - redis
-
-  mysql:
-    image: mysql:5.7
-    container_name: mysql
+      - './app:/data' # Local directory for BookStack data
+      - './bookstack.env:/root/.bookstack/config.php' # Optional, if you have custom .env file
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: bookstack
-      MYSQL_USER: bookstack
-      MYSQL_PASSWORD: bookstackpassword
-    volumes:
-      - "./db:/var/lib/mysql"
+      - PUID=1000 # Set the Process User ID (optional, defaults to 1000)
+      - GID=1000 # Set the Process Group ID (optional, defaults to 1000)
+      - TZ=Europe/London # Set your timezone
     networks:
-      - bookstack-net
-
-  redis:
-    image: redis:6.0-alpine
-    container_name: redis
-    networks:
-      - bookstack-net
+      - bookstack_net
+    restart: unless-stopped
 
 networks:
-  bookstack-net:
+  bookstack_net:
     driver: bridge

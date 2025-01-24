@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+  yt-dlp:
+    image: yt-dlp/yt-dlp:latest # Use the official yt-dlp image
+    volumes:
+      - ./config:/root/.config/yt-dlp # Map your local config directory to the container's configuration directory
+      - ./downloads:/root/downloads     # Map your local downloads directory to the container's downloads directory (optional)
+    environment:
+      - PUID=1000                        # Set the process user ID (optional, can be any UID you use)
+      - PGID=1000                       # Set the process group ID (optional, can be any GID you use)
+      - TZ=Europe/London            # Set the timezone (optional, change to your preferred timezone)
+    ports:
+      - "80:80"                          # Map port 80 on the host to port 80 on the container (for web UI)
+    restart: unless-stopped     # Ensure the container restarts on failure
+
+  redis:
+    image: redis:6-alpine         # Use a Redis instance for yt-dlp's session storage
+    volumes:
+      - redis-data:/data        # Persist Redis data
+    environment:
+      - REDIS_PASSWORD=yourpassword  # Set the Redis password (optional, if you want to secure it)
+
+volumes:
+  config:
+  redis-data:

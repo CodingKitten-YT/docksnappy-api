@@ -1,30 +1,40 @@
 version: '3.8'
 
 services:
-  dailytxt:
-    image: dailytxt/dailytxt:latest
+  db:
+    image: postgres:12
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: dailytxtx
+      POSTGRES_USER: dailytxtx_user
+      POSTGRES_PASSWORD: dailytxtx_password
     ports:
-      - "5000:5000" # Expose the FastAPI app on port 5000 (web interface)
-    environment:
-      - TZ=Your/Timezone # Set your timezone, e.g., 'America/New_York'
-      - POSTGRES_DB=dailytxtdb # The name of the PostgreSQL database
-      - POSTGRES_USER=user
-      - POSTGES_PASSWORD=password
-    volumes:
-      - ./data:/data
-      - ./config:/code/config
-    depends_on:
-      - postgres
-    command: --log-level debug
+      - "5432:5432"
 
-  postgres:
-    image: postgres:13
-    environment:
-      - POSTGRES_DB=dailytxtdb
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
+  backend:
+    image: dailymaer/daily-text-txx:latest
+    build:
+      context: ./backend
     volumes:
-      - dailytxt-db:/var/lib/postgresql/data
+      - backend_data:/app/data
+    environment:
+      DATABASE_URL: postgres://dailytxtx_user:dailytxtx_password@db:5432/dailytxtx
+    depends_on:
+      - db
+    ports:
+      - "8001:8001"
+
+  frontend:
+    image: dailymaer/daily-text-txx:latest
+    build:
+      context: ./frontend
+    volumes:
+      - frontend_data:/app/data
+    ports:
+      - "3000:3000"
 
 volumes:
-  dailytxt-db:
+  db_data:
+  backend_data:
+  frontend_data:

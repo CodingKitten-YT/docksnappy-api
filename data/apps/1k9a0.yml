@@ -1,45 +1,60 @@
 version: '3.8'
 
 services:
-  citadel:
-    image: citadel/citadel:latest
-    container_name: citadel
-    ports:
-      - "5432:5432" # PostgreSQL port, Citadel uses this for its database by default
-      - "7000:7000" # Citadel web interface
-      - "8000:8000" # Mail server submission port (SMTP/IMAP)
-    volumes:
-      - citadel_data:/var/lib/citadel
-      - citadel_cache:/tmp/citadel
-      - ./letsencrypt.yaml:/etc/letsencrypt.yaml # Optional, for Let's Encrypt SSL setup
+  citadel-api:
+    image: 'citadel.io/citadel:latest'
+    command: /run.sh api
     environment:
-      - TZ=Europe/London # Set the timezone as an example, replace with your own
-      - POSTGRES_DB=citadel # Database name, if different from the default
-      - POSTGIS_EXTENSION=1 # Enable PostGIS for spatial data support (optional)
-    command: /opt/citadel/bin/citadeld --log-path=/var/log/citadel
-    restart: unless-stopped
+      - CITADEL_AUTH=file
+      - CITADEL_HOSTNAME=citadel.local
+      - JWT_SECRET=very_secret_key
+    ports:
+      - "8081:8080" # HTTP API
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:8080/health || exit 1"]
+      interval: 5s
+      timeout: 2s
+      retries: 30
 
-  postgres:
-    image: postgres:latest
-    container_name: citadel_postgres
+  citadel-pushservice:
+    image: 'citadel.io/citadel:latest'
+    command: /run.sh pushservice
+    depends_on:
+      - citadel-api
+    environment:
+      - CITADEL_AUTH=file
+      - CITADEL_HOSTNAME=citadel.local
+    ports:
+      - "8082:8081" # Pushservice
+
+  citadel-appgateway:
+    image: 'citadel.io/citadel:latest'
+    command: /run.sh appgateway
+    depends_on:
+      - citadel-pushservice
+    environment:
+      - CITADEL_AUTH=file
+      - CITADEL_HOSTNAME=citadel.local
+      - PUSHSERVICE_HOST=citadel-pushservice:8081
+    ports:
+      - "443:443" # HTTPS (Use SSL)
     volumes:
-      - citadel_data:/var/lib/postgresql
+      - ./certs/appgateway.crt:/etc/ssl/private/appgateway.crt
+      - ./certs/appgateway.key:/etc/ssl/private/appgateway.key
+    healthcheck:
+      test: ["TCP", "0.0.0.0:443"]
+      interval: 5s
+      timeout: 2s
+      retries: 30
+
+  citadel-db:
+    image: 'citadel.io/postgres:latest'
     environment:
       - POSTGRES_DB=citadel
       - POSTGRES_USER=citadel
-      - POSTGRES_PASSWORD=yourpassword # Replace with a strong password
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U citadel"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - POSTGRES_PASSWORD=very_secure_password
+    volumes:
+      - citadel-db-data:/var/lib/postgresql/data
 
 volumes:
-  citadel_data:
-    driver: local
-  citadel_cache:
-    driver: local
-
-networks:
-  default:
-    driver: bridge
+  citadel-db-data:

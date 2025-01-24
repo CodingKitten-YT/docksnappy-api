@@ -1,39 +1,45 @@
 version: '3.8'
 
 services:
-  huly-app:
-    image: huly/huly:latest  # Replace with the official or custom image for Huly
+  huly-web:
+    image: huly/huly:latest  # Use the official or specific Huly image if available
     ports:
-      - "8080:80"  # Map the application port to the host, if necessary
-    environment:
-      - DATABASE_URL=postgres://huly-db:5432/huly  # Database connection string
-      # Add other environment variables required by Huly here
+      - "80:80"  # Map HTTP port 80 on the host to port 80 in the container
+      - "443:443"  # Map HTTPS port 443 on the host to port 443 in the container (if using SSL)
     depends_on:
       - huly-db
+      - huly-redis
+    environment:
+      DATABASE_URL: "postgres://huly-db:5432"
+      REDIS_URL: "redis://huly-redis:6379/0"
+      SECRET_KEY: "your_secret_key"  # Replace with your actual secret key
+    volumes:
+      - ./data:/data  # Mount for static files, adjust path as needed
+      - ./logs:/var/log/huly  # Logs directory (optional)
     restart: unless-stopped
 
   huly-db:
-    image: postgres:13  # PostgreSQL image version
-    command: 'postgres -c "listen_addresses = '0.0.0.0'"'  # Listen on all interfaces
+    image: postgres:13  # Use the PostgreSQL image and tag
     volumes:
-      - huly-db-data:/var/lib/postgresql/data  # Persistent storage for the database
+      - huly-db-data:/var/lib/postgresql  # Persist database data
     environment:
-      - POSTGRES_USER=huly
-      - POSTGRES_PASSWORD=yourpassword  # Replace with a secure password
-      - POSTGRES_DB=huly
+      POSTGRES_DB: huly_production  # Database name
+      POSTGRES_USER: huly  # Database user
+      POSTGRES_PASSWORD: strong_password  # Database password
     restart: unless-stopped
 
-  nginx:
-    image: nginx:latest
-    ports:
-      - "80:80"  # Map HTTP port to the host
-      - "443:443"  # Map HTTPS port to the host, if using SSL
+  huly-redis:
+    image: redis:6.2  # Use the Redis image and tag
     volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d  # Directory containing your Nginx configuration files
-      - huly-app:/var/www/html  # Mount the Huly app container as a volume for serving files directly
-    depends_on:
-      - huly-app
+      - huly-redis-data:/data  # Persist Redis data
+    healthcheck:
+      test: ["CMD", "REDITCLIA", "PING"]
+      timeout: 5s
+      retries: 10
     restart: unless-stopped
 
 volumes:
   huly-db-data:
+    driver: local
+  huly-redis-data:
+    driver: local

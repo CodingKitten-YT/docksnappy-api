@@ -1,0 +1,81 @@
+version: '3.8'
+services:
+  app:
+    image: simplelogin/simplelogin:latest
+    container_name: simplelogin
+    restart: unless-stopped
+    ports:
+      - "80:4000" # Expose HTTP on host, proxy to port 4000 in the container (SimpleLogin frontend)
+    environment:
+      - SERVICE_ENV=production
+      - POSTGRES_DB=simplelogin
+      - POSTGRES_USER=simplelogin
+      - POSTGRES_PASSWORD=simplelogin
+      # Optionally, uncomment the following line if you want to enable logging of emails
+      # EMAIL_LOG_ENABLED=true
+    volumes:
+      - ./data:/data
+      - simplelogin.sqlite3:/app/simplelogin.sqlite3 # This is for data persistence if you're using SQLite (uncomment if using SQLite)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U simplelogin"]
+      timeout: 10s
+      interval: 30s
+      retries: 5
+    depends_on:
+      - db
+
+  db:
+    image: postgres:latest
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: simplelogin
+      POSTGRES_USER: simplelogin
+      POSTGRES_PASSWORD: simplelogin
+    volumes:
+      - ./data/db:/var/lib/postgresql/data # This is for data persistence of the PostgreSQL database (uncomment if you want to persist data)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U simplelogin"]
+      timeout: 10s
+      interval: 5s
+      retries: 10
+
+# Uncomment the following if you want to enable Redis for caching (optional)
+services:
+  redis:
+    image: redis:latest
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -h $REDIS_PORT_6379_TCP_ADDR ping"]
+      timeout: 10s
+      interval: 5s
+      retries: 10
+
+# Uncomment the following if you want to enable a sending service like Postal for email sending (optional)
+services:
+  sending:
+    image: simplelogin/simplelogin-smtp:latest
+    restart: unless-stopped
+    environment:
+      - SERVICE_ENV=production
+      - SMTP_ENABLED=true
+      - SMTP_HOST=localhost
+      - SMTP_PORT=25027
+      - SMTP_USER=simplelogin
+      - SMTP_PASSWORD=simplelogin
+      - SMTP_DB=simplelogin
+    depends_on:
+      - db
+
+# Uncomment the following if you want to enable a receiving service like Failer for incoming emails (optional)
+services:
+  receiver:
+    image: simplelogin/failer:latest
+    restart: unless-stopped
+    environment:
+      - SERVICE_ENV=production
+      - FAILER_DB_HOST=db
+      - FAILER_DB_NAME=simplelogin
+      - FAILER_DB_USER=simplelogin
+      - FAILER_DB_PASSWORD=simplelogin
+    depends_on:
+      - db

@@ -1,32 +1,26 @@
-version: '3.8'
+version: '3.8'  # Use a version that is compatible with your environment and the current practices
 
 services:
   app:
-    image: note_mark:latest  # Ensure you have this image available or build it with a Dockerfile in the context directory
+    image: note_mark:latest  # Assuming you have a Docker image named 'note_mark'
     ports:
-      - "5000:5000"  # Expose the port Note Mark runs on (default is typically 5000)
-    volumes:
-      - .:/usr/src/app  # For local development; mounts the current directory into the container
-      - app/node_modules:/usr/src/app/node_modules  # Prevents rebuilding node modules on every container start (for production, remove this or change to read-only)
+      - "5000:5000"  # Expose the port that Note Mark uses (default is usually 5000)
     environment:
-      - NODE_ENV=production  # Set to 'development' for development mode
-    command: >
-      yarn install && \
-      yarn run build && \
-      yarn run serve  # Adjust the commands as needed, e.g., build and start scripts from package.json
+      - ENV=production  # Set the environment to production or development as needed
+    volumes:
+      - .:/app  # Mount the current directory to '/app' within the container for local development and changes
+      - app/node_modules:/app/node_modules  # Prevents rebuilding of node_modules every time, speeding up dev process.
+    depends_on:
+      - db
 
   db:
-    image: postgres:latest
-    volumes:
-      - note-mark-db:/var/lib/postgresql  # Use a named volume for persistence (create this with `docker volume create note-mark-db`)
+    image: postgres:latest  # Use the official PostgreSQL image
     environment:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=note_mark_db  # Adjust these to your database configuration
+      - POSTGRES_DB=note_mark_db
+    volumes:
+      - db_data:/var/lib/postgresql/data  # Persist the database data
 
 volumes:
-  note-mark-db:
-
-networks:
-  default:
-    driver: bridge
+  db_data:

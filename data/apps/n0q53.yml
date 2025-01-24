@@ -1,0 +1,114 @@
+version: '3.8'
+
+services:
+  rudder-ingester:
+    image: rudderlabs/rudder-ingester:latest
+    depends_on:
+      - rudder-api
+    environment:
+      RUDDER_API__HOST: rudder-api
+      RUDDER_API__SECRET: ${RUDDER_INGESTER_SECRET}
+      JOB_STORE__TYPE: redis
+      JOB_QUEUE__HOST: redis
+    ports:
+      - "8071:8071" # RudderAgent's default ingest port
+    commandReview:
+      - "--ingest=true"
+      - "--store.type=redis"
+      - "--store.host=redis"
+      - "--store.password=${REDIS_PASSWORD}"
+      - "--collect_logs=true"
+      # Additional flags can be added here as needed
+    volumes:
+      - "./rudder-ingester/configs:/etc/rudder/configs"
+      - "./rudder-ingester/sources:/etc/rudder/sources"
+      - "./rudder-ingester/plugins:/etc/rudder/plugins"
+    depends_on:
+      - rudder-redis
+      - rudder-postgres
+
+  rudder-api:
+    image: rudderlabs/rudder-server:latest
+    environment:
+      RUDDER_JWT__SECRET: ${RUDDER_API_SECRET}
+      RUDDER_POSTGRES__HOST: rudder-postgres
+      RUDDER_POSTGRES__DBNAME: rudder
+      RUDDER_REDIS__HOST: redis
+    ports:
+      - "8075:8075" # RudderServer's default API port
+    volumes:
+      - ./rudder-api/config.yml:/etc/rudder/config.yml
+      - ./rudder-api/certs:/etc/letsencrypt
+    depends_on:
+      - rudder-postgres
+      - rudder-redis
+
+  rudder-redis:
+    image: redis:latest
+    command: "redis-server --save . snapshot.rdb"
+    volumes:
+      - "./rudder/redis/data:/data"
+
+  rudder-postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: rudder
+      POSTGRES_USER: rudder
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - "./rudder/postgres/data:/var/lib/postgresql/data"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready 5432"]
+      timeout: 10s
+      retries: 30
+
+  rudder-monitoring:
+    image: rudderlabs/rudder-monitoring:latest
+    depends_on:
+      - rudder-api
+    environment:
+      MONITORING__HOST: rudder-api
+      MONITORING__SECRET: ${RUDDER_MONITORING_SECRET}
+    ports:
+      - "8080:8080" # RudderMonitoring's default monitoring port
+    volumes:
+      - "./rudder-monitoring/config.yml:/etc/rudder/monitoring/config.yml"
+
+  rudder-sentinel:
+    image: rudderlabs/rudder-sentinel:latest
+    depends_on:
+      - rudder-api
+    environment:
+      RUDDER_API__HOST: rudder-api
+      RUDDER_API__SECRET: ${RUDDER_SENTINEL_SECRET}
+    ports:
+      - "8076:8076" # RudderSentinel's default sentinel port
+
+# Uncomment the following services if you want to enable Rudder's agent simulation (Ingester)
+# rudder-agent-simulator:
+#   image: rudderlabs/rudder-agent-simulator:latest
+#   environment:
+#     - RUDDER_API__HOST=rudder-api
+#     - RUDDER_API__SECRET=${RUDDER_AGENT_SIMULATOR_SECRET}
+#     - EVENTS__EMITTER=example_events_emitter
+#   command: >
+#     --ingest=false
+#     --store.type=memory
+#     --source.id=example_sources_simulator
+#     --plugins.id=example_plugins_simulator
+#     --plugins.config.example_plugin_name.event_class=ExampleEvent
+#   ports:
+#     - "8072:8072" # RudderAgentSimulator's default port
+
+# Uncomment the following services if you want to enable Rudder's real-time analytics service (SparkNotebook)
+# rudder-sparknotebook:
+#   image: rudderlabs/rudder-sparknotebook:latest
+#   environment:
+#     - RUDDER_API__HOST=rudder-api
+#     - RUDDER_API__SECRET=${RUDDER_SPARKNOTEBOOK_SECRET}
+#   ports:
+#     - "8077:8077" # RudderSparkNotebook's default port
+
+networks:
+  rudder-network:
+    driver: bridge

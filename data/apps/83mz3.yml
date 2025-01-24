@@ -1,23 +1,50 @@
 version: '3.8'
 
 services:
-  ntfy:
-    image: ntfy/ntfy:latest
-    ports:
-      - "8080:80" # Web interface
-      - "8125:43": # NTFY server (D-Bus for system notifications)
-        expose: true # D-Bus sockets are exposed, but not published to the host.
+  ntfy-db:
+    image: postgres:13
+    command: 'postgres -c "fsync=off"'
     volumes:
-      - "./ntfy.toml:/etc/ntfy/supervisor.conf:ro" # Configuration file
-      - "ntfy_data:/var/spool/postfix" # For emails, if used
-      - "ntfy_socket:/run/dbus/system" # For D-Bus integration with system notifications
-    user: "1000" # Replace with your user ID to allow volume mounting
-    networks:
-      - ntfy_net
+      - ./data/ntfy-db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ntfy
+      POSTGRES_PASSWORD: ntfy@2023
+      POSTGRES_DB: ntfy
+    ports:
+      - "5432:5432"
+
+  ntfy-redis:
+    image: redis:6-alpine
+    volumes:
+      - ./data/ntfy-redis:/data
+
+  ntfy-api:
+    image: ntfy/ntfy:latest
+    environment:
+      REDIS_URL: redis://redis:6379
+      POSTGRES_URL: postgres://ntfy-db:5432
+      POSTGRES_USERNAME: ntfy
+      POSTGRES_PASSWORD: ntfy@2023
+      POSTGRES_DBNAME: ntfy
+    ports:
+      - "8080:8080"
+    depends_on:
+      - ntfy-db
+      - ntfy-redis
+
+  # Optional reverse proxy with traefik (if you want to use SSL/TLS)
+  # traefik:
+  #   image: traefik:v2.5
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./traefik.toml:/traefik.toml
+  #   command:
+  #     - "--api.insecure=true"
+  #     - "--providers.docker=true"
+  #     - "--providers.docker.exposedByDefault=false"
 
 volumes:
-  ntfy_data:
-  ntfy_socket:
-
-networks:
-  ntfy_net:
+  ntfy-db_data:
+  ntfy-redis_data:

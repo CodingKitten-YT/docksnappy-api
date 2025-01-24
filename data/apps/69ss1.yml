@@ -4,36 +4,30 @@ services:
   app:
     image: hedgedoc/hedgedoc:latest
     container_name: hedgedoc
-    restart: unless-stopped
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Paris
-    volumes:
-      - './appdata:/data'
-      - './share:/share'
-      - './config:/config'
     ports:
-      - "80:80" #HTTP
-      - "443:443" #HTTPS (only if you set up SSL)
-    networks:
-      - hedge-network
-
-  postgres:
-    image: postgres:12
-    container_name: hedgedoc_postgres
-    restart: unless-stopped
+      - "8080:80" # HTTP port
     environment:
-      - POSTGRES_DB=hedgedoc
-      - POSTGRES_USER=hedgedoc
-      - POSTGRES_PASSWORD=changeit
+      - TZ=Europe/Paris
+      - JAVA_OPTS=-Xms512M -Xmx512M
     volumes:
-      - './dbdata:/var/lib/postgresql'
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U hedgedoc"]
+      - "./data:/data"
+      - "./config:/etc/hedgedoc"
+      - "./logs:/var/log/hedgedoc"
     networks:
-      - hedge-network
+      - hedgedoc_net
+
+  db:
+    image: postgres:13
+    container_name: hedgedoc_db
+    environment:
+      - POSTGRES_USER=hedgedoc
+      - POSTGRES_PASSWORD=change_this_password
+      - POSTGRES_DB=hedgedoc
+    volumes:
+      - "./data/db:/var/lib/postgresql/data"
+    networks:
+      - hedgedoc_net
 
 networks:
-  hedge-network:
+  hedgedoc_net:
     driver: bridge

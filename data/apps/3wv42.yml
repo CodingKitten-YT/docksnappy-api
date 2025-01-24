@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  thingsboard:
+    image: thingsboard/thingsboard:latest
+    container_name: thingsboard
+    ports:
+      - "8081:8081" # HTTP API (Default HTTP REST API)
+      - "8443:8443" # HTTPS API (Enable HTTPS by setting THINGSBORD_USE_SSL to 'true')
+      - "1883:1883" # MQTT Broker
+      - "6080:6080" # UI Portal
+    environment:
+      - THINGSBOARD_MOBILE_APP_ENABLED=true
+      - THINGSBORD_DEFAULT_TIMEZONE=UTC
+      - THINGSBORD_DB_TYPE=influxdb2
+      - THINGSBORD_DB_HOST=influxdb
+      - THINGSBORD_DB_USERNAME=thingsboard
+      - THINGSBORD_DB_PASSWORD=thingsboard_pwd
+      - THINGSBORD_DB_DATABASE=thingsboard
+      - THINGSBORD_DB_ADMIN_USERNAME=admin
+      - THINGSBORD_DB_ADMIN_PASSWORD=admin_pwd
+    depends_on:
+      - influxdb
+      - mqttbroker
+    networks:
+      - thingsboard-network
+
+  influxdb:
+    image: influxdata/influxdb:latest
+    container_name: influxdb
+    command: >
+      --default.replication.factor=1
+      --default.data.retention.duration=60d
+    ports:
+      - "8086:8086"
+    networks:
+      - thingsboard-network
+
+  mqttbroker:
+    image: eclipse-mosquitto/mosquitto:latest
+    container_name: mqttbroker
+    environment:
+      MOSQUITTO_CLIENT_ID_PREFIX: 'thingsboard'
+    networks:
+      - thingsboard-network
+
+  influxdb2-ui:
+    image: apache/influxdb-ui:latest
+    container_name: influxdb2_ui
+    depends_on:
+      - influxdb
+    ports:
+      - "9000:9000"
+    networks:
+      - thingsboard-network
+
+  db_backup:
+    image: thingsboard/db-backup:latest
+    container_name: db_backup
+    depends_on:
+      - influxdb
+    environment:
+      - INFLUXDB_HOST=influxdb
+      - BACKUP_SCHEDULE='0 2 * * *' # Example cron schedule to run once a day at 2 AM
+      - RETRIEVE_BACKUPS='false'
+    networks:
+      - thingsboard-network
+
+networks:
+  thingsboard-network:
+    driver: bridge

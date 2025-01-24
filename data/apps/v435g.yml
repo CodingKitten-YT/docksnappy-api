@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  wbo-app:
+    image: wbo-app:latest
+    ports:
+      - "8000:80"
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_USER: wbouser
+      DB_PASSWORD: wbopassword
+      DB_NAME: wboname
+    volumes:
+      - ./app/src:/app/src
+      - ./app/static:/app/static
+      - ./app/templates:/app/templates
+
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: wbouser
+      POSTGRES_PASSWORD: wbopassword
+      POSTGRES_DB: wboname
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data:

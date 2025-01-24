@@ -1,42 +1,32 @@
-version: '3.7'
-services:
-  # Hoppscotch UI Service
-  hoppscotch-ui:
-    image: hoppscotch/hoppscotch:community_edition
-    container_name: hoppscotch-ce
-    ports:
-      - "8080:8080" # Hoppscotch default port for the UI
-    environment:
-      HOPPSCOTCH_DATABASE__TYPE: sqlite  # Database type (default)
-      HOPPSCOTCH_DATABASE__HOST: db       # Database host (named link to 'hoppscotch-db')
-      HOPPSCOTCH_DATABASE__DBNAME: hoppscotch    # Database name (optional, will be auto-generated if not set)
-      HOPPSCOTCH_DATABASE__USER: hoppscotch   # Database user (optional)
-      HOPPSCOTCH_DATABASE__PASSWORD: hoppscotch  # Database password (optional)
-    volumes:
-      - hoppscotch-ce-data:/data/db     # Persistent storage for DB
-      - ./hoppscotch:/data/upload   # Custom API, UI or other custom data
-    depends_on:
-      - hoppscotch-db
-    networks:
-      - hoppscotch_network
+version: '3.8'
 
-  # Hoppscotch Database Service (SQLite)
-  hoppscotch-db:
-    image: postgres:13
-    container_name: hoppscotch-db
-    volumes:
-      - hoppscotch-db-data:/var/lib/postgresql/data
+services:
+  hoppscotch-community:
+    image: hoppscotch/hoppscotch-ce:latest
+    ports:
+      - "8080:8080" # The API Gateway exposes on port 8080.
     environment:
-      POSTGRES_DB: hoppscotch     # Database name (optional, will be auto-generated if not set)
-      POSTGRES_USER: hoppscotch   # Database user (optional)
-      POSTGRES_PASSWORD: hoppscotch  # Database password (optional)
-    networks:
-      - hoppscotch_network
+      HOPPSCOTCH_SERVER_HOSTNAME: "0.0.0.0" # Allows access from any IP address.
+      JWT_SECRET: "${JWT_SECRET:-random-very-secure-string}" # Set your own secret for JWT tokens.
+    command: server --disable-telemetry # Optional: disable telemetry by default.
+
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: hoppscotch
+      POSTGRES_PASSWORD: hoppscotch
+      POSTGRES_DB: hoppscotch
+    volumes:
+      - hoppscotch-community-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hoppscotch"]
+      timeout: 10s
+      retries: 30
 
 volumes:
-  hoppscotch-ce-data:
-  hoppscotch-db-data:
+  hoppscotch-community-postgres:
 
 networks:
-  hoppscotch_network:
-    driver: bridge
+  default:
+    external:
+      name: hoppscotch-network # Optional: if you define a custom network in your Docker environment.

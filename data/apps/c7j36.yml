@@ -2,47 +2,34 @@ version: '3.8'
 
 services:
   docking:
-    image: 'docking/docking:latest' # Use the official or your custom DocKing image
+    image: docking/docking:latest
     container_name: docking
     ports:
-      - "5000:5000" # Expose the port DocKing runs on (default is 5000)
+      - "5000:5000" # The default port for DocKing API
     volumes:
-      - './data:/app/data' # Mount a volume for DocKing to store its files
-      - './config:/app/config' # Optional: Mount a volume for Docking to store its configuration
+      - "./data:/app/data" # Mount your local data directory to the container's data directory
+      - "./conf:/etc/docking" # Mount your local configuration directory to the container's configuration directory (optional, for custom config)
     environment:
-      - DOCKING_DB_HOST=db
-      - DOCKING_DB_NAME=docking
-      - DOCKING_DB_USER=dockinguser
-      - DOCKING_DB_PASSWORD=dockingpassword
-      # Optional additional environment variables for DocKing configurations
-    depends_on:
-      - db
+      DOCKING_LICENSE: "your-license-key" # Set your DocKing license key if needed
+      JAVA_OPTS: "-Xms512m -Xmx512m" # Set Java heap size (optional)
+    command: run --config /etc/docking
+    restart: unless-stopped
 
-  db:
-    image: 'postgres:latest' # Use the official PostgreSQL image or a tag of your choice
-    container_name: docking_db
+  postgres:
+    image: postgres:latest
+    container_name: docking_postgres
     volumes:
-      - './data/db:/var/lib/postgresql/data' # Persist database data
+      - "./data/db:/var/lib/postgresql/data" # Mount your local database data directory to the container's data directory
     environment:
-      - POSTGRES_USER=dockinguser
-      - POSTGRES_PASSWORD=dockingpassword
-      - POSTGRES_DB=docking
-    environment:
-      # Optionally, set up POSTGRES_PASSWORD if you didn't set it in a secret way
-      - POSTGRES_PASSWORD=rootpassword
+      POSTGRES_DB: "docking"
+      POSTGRES_USER: "docking"
+      POSTGRES_PASSWORD: "yourpassword"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U docking"]
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
 
-  redis:
-    image: 'redis:latest' # Use the official Redis image or a tag of your choice
-    container_name: docking_redis
-
-# Define any volumes if you want to persist data across container restarts
-volumes:
-  data:
-  db:
-    driver: local
-  config:
-
-# Define any networks if you need them beyond the default network
 networks:
   default:
-    driver: bridge
+    name: docking_network

@@ -1,52 +1,73 @@
 version: '3.8'
 
 services:
-  app:
-    image: foodcoopshop/foodcoopshop:latest
-    container_name: foodcoopshop
-    restart: unless-stopped
+  web:
+    image: foodcoopshop/web:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.web
     ports:
-      - "8000:8000" # Adjust the host port as needed
+      - "8000:80"
+    depends_on:
+      - db
+      - cache
     environment:
-      - DJANGO_SETTINGS_MODULE=foodcoopshop.settings.production
-      - SECRET_KEY=change_this
-      - DEBUG=False
-      - ALLOWED_HOSTS=127.0.0.1,localhost,yourdomain.com
-      # Add other environment variables as needed (e.g., database credentials)
+      SECRET_KEY: ${RANDOM_SECRET_KEY}
+      DEBUG: True
+      DATABASE_URL: db://db:5432/foodcoopshop
+      BROKER_URL: redis://cache:6379/0
     volumes:
-      - ./app/static:/code/foodcoopshop/static
-      - ./app/foodcoopshop/:/code/foodcoopshop
-      - /code/foodcoopshop/static/media:/code/foodcoopshop/media  # Assuming you store media in the 'media' directory
-    command: gunicorn foodcoopshop.wsgi -b 0.0.0.0:8000
+      - .:/code
+      - /code/static:/code/static
+      - /code/foodcoopshop.local_secret:/etc/secret
+    env_file:
+      - .env
+
+  cache:
+    image: foodcoopshop/cache:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.cache
+    command: redis-server /root/Redis.conf
+    volumes:
+      - redish_data:/data
 
   db:
     image: postgres:13
-    container_name: foodcoopshop_db
     environment:
-      - POSTGRES_DB=foodcoopshop_db
-      - POSTGRES_USER=foodcoopshop_user
-      - POSTGRES_PASSWORD=change_this
+      POSTGRES_DB: foodcoopshop
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data/
 
-  celery_worker:
-    image: foodcoopshop/foodcoopshop:latest
-    container_name: foodcoopshop_celery_worker
-    restart: unless-stopped
+  worker:
+    image: foodcoopshop/worker:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    depends_on:
+      - db
+      - cache
+      - queue
     environment:
-      - DJANGO_SETTINGS_MODULE=foodcoopshop.settings.production
-      - SECRET_KEY=change_this
-      - DEBUG=False
-      - ALLOWED_HOSTS=127.0.0.1,localhost,yourdomain.com
-      # Add other environment variables as needed (e.g., database credentials)
-    command: celery -A foodcoopshop worker --loglevel=info
+      CELOERY_BROKER_URL: redis://cache:6379/0
+      CELOERY_BEAT_ERROR_EXPIRY_TIME: 86400
+    volumes:
+      - celery_results:/root/.celery_results
 
-  redis:
-    image: redis:6-alpine
-    container_name: foodcoopshop_redis
+  queue:
+    image: foodcoopshop/queue:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.queue
+    depends_on:
+      - db
 
 volumes:
+  redis_data:
   db_data:
+  celery_results:
 
 networks:
   default:

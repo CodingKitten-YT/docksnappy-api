@@ -1,34 +1,43 @@
-version: '3.8'
+version: '3'
 
 services:
-  flagsmith-feature-toggle:
-    image: flagsmith/flagsmith:latest
-    command: >
-      /bin/entrypoint.sh configure --type=haproxy --haproxy_config.backend_mode=http_bridge
+  flagsmith-db:
+    image: postgres:12
+    command: postgres -c 'fsync=OFF' -c 'full_page_writes=OFF'
+    volumes:
+      - flagsmith-db-data:/var/lib/postgresql/data
     environment:
-      - FLAGSMITH_ADMINS=admin@example.com
-      - FLAGSMITH_ORGANISATION=my-org
-      - FLAGSMITH_ENVIRONMENT=production
-      # Optionally, set the feature store S3 bucket if you are using it
-      - FLAGSMITH_AWS_S3_BUCKET=my-feature-store-bucket
-    ports:
-      - "9090:9090"
+      POSTGRES_USER: ${FLAGSMITH_DB_USER}
+      POSTGRES_PASSWORD: ${FLAGSMITH_DB_PASSWORD}
+      POSTGRES_DB: ${FLAGSMITH_DB_NAME}
     networks:
       - flagsmith-net
 
-  flagsmith-ui:
-    image: flagsmith/flagsmith-ui:latest
-    environment:
-      - REACT_APP_FLAGSMITH_SERVER=http://feature-toggle:9090
-      - REACT_APP_FLAGSMITH_ORGANISATION=my-org
-      - REACT_APP_FLAGSMITH_ENVIRONMENT=production
-    ports:
-      - "5000:5000"
+  flagsmith:
+    image: flagsmith/flagsmith:latest
     depends_on:
-      - flagsmith-feature-toggle
+      - flagsmith-db
+    environment:
+      FLAGSMITH_DATABASE_HOST: flagsmith-db
+      FLAGSMITH_DATABASE_USER: ${FLAGSMITH_DB_USER}
+      FLAGSMITH_DATABASE_PASSWORD: ${FLAGSMITH_DB_PASSWORD}
+      FLAGSMITH_DATABASE_NAME: ${FLAGSMITH_DB_NAME}
+      FLAGSMITH_DATABASE_PORT: 5432
+    ports:
+      - "9090:9090" # Default port for Flagsmith API
+    volumes:
+      - ./flagsmith.env:/etc/Flagsmith/flagsmith.env
     networks:
       - flagsmith-net
+
+volumes:
+  flagsmith-db-data:
 
 networks:
   flagsmith-net:
     driver: bridge
+
+variables:
+  FLAGSMITH_DB_USER: flagsmith
+  FLAGSMITH_DB_PASSWORD: some_password
+  FLAGSMITH_DB_NAME: flagsmith

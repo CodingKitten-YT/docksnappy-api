@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  snyk_scan_engine:
+    image: snyk/snyk-scan-engine
+    environment:
+      # Use the Snyk write key for scanning your own code. It is not required for community use but when you are ready to scale up, you will need one.
+      SYNK_FREE_ANONYMOUS: "true"
+    ports:
+      - "1090:1090" # The default port for the Snyk Scan Engine
+    restart: unless-stopped
+    healthcheck:
+      test: ["tcp", "0.0.0.0", "1090"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  snyk_cli:
+    image: snyk/cli
+    entrypoint: ['/bin/sh']
+    command: ['-c', 'echo "Hello Snyk CLI!"']
+    restart: unless-stopped
+
+volumes:
+  snyk-data:
+    driver: local
+
+networks:
+  default:
+    name: snyk_network

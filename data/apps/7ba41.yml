@@ -1,0 +1,69 @@
+version: '3.8'
+services:
+  # OSM (OpenStreetMap) database service
+  osm-database:
+    image: openstreetmap/osm2pgsql:latest
+    command: sh -c 'pg_ctl -l logfile stop; osm2pgsql --slots-count=8 /path/to/planet.osm pgsql "host=localhost user=osm dbname=osm password=your_password" && pg_ctl -l logfile start'
+    volumes:
+      - type: bind
+        source: /path/to/planet.osm
+        target: /path/to/planet.osm
+      - osm-database-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: osm
+      POSTGIS_EXTENSION: true
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    depends_on:
+      - postgres
+
+  # PostgreSQL service
+  postgres:
+    image: postgres:latest
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: osm
+      POSTGRES_USER: osm
+      POSTGRES_PASSWORD: your_password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U osm"]
+      timeout: 10s
+      retries: 30
+    restart: unless-stopped
+
+# Named volumes for persistent data
+volumes:
+  osm-database-data:
+  postgres-data:
+
+# Optional: Add a web access to the OSM database using a service like Marathon or GeoServer
+# Example using Marathon with an additional plugin to serve MapML and XML formats
+services:
+  marathon:
+    image: geowebcache/marathon:latest
+    volumes:
+      - type: bind
+        source: /path/to/geowebcache-data
+        target: /opt/GeoWebCache/data
+    environment:
+      GWC_MAPPING_CONFIG: /path/to/gwc_config.xml
+      JAVA_OPTS: "-Dgeowebcache.dataDir=/opt/GeoWebCache/data"
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+volumes:
+  osm-database-data:
+    driver_opts:
+      device: '/dev/sdb' # or any other device you want to use
+      o: 'bind'
+  postgres-data:
+    driver_opts:
+      device: '/dev/sdc' # or another device for PostgreSQL data
+      o: 'bind'
+  geowebcache-data:
+    driver_opts:
+      device: '/dev/sde' # or another device for GeoWebCache data
+      o: 'bind'

@@ -1,21 +1,18 @@
-version: '3.8'
+version: '3.7'
 services:
   dashy:
-    image: dasherdecker/dashy:latest
-    container_name: dashy
+    image: dashy/dashy:latest  # Use the official Dashy image from Docker Hub
+    container_name: dashy  # Optional, gives a specific name to the service
     ports:
-      - "80:3000" # Host:Container
-    restart: unless-stopped
+      - "8080:80"  # Map port 80 from the container to port 8080 on the host (HTTP)
     environment:
-      - TZ=Europe/London  # Set your timezone, e.g., for UTC: TZ=UTC
+      TZ: "Europe/London"  # Set the timezone, change as needed
     volumes:
-      - ./dashy:/data/dashyd
-      - ./dashy/config:/root/.config/dashy
-      - ./dashy/data:/data/dashy/data
-      - ./dashy/addons:/data/dashy/addons
-    networks:
-      - homeassistant
+      - "./config:/config"  # Mount a volume for configuration files, optional but recommended
+      - "./data:/data"  # Mount a volume for data persistence, optional but recommended
+      - "./plugins:/plugins"  # Mount a volume for plugin files, optional but recommended
+    restart: unless-stopped  # Restart the service unless it has been manually stopped
 
 networks:
-  homeassistant:
-    driver: bridge
+  dashy_net:
+    driver: bridge  # Optional, sets up a network for the container

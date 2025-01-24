@@ -1,42 +1,52 @@
-version: '3.8'
+1 version: '3.8'
+2 services:
+3   bitwarden_server:
+4     image: 'bitwarden/server:latest' # Use a specific version if needed, e.g., 'bitwarden/server:2023.1.7'
+5     ports:
+6       - "80:80" # HTTP
+7       - "443:443" # HTTPS (requires SSL configuration)
+8     environment:
+9       SECRET_KEY: "${SECRET_KEY}" # Set this to a secure random key, e.g., using `openssl rand -base64 32`
+10      BW_DB_HOSTNAME: 'db' # Reference the database service defined below
+11      BW_DB_USERNAME: "${MYSQL_USER}"
+12      BW_DB_PASSWORD: "${MYSQL_PASSWORD}"
+13      BW_DB_DATABASE: "${MYSQL_DATABASE}"
+14      BW_DB_PORT: '3306'
+15      BW_SERVER_HOSTNAME: 'localhost' # Default, change if using a proxy or load balancer
+16      BW_SERVER_PROTOCOL: "http" # Change to "https" for HTTPS
+17      BW_ADMIN_USERNAME: 'admin'
+18      BW_ADMIN_PASSWORD: 'password'
+19      BW_LOGIN_ATTEMPTS: '5'
+20      JWT_SECRET: "${JWT_SECRET}" # Recommended for production, leave empty or use a random secret for testing
+21      SERVICE_NAME: 'bitwarden.local' # FQDN for the service, change to your domain/subdomain
+22     volumes:
+23       - './data:/data' # Data persistence for Bitwarden (encrypted is recommended)
+24       - './letsencrypt:/etc/letsencrypt' # Required for automatic certbot certificates (if enabled)
+25     depends_on:
+26       - 'db'
+27   db:
+28     image: 'postgres:latest' # Use a specific version if needed, e.g., 'postgres:13'
+29     environment:
+30       POSTGRES_USER: "${MYSQL_USER}"
+31       POSTGRES_PASSWORD: "${MYSQL_PASSWORD}"
+32       POSTGRES_DB: "${MYSQL_DATABASE}"
+33   # Optionally, you can also set up a Redis cache and/or a logging stack (e.g., elasticsearch, filebeat, logstash)
+34 # for better performance and monitoring. Here's an example for a Redis cache service:
+35 redis:
+36   image: 'redis:latest' # Use a specific version if needed, e.g., 'redis:6-alpine'
+37   command: redis-server --appendonly yes
+38   volumes:
+39     - './redis/data:/data' # Data persistence for Redis (optional, but recommended)
+40
+41 # If you set up a logging stack, define it here similarly to the above services.
+42
+43 networks:
+44   default:
+45     external:
+46       name: true # This makes the compose service names resolvable by the host and containers on the same Docker network
 
-services:
-  bitwarden_server:
-    image: 'bitwarden/server:latest' # Use a specific version if needed, e.g., 'bitwarden/server:2021.11.4'
-    container_name: bitwarden
-    ports:
-      - "80:80" # HTTP
-      - "443:443" # HTTPS (use with a TLS certificate)
-    environments:
-      - SECRET_KEY=$(openssl rand -base64 32) # Generate a random secret key
-      - BW_DB_HOST=db
-      - BW_DB_NAME=bitwarden_rw
-      - BW_DB_USER=bitwarden
-      - BW_DB_PASSWORD=bitwarden
-      - BW_SERVER_HOST=0.0.0.0 # Allows access to Bitwarden from the host machine
-      - BW_SERVER_PROTOCOL=HTTPS # Use HTTP if you are not using SSL
-    volumes:
-      - 'bitwarden:/data' # Persistent storage for the database
-      - 'bitwarden_server_data:/data' # Persistent storage for application data
-    restart: unless-stopped # Auto-restart on failure or system shutdown
-    networks:
-      - bitwarden_net
+Make sure to replace `${SECRET_KEY}`, `${MYSQL_USER}`, `${MYSQL_PASSWORD}`, `${MYSQL_DATABASE}`, and `${JWT_SECRET}` with your actual secrets. For a production setup, you should also ensure that the data volumes are properly set up for encryption at rest.
 
-  postgresql:
-    image: 'postgres:latest' # Use a specific version if needed, e.g., 'postgres:13'
-    volumes:
-      - 'bitwarden_db_data:/var/lib/postgresql' # Persistent storage for the PostgreSQL database
-    environments:
-      - POSTGRES_DB=bitwarden_rw
-      - POSTGRES_USER=bitwarden
-      - POSTGRES_PASSWORD=bitwarden
-    networks:
-      - bitwarden_net
+For HTTPS, you'll need to configure SSL certificates, which can be done manually or using Let's Encrypt with Certbot. If you choose to use Certbot, ensure that the `./letsencrypt` volume is correctly set up and that your Docker Compose setup includes the necessary Certbot commands in an entrypoint script or similar.
 
-volumes:
-  bitwarden:
-  bitwarden_server_data:
-  bitwarden_db_data:
-
-networks:
-  bitwarden_net:
+Remember to adjust the image tags to specific versions suitable for your use case and to follow best practices for securing your Bitwarden installation, including keeping software up to date and using strong, unique passwords and keys.

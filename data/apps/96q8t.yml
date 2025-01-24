@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # Weblate instance itself
+  weblate:
+    image: weblate/weblate:latest
+    container_name: weblate
+    restart: unless-stopped
+    environment:
+      WEBLATE_POSTGRES_HOST: postgres
+      WEBLATE_POSTGRES_NAME: weblate
+      WEBLATE_POSTGRES_USER: weblate
+      WEBLATE_POSTGRES_PASSWORD: change_this_password
+      SECRET_KEY: "change_this_secret" # Be sure to change this as well, see https://weblate.org/docs/security/
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/code
+      - weblate-db:/var/lib/postgresql
+    depends_on:
+      - postgres
+
+  # PostgreSQL database
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      POSTGRES_DB: weblate
+      POSTGRES_USER: weblate
+      POSTGRES_PASSWORD: change_this_password
+    volumes:
+      - weblate-db:/var/lib/postgresql
+    restart: unless-stopped
+
+# Necessary for sending emails, for example with a mailhog or localmailhack service.
+mailcatcher:
+    image: mailcatcher:latest
+    container_name: mailcatcher
+    ports:
+      - "1080:1080"
+    environment:
+      MC_USERNAME: user
+      MC_PASSWORD: password
+    restart: unless-stopped
+
+# Optional service for cache, using Redis
+redis:
+    image: redis:latest
+    container_name: redis
+    restart: unless-stopped
+
+volumes:
+  weblate-db:
+    driver: local

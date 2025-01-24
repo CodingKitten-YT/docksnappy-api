@@ -3,69 +3,62 @@ version: '3.8'
 services:
   web:
     image: christmascommunity/web:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.web
     ports:
-      - "80:80" # HTTP
-      - "443:443" # HTTPS (if SSL is configured)
+      - "8000:80"
     depends_on:
       - db
+      #- cache
+      #- queue
     environment:
-      SECRET_KEY: "${SECRET_KEY}"
-      DATABASE_URL: "postgres://db:db@db:5432/db"
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASSWORD=secret
+      - DB_NAME=community_db
     volumes:
-      - ./web:/usr/src/app
-    networks:
-      - christmascommunity-net
+      - .:/app
+      - web-static:/app/static
+    command: python manage.py runserver 0.0.0.0:80
 
   db:
     image: postgres:13
     environment:
-      POSTGRES_DB: christmascommunity
-      POSTGRES_USER: db
-      POSTGRES_PASSWORD: db
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=community_db
     volumes:
-      - ./db:/var/lib/postgresql/data
-    networks:
-      - christmascommunity-net
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root"]
+      timeout: 10s
+      retries: 5
 
-  redis:
-    image: redis:6
-    volumes:
-      - ./redis:/data
-    networks:
-      - christmascommunity-net
+  # cache:
+  #   image: redis:latest
+  #   command: redis-server --port 6379
 
-  queue_worker:
-    image: python:3.9-slim
-    volumes:
-      - ./queue_worker:/usr/src/app
-      - redis:/var/lib/redis
-    command: python manage.py queue_worker
-    depends_on:
-      - db
-      - redis
-    networks:
-      - christmascommunity-net
+  # queue:
+  #   image: rabbitmq:3.8-management
+  #   environment:
+  #     - RABBITMQ_USER=user
+  #     - RABBITMQ_PASSWORD=password
+  #     - RABBITMQ_VHOST=vhost
+  #   volumes:
+  #     - rabbitmq-data:/var/lib/rabbitmq
+
+volumes:
+  web-static:
+  db-data:
+  rabbitmq-data:
+    external: true # Uncomment if using RabbitMQ
+  redis-data:
+    external: true # Uncomment if using Redis
 
 networks:
-  christmascommunity-net:
+  default:
     driver: bridge
 
-# Uncomment the following section if you need to use SSL for HTTPS
-# and have certificates ready.
-# volumes:
-#   letscryptestore:
-#     name: letdev/letsencrypt:storage
-# services:
-#   web:
-#     ports:
-#       - "443:443"
-#     environment:
-#       SECRET_KEY: "${SECRET_KEY}"
-#       DATABASE_URL: "postgres://db:db@db:5432/db"
-#       SSL_REDIR: "true"
-#       SSL_CertFile: "/etc/ssl/cert.pem"
-#       SSL_KeyFile: "/etc/ssl/key.pem"
-#       SSL_FullchainFile: "/etc/ssl/fullchain.pem"
-#     volumes:
-#       - ./web:/usr/src/app
-#       - letscryptestore:/etc/ssl
+# Optional configurations like logging, resource limits, etc.
+# Add these under the "services" or at the root level as needed.

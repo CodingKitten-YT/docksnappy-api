@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  app:
+    image: pictshare/pictshare:latest
+    ports:
+      - "5000:5000"
+    environment:
+      PICTSHARE_DATABASE_URI: "postgres://db:${DB_PASSWORD}@db:5432/dbname"
+      PICTSHARE_JWT_SECRET: "your_jwt_secret"
+      PICTSHARE_SMTP_USERNAME: "your_email@example.com"
+      PICTSHARE_SMTP_PASSWORD: "your_email_password"
+      PICTSHARE_SMTP_HOST: "smtp.example.com"
+      PICTSHARE_SMTP_PORT: 587
+    depends_on:
+      - db
+    volumes:
+      - ./app/uploads:/code/uploads
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: db
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: dbname
+    volumes:
+      - ./app/db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U db"]
+      timeout: 10s
+      retries: 5
+
+  redis:
+    image: redis:6-alpine
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli --scan --slot-count=16384 ping"]
+      timeout: 10s
+      retries: 5
+
+  worker:
+    image: pictshare/pictshare-worker:latest
+    depends_on:
+      - app
+    command: worker
+
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "8025:8025"
+    command: api
+
+# Optional configuration for MailHog UI
+extra_hosts:
+  mailhog.local: mailhog
+
+# For running MailHog in headless mode when not using Docker Desktop
+services:
+  mailhog:
+    environment:
+      MAILHOG_INMEMORY: "true"

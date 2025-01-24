@@ -1,0 +1,54 @@
+version: '3.8'
+services:
+  wildduck:
+    image: 'wildduck/wildduck:latest' # Use the official Wildduck image from Docker Hub
+    ports:
+      - "8010:http" # Map the container's HTTP port to host port 8010
+    environment:
+      WILDDUCK_WEB_PUBLIC_HOSTNAME: 'your-domain.com' # Set the public hostname for Wildduck
+      JVM_OPTS: "-Xmx2G -XX:+UseG1GC" # Set JVM options (memory and garbage collector)
+    volumes:
+      - './data:/var/lib/wildduck' # Mount a volume for data persistence
+    command: >
+       --server.port=8080  # Set the internal port for Wildduck server
+       --spring.jpa.hibernate.ddl-auto=none  # Prevent automatic schema creation (managed manually)
+       --logging.level.org.springframework.data.jpa.repository.support: INFO  # Set logging level for JPA repositories
+       --logging.file.max-size=10m  # Set the maximum size before log file rotation
+       --logging.file.total-size-cap=200m  # Set total size cap before deletion
+       wildduck.WildduckApplication  # Specify the main class to run
+    depends_on:
+      - postgres
+
+  postgres:
+    image: 'postgres:13' # Use PostgreSQL 13 official image
+    command: >
+        --max_connections=200
+        --shared_buffers=64MB
+        --work_mem=4MB
+        --effective_cache_size=8GB
+    volumes:
+      - './dbdata:/var/lib/postgresql' # Mount a volume for PostgreSQL data persistence
+    environment:
+      POSTGRES_DB: 'wildduck' # Database name for Wildduck
+      POSTGRES_USER: 'wildduck' # Username for the database
+      POSTGRES_PASSWORD: 'your-password' # Password for the database
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      timeout: 20s
+      retries: 5
+
+  redis:
+    image: 'redis:6.2-alpine' # Use Redis 6.2 official image
+    command: redis-server --appendonly yes
+
+# Optional Redis configuration if needed (uncomment and adjust)
+# redis:
+#   image: 'redis:6.2-alpine'
+#   healthcheck:
+#     test: ["CMD", "REDIS-CLI", "PING"]
+#     timeout: 5s
+#     retries: 10
+
+networks:
+  default:
+    driver: bridge

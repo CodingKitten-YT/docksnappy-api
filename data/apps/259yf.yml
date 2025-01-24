@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:12
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: slink
+      POSTGES_USER: slink
+      POSTGRES_PASSWORD: change_this_password
+    command: postgres -c 'listen_addresses = "localhost, *.*.*.*"'
+
+  redis:
+    image: redis:6-alpine
+    volumes:
+      - ./data/redis:/data
+
+  shlink-api:
+    image: shlink.io/shlink/shlink:latest
+    depends_on:
+      - db
+      - redis
+    environment:
+      SLINGK_DB_HOST: db
+      SLINKK_DB_NAME: slink
+      SLINKK_DB_PASSWORD: change_this_password
+      SLINKK_DB_USER: slink
+      SLINKK_JWT_SECRET: change_this_secret
+      SLINKK_SERVER_DOMAIN: localhost
+      SLINKK_REDIS_HOST: redis
+      SLINKK_REDIS_PORT: 6379
+    ports:
+      - "8501:8501" # Shlink API
+      - "9000:9000"  # Redis if you want to access it directly
+    networks:
+      - shlink-network
+
+  php:
+    image: shlink.io/shlink/php:latest
+    depends_on:
+      - shlink-api
+    volumes:
+      - ./data/www:/var/www/html
+      - ./vendor:/var/www/html/vendor
+    environment:
+      SHLINKK_API_HOST: shlink-api:8501
+      APP_ENV: prod
+      APP_DEBUG: false
+      APP_KEY: change_this_key
+      LOG_CHANNEL: slack
+    ports:
+      - "8080:80" # PHP Symfony server
+    networks:
+      - shlink-network
+
+  worker:
+    image: shlink.io/shlink/worker:latest
+    depends_on:
+      - shlink-api
+    volumes:
+      - ./data/www:/var/www/html
+    environment:
+      SHLINKK_API_HOST: shlink-api:8501
+      APP_ENV: prod
+      APP_DEBUG: false
+      APP_KEY: change_this_key
+      WORKER_QUEUES: default
+    networks:
+      - shlink-network
+
+networks:
+  shlink-network:
+    driver: bridge

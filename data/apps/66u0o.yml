@@ -1,50 +1,28 @@
 version: '3.8'
-
 services:
-  # Database service (PostgreSQL)
-  db:
-    image: postgres:13
-    environment:
-      POSTGRES_DB: freescout
-      POSTGRE_USER: freescout
-      POSTGRE_PASSWORD: change_this_password
-    volumes:
-      - db-data:/var/lib/postgresql/data
-    networks:
-      - app-network
-
-  # Application service (FreeScout)
   app:
-    image: freescout/freescout:latest
+    image: freescout/freescout:latest # Use the official FreScout image
+    container_name: freescout
     environment:
-      DATABASE_URL: postgres://freescout:change_this_password@db:5432/freescout
-      JWT_SECRET: change_this
+      - JAVA_OPTS=-Xmx512m -Xms512m
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASSWORD=your_password
+      - DB_DATABASE=freescout
+    ports:
+      - "8080:8080" # HTTP port exposed to the host
     depends_on:
       - db
-    networks:
-      - app-network
 
-  # Nginx Reverse Proxy
-  webproxy:
-    image: nginx:latest
-    ports:
-      - "80:80"
-      - "443:443"
+  db:
+    image: postgres:13
+    container_name: freescout-db
     environment:
-      PROXY_HOSTNAME: your.freescout.domain
-      PROXY_EMAIL: noreply@yourdomain.com
-      GUNICORN_WORKERS: 3
-      GUNICORN_BIND: 0.0.0.0:8000
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=your_password
+      - POSTGRES_DB=freescout
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
-      - app-data:/usr/src/app
-    networks:
-      - app-network
+      - postgres-data:/var/lib/postgresql/data
 
 volumes:
-  db-data:
-  app-data:
-
-networks:
-  app-network:
-    driver: bridge
+  postgres-data:

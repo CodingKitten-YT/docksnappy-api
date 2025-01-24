@@ -1,35 +1,41 @@
-version: '3'
+version: '3.8'
+
 services:
   nocodb:
-    image: 'nocodb/nocodb:latest' # or use a specific version like 'nocodb/nocodb:v0.8.1'
+    image: n8n.io/nocodb:latest # or use a specific tag if you prefer
     container_name: nocodb
+    command: -db.enable=true -db.host=db -db.path=/run/mysql/mysql.db -db.user=root -db.password=root -log.level=info -http.port=8080 -http.ssl.enabled=false
     ports:
-      - "8080:http" # HTTP port, accessible from the host
-      - "4060:ws"     # WebSocket port for real-time features (optional)
+      - "8080:8080" # HTTP port
     volumes:
-      - nocodb_data:/var/lib/nocodb
-      - ./sqlite.db:/database
+      - nocodb-global-data:/var/lib/mysql # for persisting database data
+      - ./config:/workspace/resources/.config # (optional) for persisting custom configurations
+      - ./data:/workspace/resources/data # (optional) for persisting app data, like user data and files
     environment:
-      POSTGRES_DB: 'nocodb'
-      POSTGRES_USER: 'admin'
-      POSTGRES_PASSWORD: 'admin' # You should change this to a strong password
-    networks:
-      - nocodb-network
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: noco_db # The default database name
+      MYSQL_USER: nocodb
+      MYSQL_PASSWORD: nocodb
+    depends_on:
+      - db
 
-  postgres:
-    image: postgres:latest
-    volumes:
-      - nocodb_data:/var/lib/postgresql
+  db:
+    image: mysql:5.7
+    container_name: nocodb-db
+    command: --default-authentication-plugin=mysql_native_password
     environment:
-      POSTGRES_DB: 'nocodb'
-      POSTGRES_USER: 'admin'
-      POSTGRES_PASSWORD: 'admin' # Same password as above, or set it with an environment variable for security
-    networks:
-      - nocodb-network
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: noco_db
+      MYSQL_USER: nocodb
+      MYSQL_PASSWORD: nocodb
+      MYSQL_ROOT_HOST: '%'
+    volumes:
+      - db-data:/var/lib/mysql
 
 volumes:
-  nocodb_data:
-    driver: 'local'
+  nocodb-global-data:
+  db-data:
 
 networks:
-  nocodb-network:
+  default:
+    driver: bridge

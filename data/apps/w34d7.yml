@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  slskd:
+    image: "slsk/slskd"
+    container_name: slskd
+    ports:
+      - "6667:6667/tcp" # Control connection (TCP)
+      - "6697:6697/udp" # Extended control channel (UDP, optional but recommended)
+    volumes:
+      - "./slsk.conf:/etc/slsk.conf" # Optional: Mount your own slsk.conf for custom configuration
+      - "/etc/passwd/:/etc/passwd"   # Required: To allow SLSK to set up a user namespace for secure operation
+    restart: unless-stopped
+    environment:
+      - SLSK_NO_DAEMON=1       # Run SLSK in interactive mode inside the container
+      - SLSK_DEBUG=1           # Enable verbose logging (set to 0 for production use)
+    user: "0"                     # Run as root to avoid permission issues
+
+  redsocks:
+    image: "lokaltud/redsocks"
+    container_name: redsocks
+    ports:
+      - "8025:8025/tcp" # SOCKS proxy (TCP)
+      - "8025:8025/udp" # SOCKS proxy (UDP)
+    volumes:
+      - "./redsocks.toml:/etc/redsocks.toml" # Optional: Mount your own redsocks.toml for custom configuration
+    restart: unless-stopped
+    environment:
+      - REDSOCKS_LOCAL_IP=0.0.0.0 # Listen on all network interfaces
+      - REDSOCKS_REMOTE_IP=127.0.0.1  # Connect to localhost
+      - REDSOCKS_REMOTE_PORT=6667     # Connect to the control port of slskd
+      # The following environment variables are optional, adjust according to your needs:
+      - REDSOCKS_USER="slsk"         # User for redsocks to run as (if you want to run it as a non-root user)
+      - REDSOCKS_GROUP="slsk"        # Group for redsocks to run as (if you want to run it as a non-root user)
+    depends_on:
+      - slskd
+
+  relayhub:
+    image: "lokaltud/relayhub"
+    container_name: relayhub
+    ports:
+      - "4000-4001:4000-4001/tcp" # Tor relay controller (TCP)
+    volumes:
+      - "./relayhub.json:/etc/relayhub.json" # Optional: Mount your own relayhub.json for custom configuration
+    restart: unless-stopped
+    environment:
+      - RELAYHUB_LISTEN_INTERFACE=eth0 # Replace 'eth0' with the correct interface name
+      - RELAYHUB_WEB_INTERFACE=0.0.0.0  # Web UI accessible on all network interfaces
+    depends_on:
+      - slskd
+      - redsocks
+
+networks:
+  default:
+    driver: bridge

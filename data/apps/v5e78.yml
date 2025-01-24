@@ -1,61 +1,26 @@
 version: '3.8'
 
 services:
-  db:
-    image: postgres:12
-    command: 'postgres -c "listen_addresses = '*'"'
-    volumes:
-      - db-data:/var/lib/postgresql/data
-    env_file:
-      - .env
-    environment:
-      POSTGRES_DB: discountbandit_db
-      POSTGRES_USER: discountbandit_user
-      POSTGRES_PASSWORD: discountbandit_password
+  bandit:
+    image: 'discountbandit/bandit:latest' # Use the official Discount Bandit image
     ports:
-      - "5432:5432"
-
-  celery_worker:
-    image: python:3.9-slim
-    volumes:
-      - ./code:/code
+      - "5000:5000" # Expose the default Flask port for Bandit UI
     environment:
-      - DISCOUNT_BANDIT_DB_HOST=db
-      - DISCOUNT_BANDIT_DB_NAME=discountbandit_db
-      - DISCOUNT_BANDIT_DB_USER=discountbandit_user
-      - DISCOUNT_BANDIT_DB_PASSWORD=discountbandit_password
-      - DISCOUNT_BANDIT_DB_PORT=5432
-      - REDIS_URL=redis://redis:6379/0
-    depends_on:
-      - db
-      - redis
+      BANDIT_API_PORT: 5001 # Port for Bandit's API server, by default it runs on 5001
+      BANDIT_API_DEBUG: true # Set to true for more verbose logging
+      BANDIT_BROWSER_DRIVERS: "/opt/browser_drivers" # Directory for browser drivers
+      JOBS: 4 # Number of parallel jobs Bandit will run
+    volumes:
+      - "./bandit-files:/app/static/files" # Mount a volume for your bandit files, adjust the path as needed
+      - "./logs:/var/log/bandit" # Mount a volume for logs (optional)
+    networks:
+      - bandit_network
 
   redis:
-    image: redis:6-alpine
-    ports:
-      - "6379:6379"
+    image: 'redis:6'
+    networks:
+      - bandit_network
 
-  web:
-    build: ./code
-    volumes:
-      - ./code:/code
-    environment:
-      - DISCOUNT_BANDIT_DB_HOST=db
-      - DISCOUNT_BANDIT_DB_NAME=discountbandit_db
-      - DISCOUNT_BANDIT_DB_USER=discountbandit_user
-      - DISCOUNT_BANDIT_DB_PASSWORD=discountbandit_password
-      - DISCOUNT_BANDIT_DB_PORT=5432
-      - REDIS_URL=redis://redis:6379/0
-      - DEBUG=True
-    depends_on:
-      - db
-      - celery_worker
-      - redis
-
-  adminer:
-    image: adminer:4.5.1
-    ports:
-      - "8080:8080"
-
-volumes:
-  db-data:
+networks:
+  bandit_network:
+    driver: bridge

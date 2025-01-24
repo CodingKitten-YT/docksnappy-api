@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  trudesk_postgres:
+    image: postgres:12
+    volumes:
+      - trudesk_postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: trudesk
+      POSTGES_USER: trudesk
+      POSTGRES_PASSWORD: trudesk_password
+    ports:
+      - "5432:5432"
+
+  trudesk_redis:
+    image: redis:6-alpine
+    volumes:
+      - trudesk_redis_data:/data
+
+  trudesk_worker:
+    image: trudesk/trudesk-worker:latest
+    depends_on:
+      - trudesk_postgres
+      - trudesk_redis
+    environment:
+      DATABASE_URL: postgres://trudesk:trudesk_password@trudesk_postgres:5432/trudesk
+      REDIS_URL: redis://trudesk_redis:6379/0
+    ports:
+      - "8000:8000"
+
+  trudesk_web:
+    image: trudesk/trudesk-web:latest
+    depends_on:
+      - trudesk_postgres
+      - trudesk_redis
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgres://trudesk:trudesk_password@trudesk_postgres:5432/trudesk
+      REDIS_URL: redis://trudesk_redis:6379/0
+
+volumes:
+  trudesk_postgres_data:
+    driver: local
+  trudesk_redis_data:
+    driver: local
+
+networks:
+  trudesk_default:
+    driver: bridge

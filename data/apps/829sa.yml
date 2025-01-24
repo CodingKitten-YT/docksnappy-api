@@ -1,81 +1,49 @@
-version: '3'
+version: '3.8'
 
 services:
   kong:
     image: kong:latest
     ports:
-      - "8000:8000" # HTTP endpoint exposed to the host
-      - "8443:8443" # HTTPS endpoint with self-signed certificates (if enabled)
-    dependencies:
-      - nginx
-      - postgres
+      - "8001:8001" # Admin API and UI
+      - "8443:8443" # Encrypted Admin API (uncomment if you have TLS certificates)
+      - "80:80"       # HTTP API Proxy (optional, default Kong port is 8008)
+      - "8443:8443"  # HTTPS API Proxy (optional, default Kong port is 8443, uncomment if you have TLS certificates)
     environment:
-      KONG_DB_HOST: db
-      KONG_DB_NAME: kong
-      KONG_DB_USER: kong
-      KONG_DB_PASSWORD: change_this_password
-      KONG_PG_EXTENSIONS: "citext,hstore"
-      KONG_PROXY_LISTEN: "0.0.0.0:8000"
-      KONG_ADMIN_ACCESS_API: "allow"
-    volumes:
-      - ./data:/data
-      - ./log:/var/log/kong
+      KONG_DATABASE: "mysql"
+      KONG_DB_HOST: "mysql"
+      KONG_DB_USER: "kong"
+      KONG_DB_PASSWORD: "kongdbpass"
+      KONG_DB_PORT: "3306"
+      KONG_DB_DATA: "/run/postgresql.db" # Use the correct data directory for your database
+      KONG_PROXY_ACCESS_LOG: "/dev/stdout"
+      KONG_ADMIN_ACCESS_LOG: "/dev/stdout"
+      KONG_DB_SSL_MODE: "verify-full" # Only if you are using SSL certificates for the database connection
     depends_on:
-      - postgres
-      - kong-admin
-
-  postgres:
-    image: postgres:latest
-    environment:
-      POSTGRES_DB: kong
-      POSTGRES_USER: kong
-      POSTGRES_PASSWORD: change_this_password
+      - mysql
     volumes:
-      - ./data/db:/var/lib/postgresql/data
+      - /var/run/docker.sock:/var/run/docker.sock
+      - kong-data:/data
+      - kong-logs:/dev/log:Z
+    command: agent -config /etc/kong/kong.yml -log-level debug
+
+  mysql:
+    image: mysql:5.7
+    volumes:
+      - mysql-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: kong
+      MYSQL_USER: kong
+      MYSQL_PASSWORD: kongdbpass
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U kong"]
-      timeout: 10s
-      retries: 5
+      test: ["CMD", "mysqladmin", "ping", "—silent"]
+      timeout: 5s
+      retries: 10
+      interval: 10s
 
-  nginx:
-    image: kong:latest
-    depends_on:
-      - kong
-    ports:
-      - "5678:5678" # Admin API exposed to the host (only for internal use)
-
-  kong-admin:
-    image: kong:latest
-    ports:
-      - "8001:8001" # Kong admin API endpoint exposed to the host
-    environment:
-      KONG_ADMIN_LISTEN: "0.0.0.0:8001"
-      KONG_ADMIN_ACCESS_API: "allow"
-    depends_on:
-      - kong
-
-  consul:
-    image: hashicorp/consul:latest
-    ports:
-      - "8300-8302:8300-8302" # Consul UI and RPC
-      - "8500:8500"           # Consul DNS, HTTP API, Serf LAN, WATCH, gossip etc.
-    environment:
-      - CONSUL_BIND_INTERFACE=eth0 (replace eth0 with your desired network interface)
-      - CONSUL_CLUSTER_ADVERTISE=kong-consul-cluster (replace with your cluster name)
-      - CONSUL_DATA_DIR=/tmp/consul (optional, for data persistence)
-    volumes:
-      - ./data/consul:/tmp/consul
-
-  kong-service-consul:
-    image: kong:latest
-    environment:
-      KONG_SERVICE_PLUGIN: "true"
-      KONG_SERVICE_PLUGIN_OPTIONS: "consul"
-      KONG_CONSUL_HOST: consul
-      KONG_REGISTRATION: "MANUAL"
-    depends_on:
-      - kong
-      - consul
+volumes:
+  kong-data:
+  mysql-data:
 
 networks:
   default:

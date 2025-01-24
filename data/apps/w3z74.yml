@@ -1,58 +1,60 @@
-version: '3.8'
+version: '3.7'
 
 services:
-  ledgersmb_postgresql:
-    image: postgres:13.2
-    command: 'postgres -c "config_file = /etc/postgresql/main/pg_hba.conf"'
+  postgres:
+    image: postgres:12
+    command: postgres -c 'fsync=off' -c 'full_page_writes=off'
     volumes:
-      - ./data/postgresql:/var/lib/postgresql/data
-      - ./sql:/docker-entrypoint-initdb.d
+      - pgdata:/var/lib/postgresql/data
     env_file: .env
     environment:
-      POSTGRES_DB: ledgersmb
-      POSTGRES_USER: ledgersmb
-      POSTGRES_PASSWORD: ledgersmb_pwd
-    ports:
-      - "5432:5432"
-    networks:
-      - ledger-network
+      POSTGRES_DB: ledger
+      POSTGRES_USER: ledgeruser
+      POSTGES_PASSWORD: your_password_here
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ledgeruser"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
-  ledgersmb_webapp:
-    image: ledgersmb/ledgersmb-webapp:latest
-    container_name: ledgersmb
-    depends_on:
-      - ledgersmb_postgresql
-    environment:
-      PGHOST: postgresql
-      PGUSER: ledgersmb
-      PGPASSWORD: ledgersmb_pwd
-      PGDATABASE: ledgersmb
-      SERVICE_DOMAIN: ${SERVICE_NAME}.local
+  perl:
+    image: perl:latest
     volumes:
-      - ./data/ledgersmb:/var/lib/ledgersmb
-      - ./logs/ledgersmb:/var/log/ledgersmb
-      - ./srv/ledgersmb:/etc/ledgersmb
-    ports:
-      - "5000:5000"
-    networks:
-      - ledger-network
-    restart: unless-stopped
+      - ./perl:/usr/local/src/ledger_smb
 
-  ledgersmb_queue:
-    image: ledgersmb/ledgersmb-queue:latest
-    container_name: ledgersmb_queue
-    depends_on:
-      - ledgersmb_postgresql
-    environment:
-      PGHOST: postgresql
-      PGUSER: ledgersmb
-      PGPASSWORD: ledgersmb_pwd
-      PGDATABASE: ledgersmb
+  ledgersmb:
+    image: ledgersmb/ledgersmb:latest
+    ports:
+      - "8080:80" # HTTP
+      - "5601:5601" # HTTP Admin (optional)
     volumes:
-      - ./data/ledgersmb_queue:/var/lib/ledgersmb_queue
-    networks:
-      - ledger-network
+      - ./ledger_smb:/usr/local/src/ledger_smb
+      - ledgerdata:/var/lib/ledgersmb
+    environment:
+      DB_DATABASE: ledger
+      DB_USERNAME: ledgeruser
+      DB_PASSWORD: your_password_here
+      PERL_PATH: /usr/local/src/ledger_smb
+      LSMB_DOMAIN: example.com # Change to your domain
+      WEB_LISTEN_ADDRESS: 0.0.0.0:8080 # Listen on all interfaces on the default HTTP port
+    depends_on:
+      - postgres
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ledgerdata:/var/lib/ledgersmb/public
+    depends_on:
+      - ledgersmb
+
+volumes:
+  pgdata:
+  ledgerdata:
 
 networks:
-  ledger-network:
+  default:
     driver: bridge

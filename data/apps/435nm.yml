@@ -1,0 +1,51 @@
+version: '3'
+
+services:
+  zenko-control-plane:
+    image: 'zenkocloud/cloudserver-control-plane:latest'
+    container_name: zenko-control-plane
+    environment:
+      ZENKO_CONTROL_PLANE__API_HOST: "zenko-worker-node"
+      ZENKO_CONTROL_PLANE__BIND_ADDR: 0.0.0.0
+      ZENKO_CONTROL_PLANE__ADMIN_PASSWORD: 'change_me_please'
+    ports:
+      - "8080:8080" # HTTP API
+      - "8443:8443" # HTTPS API
+      - "5672:5672"  # RabbitMQ (optional, if needed)
+    networks:
+      - zenko-network
+    volumes:
+      - ./zenko-data/control-plane:/data/control-plane
+      - ./zenko-logs/control-plane:/var/log/cloudserver
+      - ./zenko-config/control-plane:/etc/cloudserver
+
+  zenko-worker-node:
+    image: 'zenkocloud/cloudserver-worker-node:latest'
+    container_name: zenko-worker-node
+    environment:
+      ZENKO_WORKER__API_HOST: "zenko-control-plane"
+      ZENKO_WORKER__ADMIN_PASSWORD: 'change_me_please'
+    ports:
+      - "8081:8081" # HTTP API
+    networks:
+      - zenko-network
+    volumes:
+      - ./zenko-data/worker-node:/data/worker-node
+      - ./zenko-logs/worker-node:/var/log/cloudserver
+      - ./zenko-config/worker-node:/etc/cloudserver
+
+  zenko-monitor:
+    image: 'zenkocloud/cloudserver-monitor:latest'
+    container_name: zenko-monitor
+    environment:
+      ZENKO_MONITOR__API_HOST: "zenko-control-plane"
+    networks:
+      - zenko-network
+    volumes:
+      - ./zenko-data/monitor:/data/monitor
+      - ./zenko-logs/monitor:/var/log/cloudserver
+      - ./zenko-config/monitor:/etc/cloudserver
+
+networks:
+  zenko-network:
+    driver: bridge

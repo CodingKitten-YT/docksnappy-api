@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  squid:
+    image: armant/squid:latest
+    container_name: squid5_proxy
+    ports:
+      - "3128:3128" # Squid default port for HTTP and HTTPS traffic
+      - "1080:1080" # SOCKS5 proxy client connections
+    volumes:
+      - ./data:/usr/local/squid/var
+      - ./configs:/usr/local/squid/etc/squid
+    environment:
+      - TZ=Europe/London  # Set the timezone as per your requirement
+    restart: unless-stopped
+    networks:
+      default:
+        ipv4_address: 10.0.0.2  # Assign a fixed IP address to the container
+
+networks:
+  default:
+    external:
+      name: home-net  # Use an existing network 'home-net' or create one with this name

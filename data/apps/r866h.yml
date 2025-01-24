@@ -1,42 +1,44 @@
-version: '3.8'
+version: '3'
 
 services:
-  langfuse_db:
-    image: postgres:latest
-    volumes:
-      - langfuse_db_data:/var/lib/postgresql/data:ro
-    environment:
-      POSTGRES_DB: langfuse
-      POSTGRES_USER: langfuse
-      POSTGRES_PASSWORD: change_this_password
+  langfuse-api:
+    image: langfuse/langfuse-api:latest
     ports:
-      - "5432:5432"
-    command: postgres -c 'listen_addresses = 0.0.0.0'
-
-  langfuse_worker:
-    build: .
-    volumes:
-      - .:/code
-    environment:
-      REDIS_URL: redis://redis:6379/0
-      DB_DSN: postgres://langfuse_db:change_this_password@langfuse_db:5432/langfuse
-      JOB_QUEUE: langfuse_default
+      - "5000:5000"
     depends_on:
-      - langfuse_db
       - redis
 
   redis:
-    image: redis:latest
-    command: redis-server --appendonly yes
-
-  webapp:
-    build: .
+    image: redis:6-alpine
+    command: rediss-server --appendonly yes
     volumes:
-      - .:/code
+      - "./data/redis:/data/redis"
+
+  nginx-proxy:
+    image: nginx:latest
     ports:
-      - "8000:8000"
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "./certs:/etc/nginx/ssl"
+      - ./data/nginx/conf.d:./data/nginx/conf.d:ro
+      - ./data/nginx/html:./data/nginx/html:ro
+      - ./data/nginx/logs:./data/nginx/logs:ro
     depends_on:
-      - langfuse_worker
+      - langfuse-api
+
+  langfuse-worker:
+    image: langfuse/langfuse-worker:latest
+    volumes:
+      - "./data/langfuse-worker:/app/code"
+    depends_on:
+      - langfuse-api
 
 volumes:
-  langfuse_db_data:
+  redis_data:
+    driver: local
+
+networks:
+  default:
+    external:
+      name: langfuse-net

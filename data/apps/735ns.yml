@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  youtube-dl-material:
+    image: ytdl-docker/youtube-dl:latest  # Use an official Youtube-DL image from Docker Hub
+    container_name: youtube-dl-material
+    command: youtube-dl -B --extract-audio -f bestaudio --output "%(title)% (%(ext)s).%(ext)s" --continue --ignore-errors --default-search ytmusic,youtube,youtube-audiobook
+    volumes:
+      - "/path/to/downloads:/downloads"  # Replace with the path where you want your downloads to be saved on the host machine
+      - "./config.json:/config.json"  # Optional: Mount your custom config file if you have one
+    restart: unless-stopped
+    environment:
+      TZ: "Your/Timezone"  # Set your timezone, e.g., "Europe/Paris"
+    ports:
+      - "8080:8080"  # Map the container's port to the host, if necessary (e.g., for a web UI like yt-dlp-web)
+    networks:
+      - ytdl_network
+
+networks:
+  ytdl_network:
+    driver: bridge

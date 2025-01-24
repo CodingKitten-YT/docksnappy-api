@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  ostenet:
+    image: ostenet/ostenet:latest
+    container_name: ostenet
+    ports:
+      - "5000:5000" # Web UI port
+      - "5001:5001" # Server query port
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/London  # Set your desired Timezone
+      - SERVER_HOSTNAME=localhost  # If you want to run in Docker network, keep this. Otherwise, set to your host's IP or domain
+      - RESULTS_DB_ENABLED=true  # Enable database for storing results (optional)
+      - RESULTS_DB_HOSTNAME=ostenedb  # Database service name if you use the db service
+      - RESULTS_DB_USER=osduser  # Database user (optional, required only if you enable the db)
+      - RESULTS_DB_PASSWORD=example  # Database password (optional, required only if you enable the db)
+      - RESULTS_DB_DATABASE=ostenedb  # Database name (optional, required only if you enable the db)
+    networks:
+      - ostenet-network
+
+  ostenetdb:
+    image: postgres:13
+    container_name: ostenetdb
+    volumes:
+      - ostenet-data:/var/lib/postgresql2
+    environment:
+      - POSTGRES_DB=ostenedb
+      - POSTGRES_USER=osduser
+      - POSTGES_PASSWORD=example
+    restart: unless-stopped
+    networks:
+      - ostenet-network
+
+volumes:
+  ostenet-data:
+
+networks:
+  ostenet-network:

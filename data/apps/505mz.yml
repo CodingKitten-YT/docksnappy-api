@@ -1,80 +1,56 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:latest
-    command: 'postgres -c "fsync=OFF"'
-    volumes:
-      - type: bind
-        source: ${HOME}/.local/share/listmonk/db:/var/lib/postgresql/data
-        target: /var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: listmonk
-      POSTGES_USER: listmonk
-      POSTGRES_PASSWORD: listmonk_passwd
-    ports:
-      - "5432:5432"
-
+  # Listmonk main application service
   listmonk:
     image: listmonk/listmonk:latest
-    depends_on:
-      postgres:
-        version: '2.14.0'
-        protocol: 'tcp'
-    environment:
-      LISTMONK_DATABASE_URL: postgresql://listmonk:listmonk_passwd@postgres:5432/listmonk
-      LISTMONK_SECRET_KEY: 'very-secret'
-      LISTMONK_ALLOWED_HOSTS: '*'
-      LISTMONK_ADMIN_EMAIL: 'admin@example.com'
-      LISTMONK_ADMIN_USERNAME: 'admin'
-      LISTMONK_ADMIN_PASSWORD: 'admin_passwd'
-      LISTMONK_EMAIL_BACKEND: 'django.core.mail.backends.smtp.EmailBackend'
-      LISTMONK_EMAIL_HOST: 'smtp.example.com'
-      LISTMONK_EMAIL_PORT: 587
-      LISTMONK_EMAIL_USE_TLS: 'true'
-      LISTMONK_EMAIL_USER: 'user@example.com'
-      LISTMONK_EMAIL_PASSWORD: 'email_passwd'
+    container_name: listmonk
     ports:
-      - "8000:8000"
+      - "9000:9000" # HTTP API & UI
+      - "8000:8000" # Management console
+    command: --database-url "postgresql://listmonk:listmonk@db:5432/listmonk?sslmode=disable&timezone=UTC" \
+                --server-secret "change_me_please_a_long_secure_password" \
+                --redis-url "redis://redis:6379/0" \
+                listmonk server
+    environment:
+      LISTMONK_POSTGRES_USER: listmonk
+      LISTMONK_POSTGRES_PASSWORD: listmonk
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - listmonk-storage:/var/lib/listmonk
+      - listmonk-config:/etc/listmonk
+
+  # PostgreSQL service
+  db:
+    image: postgres:latest
+    container_name: listmonk_db
+    volumes:
+      - listmonk-storage:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: listmonk
+      POSTGRES_PASSWORD: listmonk
+      POSTGRES_DB: listmonk
     healthcheck:
-      test: ["CMD-SHELL", "python listmonk/manage.py check"]
+      test: ["CMD-SHELL", "pg_isready -U listmonk"]
       timeout: 10s
       retries: 5
 
+  # Redis service
   redis:
     image: redis:latest
-    command: 'redis-server --appendonly yes'
-
-  celery_worker:
-    image: listmonk/listmonk:latest
-    command: celery -A listmonk worker --loglevel=info
-    depends_on:
-      - listmonk
-      - redis
-    environment:
-      LISTMONK_DATABASE_URL: postgresql://listmonk:listmonk_passwd@postgres:5432/listmonk
-      LISTMONK_CELERY_RESULT_BACKEND: 'redis://redis:6379/0'
-    volumes:
-      - type: bind
-        source: ${HOME}/.local/share/listmonk/celery:/var/spool/celery
-    environment:
-      - name: LISTMONK_CELERY_BEAT_SCHEDULE
-      - value: '{"send_welcome": {"task": "send_welcome_email", "schedule": 30.0}}'
-    depends_on:
-      - redis
-
-  celery_beat:
-    image: listmonk/listmonk:latest
-    command: celery -A listmonk beat --loglevel=info
-    depends_on:
-      - redis
-    volumes:
-      - type: bind
-        source: ${HOME}/.local/share/listmonk/celery_beat:/var/spool/celery_beat
-    depends_on:
-      - redis
+    container_name: listmonk_redis
+    command: --save-mode no-overwrite
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping"]
+      timeout: 10s
+      retries: 5
 
 volumes:
-  listmonk_data:
-  drive:
-    external: false
+  listmonk-storage:
+    driver: local
+
+networks:
+  default:
+    driver: bridge

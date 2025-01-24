@@ -1,53 +1,42 @@
-version: '3'
+version: '3.8'
+
 services:
   homarr:
     image: homarr/homarr:latest
     container_name: homarr
     ports:
-      - "8080:8080" # Homarr web UI
-    environment:
-      - HOOMARR__POSTGRES_DB=homarr
-      - HOOMARR__POSTGRES_USER=homarr
-      - HOOMARR__POSTGRES_PASSWORD=secret
-      - HOOMARR__SECRET=thisisthesecrettouseforeverything
+      - "5000:5000" # Expose Homarr API on port 5000
     volumes:
-      - "./homarr_config:/code/homarr_config"
-      - "./homarr_logs:/code/homarr_logs"
-      - "./homarr_data:/var/lib/postgresql"
-    depends_on:
-      - postgres
+      - "./data:/var/lib/homarr" # Mount a local directory for data persistence
+      - "./config:/etc/homarr" # Mount a local directory for configuration files
+    environment:
+      - HOMARR_LICENSE_KEY=your_license_key # Set your Homarr license key if required
+      - ENABLE_ADVANCED_SECURITY=true # Optional: Enable advanced security features
+    command: >
+      java -Djava.security.egd=file:/dev/./urandom -jar homarr-all.jar --config=/etc/homarr/homarr-application.properties --data=/var/lib/homarr
+    restart: unless-stopped # Restart policy
 
   postgres:
-    image: postgres:latest
-    container_name: postgres
+    image: postgres:13
+    container_name: homarr_postgres
     volumes:
-      - "./homarr_data:/var/lib/postgresql"
+      - "./pgdata:/var/lib/postgresql" # Mount a local directory for PostgreSQL data persistence
     environment:
-      - POSTGRES_DB=homarr
-      - POSTGRES_USER=homarr
-      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=homarr # Database name
+      - POSTGRES_USER=homarr # Username
+      - POSTGRES_PASSWORD=your_password # Set your PostgreSQL password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U homarr"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  nginx-proxy:
-    image: nginx:latest
-    container_name: nginx_proxy
-    ports:
-      - "80:80" # NGINX server
-      - "443:443" # NGINX server (HTTPS if you set up SSL)
+  redis:
+    image: redis:6-alpine
+    container_name: homarr_redis
     volumes:
-      - "./nginx/conf.d:/etc/nginx/conf.d"
-      - "./nginx/certs:/etc/nginx/certs"
-    depends_on:
-      - homarr
+      - "./redisdata:/data" # Mount a local directory for Redis data persistence
 
-  letsencrypt:
-    image: certbot/dns-python:latest
-    container_name: letsencrypt
-    volumes:
-      - "./nginx/certs:/etc/letsencrypt"
-    depends_on:
-      - nginx-proxy
-
-# If you want to use Let's Encrypt for SSL, uncomment the "letsencrypt" service and configure it accordingly.
-# You can also add a volume for Homarr logs if you want to persist them across container restarts:
-#   homarr_logs:
-#     driver: local
+networks:
+  homarr_net:
+    driver: bridge

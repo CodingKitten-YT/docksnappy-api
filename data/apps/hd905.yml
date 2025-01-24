@@ -1,56 +1,98 @@
-version: '3.8'
+version: '3.7'
 
 services:
+  postgres:
+    image: postgres:12
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: foodsoft
+      POSTGRES_USER: foodsoft
+      POSTGRES_PASSWORD: foodsoft_dbpassword
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U foodsoft"]
+      timeout: 10s
+      retries: 5
+
+  redis:
+    image: redis:6-alpine
+    command: redis-server --appendonly yes
+
+  solr:
+    image: apache/solr:8.8.2
+    ports:
+      - "8983:8983"
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.1.0-SNAPSHOT
+    environment:
+      LS_JAVA_OPTIONS:-Xms512m,-Xmx512m
+    volumes:
+      - logstash_data:/usr/share/logstash/data
+    depends_on:
+      - foodsoft
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.1.0-SNAPSHOT
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    depends_on:
+      - logstash
+
+  nginx-proxy:
+    image: jwilder/nginx-proxy:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - nginx_data:/var/lib/letsencrypt
+      - ./nginx.conf:/etc/nginx/nginx.conf
+
   foodsoft:
-    image: 'foodsoft/foodsoft:latest' # Use the official FoodSoft image
-    container_name: 'foodsoft'
-    ports:
-      - "80:80" # Maps port 80 on the host to port 80 in the container for web traffic
-      - "443:443" # Maps port 443 on the host to port 443 in the container for secure traffic
-    volumes:
-      - 'foodsoft-data:/var/www/html' # Persistent storage for FoodSoft data
-      - '/etc/localtime:/etc/localtime' # Ensure correct timezone configuration (optional, depending on your setup)
-      - './letsencrypt:/etc/letsencrypt' # For Let's Encrypt certificates if you want to use SSL (optional)
+    image: foodsoft/foodsoft:latest
     depends_on:
-      - 'mysql'
+      - db:postgres
+      - redis
+      - solr
+      - elasticsearch
+      - nginx-proxy
     environment:
-      MYSQL_DATABASE: 'foodsoft'
-      MYSQL_USER: 'foodsoft'
-      MYQL_PASSWORD: 'changeit'
-      MYSQL_ROOT_PASSWORD: 'changeit'
-      FOODSOFT_SITEURL: 'https://yourdomain.tld' # Set your domain or subdomain
-      FOODSOFT_ADMIN_EMAIL: 'admin@example.com' # Set an admin email for FoodSoft
-    networks:
-      - foodsoft-net
-
-  mysql:
-    image: 'mysql:5.7' # Use the official MySQL image
-    environment:
-      MYSQL_DATABASE: 'foodsoft'
-      MYSQL_USER: 'foodsoft'
-      MYSQL_PASSWORD: 'changeit'
-      MYSQL_ROOT_PASSWORD: 'changeit'
+      FOODSOFT_SECRET_KEY: a very secret key
+      FOODSOFT_SOLR_HOSTNAME: solr:8983
+      FOODSOFT_ES_HOSTNAME: elasticsearch:9200
+      FOODSOFT_REDIS_HOSTNAME: redis
+      FOODSOFT_PG_HOSTNAME: db:5432
+      FOODSOFT_PG_USERNAME: foodsoft
+      FOODSOFT_PG_PASSWORD: foodsoft_dbpassword
     volumes:
-      - 'mysql-data:/var/lib/mysql' # Persistent storage for MySQL data
-    networks:
-      - foodsoft-net
+      - foodsoft_data:/var/lib/foodsoft
+      - foodsoft_logs:/var/log/foodsoft
+      - ./config:/etc/foodsoft
+    command: gunicorn -b 0.0.0.0:8000 foodsoft:app --timeout 315
+    healthcheck:
+      test: ["TCP", :container_name, "8000"]
+      timeout: 2s
+      retries: 5
 
-  phpmyadmin:
-    image: 'phpmyadmin/phpmyadmin'
-    ports:
-      - "8080:80"
-    environment:
-      PMA_HOST: 'mysql'
-      MYSQL_ROOT_PASSWORD: 'changeit' # This should match the MySQL root password
-    depends_on:
-      - 'mysql'
-    networks:
-      - foodsoft-net
+  celery_beat:
+    image: foodsoft/foodsoft:latest
+    command: celery -A foodsoft worker --loglevel=info
+    volumes:
+      - foodsoft_data:/var/lib/foodsoft
+
+  celery_worker:
+    image: foodsoft/foodsoft:latest
+    command: celery -A foodsoft worker --loglevel=info
+    volumes:
+      - foodsoft_data:/var/lib/foodsoft
 
 volumes:
-  foodsoft-data:
-  mysql-data:
-
-networks:
-  foodsoft-net:
-    driver: bridge
+  postgres_data:
+  redis_data:
+  elasticsearch_data:
+  logstash_data:
+  foodsoft_data:
+  foodsoft_logs:

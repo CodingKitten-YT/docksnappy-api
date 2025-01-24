@@ -1,41 +1,54 @@
-version: '3'
+version: '3.7'
 
 services:
-  mirortc-miroserver:
-    image: mirotc/miroserver:latest # or specify a tag if needed
-    command: -f /conf/mirortc.yml --web-statistic=true --redis-uri=redis://redis:6379/0
+  mira:
+    image: mirtalk/miratalk-sfu:latest
+    container_name: mirtalk-sfu
     ports:
-      - "8080:8080" # HTTP API
-      - "5223:5223"  # WebRTC signaling (default STUN server port)
-      - "443:443"     # HTTPS (if using Nginx as a reverse proxy)
-    volumes:
-      - ./data:/data
-      - ./conf:/conf
-      - miroserver_log:/var/log/miroserver
+      - "8080:8080" # HTTP UI
+      - "3478:3478"  # WebSocket for signaling and media (required for SFU)
+      - "10001:10001" # RTP/RTCP (if you need to expose RTSP/RTP streams)
     environment:
-      MIROSERVER_LOGLEVEL: "info" # Set log level (debug, info, warning, error)
-      MIROSERVER_ENABLE_WEBSOCKET_STATS: "true" # Enable web stats UI
+      MIRATALK_SECRET: "your_secret_here"
+      MIRATALK_ACCESS_TOKEN_SECRET: "your_token_secret_here"
+      MIRATALK_DB_HOST: db
+      MIRATALK_DB_USERNAME: root
+      MIRATALK_DB_PASSWORD: your_db_password_here
+      MIRATALK_DB_DATABASE: miratalk_sfu
+      MIRATALK_REDIS_HOST: redis
+      MIRATALK_REDIS_PASSWORD: '' # If not using authentication for Redis
+    volumes:
+      - mirtalk-sfu-data:/data
     depends_on:
+      - db
       - redis
+      - nats_client
+
+  db:
+    image: postgres:12
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: your_db_password_here
+      POSTGRES_DB: miratalk_sfu
+    volumes:
+      - mirtalk-sfu-db:/var/lib/postgresql/data
 
   redis:
     image: redis:6-alpine
-    command: "--save-memory-on-flush no"
+    command: redis-server --appendonly yes
     volumes:
-      - redis_data:/data
+      - mirtalk-sfu-redis:/data
 
-  nginx:
-    image: nginx:latest
+  nats_client:
+    image: nats:latest
+    command: nc -m8 -srv842 -maxmem=100MB
     ports:
-      - "80:80" # HTTP (optional, if you want to use Nginx as a frontend)
-      - "443:443" # HTTPS (optional, if you want to use Nginx with SSL)
+      - "4222:4222" # NATS Server Port
     volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - nginx_log:/var/log/nginx
-    depends_on:
-      - mirortc-miroserver
+      - mirtalk-sfu-nats:/data
 
 volumes:
-  miroserver_log:
-  redis_data:
-  nginx_log:
+  mirtalk-sfu-data:
+  mirtalk-sfu-db:
+  mirtalk-sfu-redis:
+  mirtalk-sfu-nats:

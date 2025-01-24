@@ -1,0 +1,42 @@
+version: '3.7'
+
+services:
+  tt-rss:
+    image: linuxserver/tt-rss
+    container_name: tt_rss
+    ports:
+      - "80:80" # Map to your preferred port or leave it as is if you don't need to access it externally
+      - "8443:443" # SSL if you have certificates ready, otherwise omit this line
+    volumes:
+      - tt-rss-config:/config
+      - tt-rss-data:/app/code
+      - tt-rss-letsencrypt:/config/letsencrypt
+    environment:
+      - PUID=1000 # Replace with your user ID
+      - PGID=1000 # Replace with your group ID
+      - TZ=Europe/London # Set your timezone, e.g., America/New_York
+      - PROXY_HOST=0.0.0.0 # If you need to use a proxy
+      - PROXY_PORT=3000 # If you need to use a proxy
+      - PROXY_USER=user # If you need to authenticate with your proxy
+      - WEBPASSWORDCOM_LOGIN_URL=https://yourdomain.com # Set your domain or IP address if accessed externally
+    restart: unless-stopped
+
+  tt-rss-db:
+    image: postgres:12
+    container_name: tt_rss_db
+    volumes:
+      - tt-rss-db-data:/var/lib/postgresql2
+    environment:
+      - POSTGRES_DB=tt_rss
+      - POSTGRES_USER=tt_rss
+      - POSTGRES_PASSWORD=changeit
+    restart: unless-stopped
+
+volumes:
+  tt-rss-config:
+  tt-rss-data:
+  tt-rss-db-data:
+
+networks:
+  default:
+    name: "tt_rss_net"

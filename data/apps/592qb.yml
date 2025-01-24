@@ -1,40 +1,45 @@
 version: '3.8'
 
 services:
-  middleware_backend:
-    image: "middleware/backend:latest" # Replace with the specific tag or custom image if needed
-    ports:
-      - "8081:8080" # Map backend port as needed, e.g., for a REST API
+  appserver:
+    image: middlewared/middleware:latest # Replace with the specific tag or custom image if needed
+    container_name: middleware_appserver
     environment:
-      - DATABASE_URL=postgres://middleware_db:5432/mydatabase # Database URL or any env vars your app requires
-    depends_on:
-      - middleware_db
-    volumes:
-      - "./backend:/app" # Mount your backend code for updates and changes, if necessary
-
-  middleware_frontend:
-    image: "middleware/frontend:latest" # Replace with the specific tag or custom image if needed
+      SERVICES_APPSERVER_ENABLE: "1"
     ports:
-      - "8082:3000" # Map frontend port as needed, e.g., for a web app
-    depends_on:
-      - middleware_backend
+      - "8080:8080" # Default HTTP API port
+      - "8181:8181" # Default Web UI port
+    networks:
+      - middleware-network
 
-  middleware_db:
-    image: "postgres:latest"
+  database:
+    image: postgres:latest # Replace with the specific PostgreSQL version if needed
+    container_name: middleware_database
     volumes:
-      - "./db:/var/lib/postgresql/data" # Mount your db data for persistence and backups, if necessary
+      - ./data/db:/var/lib/postgresql/data
     environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=mydatabase
+      POSTGRES_DB: middleware
+      POSTGRES_USER: middleware
+      POSTGRES_PASSWORD: secret
+    networks:
+      - middleware-network
 
   redis:
-    image: "redis:latest"
+    image: redis:latest # Replace with the specific Redis version if needed
+    container_name: middleware_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - middleware-network
+
+  etcd:
+    image: etcd:latest # Replace with the specific etcd version if needed
+    container_name: middleware_etcd
     volumes:
-      - "./redis/data:/data" # Mount for persistence of Redis data (optional)
+      - ./data/etcd:/etc/etcd
+    networks:
+      - middleware-network
 
 networks:
-  default:
-    name: "middleware_network"
-
-# Optionally, you can define networks, but in this case, we're relying on the default network created by Docker Compose.
+  middleware-network:
+    driver: bridge

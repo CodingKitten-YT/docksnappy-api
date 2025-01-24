@@ -3,29 +3,33 @@ version: '3.7'
 services:
   lidarr:
     image: 'lidarr/docker:latest'
-    container_name: lidarr
     ports:
-      - "8686:8080" # Web interface
-      - "5000:5000"  # RPC
-      - "9092:9092"  # WebSocket (optional, for coverage if used)
-      - "54320:54320" # Torrent client downloads (optional, for coverage if used)
+      - "8680:8680" # Web interface
+      - "5001:5001" # API (optional, if you prefer to use the API)
+      - "9090:9090" # Jackett Integration (if using Jackett)
+      - "53336:53336" # Transmission Integration (if using Transmission)
     volumes:
-      - "${HOME}/.config/lidarr:/config`" # Configuration files and media directory layouts
-      - "/path/to/downloads:/downloads`" # Location to store all downloaded media
-      - "/path/to/media:/media`" # Location of your media library (optional)
+      - 'lidarr-config:/config'
+      - 'lidarr-data:/data'
     environment:
-      TZ: "Europe/London" # Set the timezone for Lidarr
-      SERVICE_NAME: lidarr
-      DEFAULT_CENSORED_EXTENSIONS: "avi,bmb,rm,rmvb" # Optional: set default censored file extensions (default is just avi)
-      DEFAULT_LANGUAGE: "English" # Set default language for media (optional)
-      DEFAULT_RESOLUTIONS: "1080p,720p" # Set default resolutions to download (optional)
-      EMBED_LOGO: "true" # Embed logo in covers (optional)
-      ALLOW_INCOMING_VNC: "false" # Allow VNC into the container (optional, defaults to false)
-      RUN_SPOTLIGHT: "false" # Run Spotlight scan on startup (optional, defaults to false)
+      TZ: 'Europe/London' # Set your timezone, e.g., Europe/Paris, America/New_York, etc.
+      SERVICE_NAME: 'Lidarr' # Sets the name of the service in the logs
+      SERVICE_HOSTNAME: lidarr # Sets the hostname for the service
+      SERVICE_PROTOCOL: 'http' # Sets the protocol (http or https)
+      SERVICE_PORT: 8680 # Sets the port for the web interface
+      SERVICE_JACKETT_ENABLED: 'false' # Set to true if you want to enable Jackett integration
+      SERVICE_JACKETT_HOST: jackett # The hostname of your Jackett service (if applicable)
+      SERVICE_TRANSMISSION_ENABLED: 'false' # Set to true if you want to enable Transmission integration
+      SERVICE_TRANSMISSION_HOST: transmission # The hostname of your Transmission service (if applicable)
+      JOB_REMOVE_OLD_DOWNLOADS: 'true' # Automatically remove old downloads after a certain time
+      JOB_CHECK_FOR_UPDATES: 'true' # Check for updates daily
     restart: unless-stopped
     networks:
-      - lidarr_network
+      - lidarr_net
+
+volumes:
+  lidarr-config:
+  lidarr-data:
 
 networks:
-  lidarr_network:
-    driver: bridge
+  lidarr_net:

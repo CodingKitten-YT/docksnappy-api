@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  readeck_app:
+    image: readeck/readeck-app:latest
+    ports:
+      - "5000:5000"
+    environment:
+      READECK_DATABASE_URI: "postgres://user:password@db:5432/database_name"
+      READECK_RABBITMQ_URL: "amqp://rabbitmq:5672/virtual_host"
+      READECK_FRONTEND_URL: "http://frontend:8000"
+    depends_on:
+      - db
+      - rabbitmq
+      - redis
+    volumes:
+      - "./readeck_app:/code"
+
+  readeck_db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: database_name
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  readeck_rabbitmq:
+    image: rabbitmq:3.8-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  readeck_redis:
+    image: redis:latest
+
+volumes:
+  postgres_data:
+  rabbitmq_data:

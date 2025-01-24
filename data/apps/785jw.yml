@@ -1,56 +1,163 @@
-version: '3'
+version: '3.8'
+
 services:
-  druid_broker:
-    image: metamarkets/druid:v20230419CLS
-    hostname: druid-broker
+  druid_historical node:
+    image: druid/druid:latest
+    hostname: druid_historical
+    environment:
+      DRUID_BOOTSTRAP_CONFIGURATION_SOURCE: "file,http"
+      DRUID_NODE_ID: historical
+      DRUID_HISTORICAL_NODE: true
+      # Uncomment and set the following if you have a license key
+      # DRUID_LICENSE: "<your-druid-license>"
     ports:
-      - "8081:8081" # HTTP endpoints and UI
-      - "8181:8181" # Cluster Manager API
-      - "8888:8888" # Broker Management API
-    environment:
-      DRUID_SECURITY_ENABLE_ADMIN_USER: "true"
-      DRUID_BROKER_BOOTSTRAP_ZK_CONNECTION_STRING: "zookeeper:2181"
-    depends_on:
-      - druid_coordinator
-      - druid_historical_nodes
-      - druid_overlord
-      - zookeeper
+      - "8090:8090" # Historical data query port
+      - "8126:8126" # Coordination service port (optional, for monitoring)
+    volumes:
+      - ./config/druid.properties:/etc/druid/druid.properties
+      - ./data:/home/druid/druid-data
+      - ./logs/druid_historical:/var/log/druid/druid_historical
+    command: >
+      sh
+      -c
+      && (
+          echo "Waiting for coordination service"
+          until nc -z localhost 9090; do echo "Coordination service not yet available"; sleep 2; done;
+          echo "Coordination service is up"
+          /bin/sh /start.sh historical &
+          tail -f /var/log/druid/druid_historical/*.log
+      )
 
-  druid_coordinator:
-    image: metamarkets/druid:v20230419CLS
-    hostname: druid-coordinator
+  druid_overlord node:
+    image: druid/druid:latest
+    hostname: druid_overlord
     environment:
-      DRUID_SECURITY_ENABLE_ADMIN_USER: "true"
-      DRUID_COORDINATOR_BOOTSTRAP_ZK_CONNECTION_STRING: "zookeeper:2181"
-    depends_on:
-      - druid_broker
-      - druid_historical_nodes
-      - druid_overlord
-      - zookeeper
+      DRUID_BOOTSTRAP_CONFIGURATION_SOURCE: "file,http"
+      DRUID_NODE_ID: overlord
+      DRUID_OVERLORD_NODE: true
+      # Uncomment and set the following if you have a license key
+      # DRUID_LICENSE: "<your-druid-license>"
+    ports:
+      - "8081:8081" # Overlord API port
+    volumes:
+      - ./config/druid.properties:/etc/druid/druid.properties
+      - ./logs/druid_overlord:/var/log/druid/druid_overlord
+    command: >
+      sh
+      -c
+      && (
+          echo "Waiting for historical node"
+          until nc -z localhost 8090; do echo "Historical node not yet available"; sleep 2; done;
+          echo "Historical node is up"
+          /bin/sh /start.sh overlord &
+          tail -f /var/log/druid/druid_overlord/*.log
+      )
 
-  druid_historical_nodes:
-    image: metamarkets/druid:v20230419CLS
-    hostname: druid-historical-nodes
+  druid_coordinator node:
+    image: druid/druid:latest
+    hostname: druid_coordinator
     environment:
-      DRUID_SECURITY_ENABLE_ADMIN_USER: "true"
-      DRUID_HISTORICAL_NODE_BOOTSTRAP_ZK_CONNECTION_STRING: "zookeeper:2181"
-    depends_on:
-      - druid_broker
-      - druid_coordinator
-      - druid_overlord
-      - zookeeper
+      DRUID_BOOTSTRAP_CONFIGURATION_SOURCE: "file,http"
+      DRUID_NODE_ID: coordinator
+      DRUID_COORDINATOR_NODE: true
+      # Uncomment and set the following if you have a license key
+      # DRUID_LICENSE: "<your-druid-license>"
+    ports:
+      - "8091:8091" # Coordinator API port
+    volumes:
+      - ./config/druid.properties:/etc/druid/druid.properties
+      - ./logs/druid_coordinator:/var/log/druid/druid_coordinator
+    command: >
+      sh
+      -c
+      && (
+          echo "Waiting for overlord node"
+          until nc -z localhost 8081; do echo "Overlord node not yet available"; sleep 2; done;
+          echo "Overlord node is up"
+          /bin/sh /start.sh coordinator &
+          tail -f /var/log/druid/druid_coordinator/*.log
+      )
 
-  druid_overlord:
-    image: metamarkets/druid:v20230419CLS
-    hostname: druid-overlord
+  druid_middlemanager node:
+    image: druid/druid:latest
+    hostname: druid_middlemanager
     environment:
-      DRUID_SECURITY_ENABLE_ADMIN_USER: "true"
-      DRUID_OVERLORD_BOOTSTRAP_ZK_CONNECTION_STRING: "zookeeper:2181"
-    depends_on:
-      - druid_broker
-      - druid_historical_nodes
-      - zookeeper
+      DRUID_BOOTSTRAP_CONFIGURATION_SOURCE: "file,http"
+      DRUID_NODE_ID: middlemanager
+      DRUID_MIDDLEMANAGER_NODE: true
+      # Uncomment and set the following if you have a license key
+      # DRUID_LICENSE: "<your-druid-license>"
+    ports:
+      - "8082:8082" # MiddleManager API port
+    volumes:
+      - ./config/druid.properties:/etc/druid/druid.properties
+      - ./logs/druid_middlemanager:/var/log/druid/druid_middlemanager
+    command: >
+      sh
+      -c
+      && (
+          echo "Waiting for overlord node"
+          until nc -z localhost 8081; do echo "Overlord node not yet available"; sleep 2; done;
+          echo "Overlord node is up"
+          /bin/sh /start.sh middlemanager &
+          tail -f /var/log/druid/druid_middlemanager/*.log
+      )
 
-  zookeeper:
-    image: apache/zookeeper:latest
-    hostname: zookeeper
+# Optional real-time node if you want to ingest data in real-time
+  druid_realtime node:
+    image: druid/druid:latest
+    hostname: druid_realtime
+    environment:
+      DRUID_BOOTSTRAP_CONFIGURATION_SOURCE: "file,http"
+      DRUID_NODE_ID: realtime
+      DRUID_REALTIME_NODE: true
+      # Uncomment and set the following if you have a license key
+      # DRUID_LICENSE: "<your-druid-license>"
+    ports:
+      - "8083:8083" # Real-time node API port
+    volumes:
+      - ./config/druid.properties:/etc/druid/druid.properties
+      - ./logs/druid_realtime:/var/log/druid/druid_realtime
+    command: >
+      sh
+      -c
+      && (
+          echo "Waiting for coordinator node"
+          until nc -z localhost 8091; do echo "Coordinator node not yet available"; sleep 2; done;
+          echo "Coordinator node is up"
+          /bin/sh /start.sh realtime &
+          tail -f /var/log/druid/druid_realtime/*.log
+      )
+
+# Optional indexer service for batch ingestion of data
+  druid_indexer:
+    image: druid/druid-indexer:latest
+    hostname: druid_indexer
+    environment:
+      DRUID_BOOTSTRAP_CONFIGURATION_SOURCE: "file,http"
+      # Uncomment and set the following if you have a license key
+      # DRUID_LICENSE: "<your-druid-license>"
+    volumes:
+      - ./config/druid.properties:/etc/druid/druid.properties
+      - ./data:/home/druid/druid-data
+      - ./logs/druid_indexer:/var/log/druid/druid_indexer
+    command: /bin/sh /start.sh indexer
+
+# Optional MiddleManager service for scheduling indexing jobs
+  druid_middlemanager_service (optional):
+    image: druid/druid-middlemanager:latest
+    hostname: druid_middlemanager_service
+    environment:
+      SERVICES: middlemanager
+      # Uncomment and set the following if you have a license key
+      # DRUID_LICENSE: "<your-druid-license>"
+    ports:
+      - "8080:8080" # MiddleManager API port
+    volumes:
+      - ./config/druid.properties:/etc/druid/druid.properties
+      - ./logs/druid_middlemanager_service:/var/log/druid/druid_middlemanager_service
+    depends_on:
+      - druid_realtime
+      # Uncomment the following if you have a real-time node
+      # - druid_realtime
+    command: /bin/sh /start.sh middlemanager

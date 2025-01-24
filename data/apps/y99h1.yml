@@ -1,40 +1,41 @@
 version: '3.8'
+
 services:
   mailu:
-    image: mailu/mailu:latest  # or use a specific version like mailu/mailu:2.7.1-python3.8
+    image: 'mailu/mailu:latest' # Use the official Mailu image
     container_name: mailu
-    environment:
-      MAILU_ADMINUSERNAME: admin
-      MAILU_ADMINPASSWORD: password
-      MAILU_DATABASE_ENGINE: postgres
-      MAILU_POSTGRES_DB: mailu
-      MAILU_POSTGRES_USER: mailu
-      MAILU_POSTGRES_PASSWORD: mailupassword
-      MAILHARNESS_ENABLE: 'true'  # Optional: to use MailHarness (Mailu's built-in test suite)
-      SMTP_IN_MEMORY: 'false'  # Change to 'true' if you want to use an in-memory store for SMTP commands (useful for testing)
+    command: -d --quiet --fresh
+    restart: unless-stopped
     ports:
-      - "8080:8080"  # Web UI port
-      - "5871:5871"  # SMTP submission port (choose a free port on your host)
-      - "4651:465"   # SMTP SSL/TLS port (choose a free port on your host)
+      - "8080:80" # HTTP (Web UI)
+      - "110:110" # SMTP for sending emails
+      - "143:143" # IMAP for receiving emails
+      - "587:587" # Submission for sending emails (optional, usually TLS-wrapped SMTP)
     volumes:
-      - './mailu/:/data'  # Mount this directory to persist emails and configurations
-      - '/var/log/mailu/mailu.log:/var/log/mailu/mailu.log'  # Optional: for logging (you can remove this if you prefer to keep logs inside the container)
-    networks:
-      - mailunetwork
+      - 'mailu_data:/data' # Persist Mailu data and configuration
+    environment:
+      - MAILU_LANG=en
+      - MAILU_ADMINS=admin@example.com # Replace with your email or a list of admins
+      - MAILU_DATABASE_HOST=db
+      - MAILU_LOG_LEVEL=info
     depends_on:
-      - postgres
+      - db
 
   postgres:
-    image: postgres:latest  # or use a specific version like postgres:13-alpine
-    environment:
-      POSTGRES_DB: mailu
-      POSTGRES_USER: mailu
-      POSTGRES_PASSWORD: mailupassword
+    image: 'postgres:latest'
     volumes:
-      - './mailu/data/db:/var/lib/postgresql/data'  # Mount this directory to persist the database data
-    networks:
-      - mailunetwork
+      - 'mailu_data:/var/lib/postgresql' # Persist PostgreSQL data
+    environment:
+      - POSTGRES_DB=mailu
+      - POSTGRES_USER=mailu
+      - POSTGRES_PASSWORD=changeit
+    restart: unless-stopped
 
-networks:
-  mailunetwork:
-    driver: bridge
+  redis:
+    image: 'redis:latest'
+    volumes:
+      - 'mailu_data:/data' # Persist Redis data
+    restart: unless-stopped
+
+volumes:
+  mailu_data:

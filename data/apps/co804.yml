@@ -1,59 +1,65 @@
 version: '3.7'
 services:
-  app:
-    image: 'misskey/misskey:latest' # Use the official image from misskey, or a specific version if needed
-    container_name: misskey
+  misskey:
+    image: 'misskey/misskey:latest' # Use the official Misskey image or specify a tag
+    container_name: 'misskey'
     ports:
-      - "9080:9080" # Misskey web UI on host port 9080
-      - "9081:9081" # Feed API on host port 9081
-      - "9082:9082" # WebSocket API on host port 9082
+      - '9090:9090' # Misskey web interface
+      - '8080:8080' # Admin API (if you need it)
+      - '3000:3000' # ActivityPub endpoint for federation
     volumes:
-      - './appdata:/data' # Persistent storage for user data (custom path based on your setup)
-      - './letsencrypt:/letencrypt' # Required for Let's Encrypt support (optional, if you want to use LE certs)
+      - './misskey/:./misskey/' # User data and configuration, set according to your setup
+      - './misskey/redis-data:/data/redis' # Redis data (optional if you don't mind losing it on restart)
+      - './misskey/mcs-data:/data/mcs' # MCS (Markdown Cache Service) data (optional, for better performance)
     environment:
-      - MISSKEY_DATABASE=postgres
-      - POSTGRES_DB=misskey
-      - POSTGRES_USER=misskey
-      - POSTGRES_PASSWORD=changeit
-      # Additional Misskey environment variables (e.g., for setting the admin account password, enabling signup, etc.)
-    command: ["--http", "0.0.0.0:9080", "--wss", "0.0.0.0:9082"] # HTTP and WebSocket interfaces
-    restart: unless-stopped
+      MISSKEY_SECRET: 'your_secret_token' # Set a secret token for additional security
+      MISSKEY_SITE_NAME: 'Your Misskey Instance Name' # Your instance name
+      MISSKEY_EMAIL: 'admin@example.com' # Email for admin account
+      MISSKEY_ADMIN_PASSWORD: 'your_password' # Password for the admin account
+      MISSKEY_TIMEZONE: 'Asia/Tokyo' # Timezone (e.g., Asia/Tokyo)
+      JWT_SECRET: 'jwt_secret_token' # JWT token for authentication
+      REDIS_HOST: 'redis' # If you are using a separate Redis service, set this to the service name
+      DB_TYPE: 'postgres' # Database type (postgres or mysql)
+      POSTGRES_DB: 'misskey' # Database name if using PostgreSQL
+      POSTGRES_USER: 'misskey' # Database user if using PostgreSQL
+      POSTGRES_PASSWORD: 'your_password' # Database password if using PostgreSQL
+      MYSQL_DATABASE: 'misskey' # Database name if using MySQL
+      MYSQL_USER: 'misskey' # Database user if using MySQL
+      MYSQL_PASSWORD: 'your_password' # Database password if using MySQL
     depends_on:
+      - redis
       - db
+    restart: unless-stopped
+
+  redis:
+    image: 'redis:6-alpine'
+    volumes:
+      - './misskey/redis-data:/data' # Persist Redis data (optional for ephemeral data)
+    environment:
+      REDIS_PASSWORD: 'your_password' # Set a password for Redis if desired
+    healthcheck:
+      test: ["CMD", "REDIS-CLI", "PING", "exit"]
+      timeout: 5s
+      interval: 10s
+      retries: 10
 
   db:
-    image: 'postgres:latest'
+    image: 'postgres:13' # Use the specific version you prefer (e.g., postgres:14)
     volumes:
-      - './appdata/db:/var/lib/postgresql' # Persistent storage for database data (custom path based on your setup)
+      - './misskey/db-data:/var/lib/postgresql/data' # Persist PostgreSQL data
     environment:
-      - POSTGRES_DB=misskey
-      - POSTGRES_USER=misskey
-      - POSTGRES_PASSWORD=changeit
-    command: ["--listen", "localhost"] # Database listens only on localhost
+      POSTGRES_DB: 'misskey'
+      POSTGRES_USER: 'misskey'
+      POSTGRES_PASSWORD: 'your_password'
     healthcheck:
-      test: ["/usr/local/bin/run-sql.sh", "SELECT 1;"]
+      test: ["CMD-SHELL", "pg_isready -U misskey"]
       timeout: 5s
-      retries: 5
-    restart: unless-stopped
+      interval: 10s
+      retries: 10
 
-# Optionally, you can also define a redis service if you want to use it for caching or pub/sub functionality.
-redis:
-  image: 'redis:latest'
-  volumes:
-    - './appdata/redis:/data' # Persistent storage for Redis data (custom path based on your setup)
-  command: redis-server --appendonly yes
-  restart: unless-stopped
-
-# If you want to use Let's Encrypt for SSL, uncomment the following services and configure them.
-letsencrypt:
-  image: 'certbot/certbot:latest'
-  volumes:
-    - './letsencrypt:/letencrypt'
-    - './appdata/letsencrypt:/etc/letsencrypt' # Persistent storage for Let's Encrypt certificates and configuration (custom path based on your setup)
-  depends_on:
-    - app
-  command: certbot certonly --webroot --webroot-path=/var/www/certbot --email your-email@example.com --agree-tos --no-eff-email --force-renewal
-  entrypoint: ''
-  restart: unless-stopped
-
-# Note: Make sure to replace './appdata', './letsencrypt', and 'your-email@example.com' with your actual data paths and email address.
+# Uncomment the following service if you need an email server like Postfix or Mailu for sending emails.
+# mailhog:
+#   image: 'mailhog/mailhog'
+#   ports:
+#     - '8025:8025' # SMTP interface
+#     - '8000-8003:8000-8003' # Web UI

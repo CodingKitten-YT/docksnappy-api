@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  opik:
+    image: opik/opik:latest
+    ports:
+      - "8080:8080" # Opik UI port
+    command: /opik/run --server=https://kubernetes.default.svc --kubeconfig=/var/run/secrets/kubernetes.io/service-account/kube-api-client --namespace=default
+    depends_on:
+      - postgres
+    environment:
+      OPIC_ADMIN_USERNAME: admin
+      OPIC_ADMIN_PASSWORD: password # Change this with a secure secret in production!
+    readiness:
+      http-get:
+        path: /healthz
+        port: 8080
+    liveness:
+      http-get:
+        path: /readyz
+        port: 8080
+
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: opik
+      POSTGRES_USER: opik
+      POSTGRES_PASSWORD: opik_password # Change this with a secure secret in production!
+      POSTGRES_HOST: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  traefik:
+    image: traefik:v2.5
+    ports:
+      - "80:80"
+      - "443:443"
+    command:
+      - "--api.insecure=true"
+      - "--providers.kubernetescrd.enabled=false" # Enable if you have CRDs installed
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+    volumes:
+      - traefik-data:/var/lib/traefik
+
+volumes:
+  postgres-data:
+  traefik-data:

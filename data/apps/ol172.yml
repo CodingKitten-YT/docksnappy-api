@@ -1,71 +1,64 @@
-version: '3.8'
+version: '3.7'
 
 services:
-  database:
-    image: postgres:12
+  firefly_iii:
+    image: fireflyiii/firefly-iii:latest
+    container_name: firefly-iii
+    restart: unless-stopped
+    ports:
+      - "8080:80" # HTTP port, change as needed
+      - "443:443"  # HTTPS port, requires a SSL certificate and the appropriate env vars set
+    environment:
+      TZ: "Your/Timezone" # e.g., Europe/Amsterdam
+      BB_DATABASE_HOST: "db"
+      DB_SERVER_ROOT_PASSWORD: "yourpassword" # Set a password for MySQL root user
+      APP_SECRET: "a very long and secret key for your application"
+      APP_DOMAIN: "example.com" # Your domain or subdomain
+      APP_ROUTER_ADMINS: "admin@example.com" # Comma separated list of admin users to invite via CLI after setup
+    volumes:
+      - "./config:/code/config"
+      - "./data:/code/data"
+    networks:
+      - firefly-network
+
+  db:
+    image: postgres:13
+    container_name: firefly-iii-db
     environment:
       POSTGRES_DB: firefly_iii
       POSTGRES_USER: firefly_iii
-      POSTGRES_PASSWORD: change_this_unless_you_hate_yourself
+      POSTGRES_PASSWORD: yourpassword # Must match DB_SERVER_ROOT_PASSWORD for initial root access
     volumes:
-      - firefly-iii-db:/var/lib/postgresql2
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U firefly_iii"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+      - "./data/db:/var/lib/postgresql"
+    networks:
+      - firefly-network
 
-  web:
-    image: fireflyii/firefly-iii:latest
-    environment:
-      FIREFLY_SECRET: change_this_please
-      FIREFLY_DB_HOST: database
-      FIREFLY_DB_NAME: firefly_iii
-      FIREFLY_DB_USER: firefly_iii
-      FIREFLY_DB_PASSWORD: change_this_unless_you_hate_yourself
-      FIREFLY_SCHEME: https
-      FIREFLY_HOST: my.fireflyiii.app.xip.io  # Optional, for setting a hostname via xip.io
+  nginx_proxy:
+    image: jwilder/nginx-proxy:alpine
+    container_name: nginx-proxy
     ports:
-      - "8080:80"
+      - "80:80"
+      - "443:443"
     depends_on:
-      - database
-    healthcheck:
-      test: ["TCP", "0.0.0.0:80"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+      - firefly_iii
+    volumes:
+      - "./data/nginx:/etc/nginx/conf.d"
+      - "/var/run/docker.sock:/tmp/docker.sock:ro" # Required for Let's Encrypt and Docker Swarm mode
+    networks:
+      - firefly-network
 
-  redis:
-    image: redis:6-alpine
-    healthcheck:
-      test: ["CMD-SHELL", "redis-cli -h 127.0.0.1 ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-
-  worker:
-    image: fireflyii/firefly-iii-worker:latest
+  letsencrypt:
+    image: jrcassancio/letsencrypt-nginx-proxy-companion:latest
+    container_name: letsencrypt
+    depends_on:
+      - nginx_proxy
+    volumes:
+      - "./data/le:/etc/letsencrypt"
     environment:
-      FIREFLY_SECRET: change_this_please
-      FIREFLY_DB_HOST: database
-      FIREFLY_DB_NAME: firefly_iii
-      FIREFLY_DB_USER: firefly_iii
-      FIREFLY_DB_PASSWORD: change_this_unless_you_hate_yourself
-    depends_on:
-      - database
-      - web
+      EMAIL: your-email@example.com # Email where certificates will be sent
+    networks:
+      - firefly-network
 
-  queue:
-    image: fireflyii/firefly-iii-queue:latest
-    environment:
-      FIREFLY_SECRET: change_this_please
-      FIREFLY_DB_HOST: database
-      FIREFLY_DB_NAME: firefly_iii
-      FIREFLY_DB_USER: firefly_iii
-      FIREFLY_DB_PASSWORD: change_this_unless_you_hate_yourself
-    depends_on:
-      - database
-      - redis
-
-volumes:
-  firefly-iii-db:
+networks:
+  firefly-network:
+    driver: bridge

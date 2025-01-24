@@ -1,11 +1,10 @@
-version: '3.8'
+version: '3'
 
 services:
-  linkwarden_db:
+  db:
     image: postgres:12
-    container_name: linkwarden_db
     volumes:
-      - ./data/postgres:/var/lib/postgresql/data
+      - ./db_data:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: linkwarden
       POSTGRES_USER: linkwarden
@@ -13,54 +12,52 @@ services:
     ports:
       - "5432:5432"
 
-  linkwarden_redis:
-    image: redis:6
-    container_name: linkwarden_redis
-    volumes:
-      - ./data/redis:/data
-
-  linkwarden_api:
-    image: linkwarden/linkwarden-api:latest
-    container_name: linkwarden_api
+  api:
+    image: linkwarden/linkwarden:latest
     depends_on:
-      - linkwarden_db
-      - linkwarden_redis
+      - db
     environment:
-      DB_HOST: linkwarden_db
-      DB_USERNAME: linkwarden
-      DB_PASSWORD: secret
-      REDIS_URL: redis://linkwarden_redis:6379/0
-      SECRET_KEY: super_secret_key
+      DATABASE_URL: postgres://linkwarden:secret@db:5432/linkwarden
+      ENABLE_API: "true"
+      # Set to "true" if you want to enable the admin UI, useful for testing and debugging.
+      ADMIN_UI_ENABLED: "false"
     ports:
-      - "5000:5000"
-
-  linkwarden_worker:
-    image: linkwarden/linkwarden-worker:latest
-    container_name: linkwarden_worker
-    depends_on:
-      - linkwarden_db
+      - "8080:8080"
     environment:
-      DB_HOST: linkwarden_db
-      DB_USERNAME: linkwarden
-      DB_PASSWORD: secret
-      SECRET_KEY: super_secret_key
+      SECRET_KEY: ${RANDOM_SECRET_KEY} # You should set this to a random secret key for production use.
+      EMAIL_HOST: 'smtp.yourprovider.com'
+      EMAIL_PORT: 587
+      EMAIL_USE_TLS: 'true'
+      EMAIL_HOST_USER: 'your-email@example.com'
+      EMAIL_HOST_PASSWORD: 'your-email-password'
 
-  linkwarden_crawler:
-    image: linkwarden/linkwarden-crawler:latest
-    container_name: linkwarden_crawler
+  worker:
+    image: linkwarden/linkwarden:latest
     depends_on:
-      - linkwarden_db
+      - db
+    command: celery -A linkwarden worker --loglevel=info
     environment:
-      DB_HOST: linkwarden_db
-      DB_USERNAME: linkwarden
-      DB_PASSWORD: secret
-      SECRET_KEY: super_secret_key
+      DATABASE_URL: postgres://linkwarden:secret@db:5432/linkwarden
+      ENABLE_API: "false"
+      BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    volumes:
+      - ./worker_data:/var/spool/celery
+    healthcheck:
+      test: ["CMD-SHELL", "ping -c 1 /*"]
+      interval: 10s
+      timeout: 5s
+      retries: 7
 
-volumes:
-  postgres_data:
-    driver: local
+  redis:
+    image: redis:6
+    ports:
+      - "6379:6379"
 
 networks:
   default:
-    name: linkwarden_net
     driver: bridge
+
+volumes:
+  db_data:
+  worker_data:

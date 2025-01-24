@@ -1,0 +1,68 @@
+version: '3'
+
+services:
+  sunshine-core:
+    image: alexa/sunshine-core:latest
+    environment:
+      - CORE_CLUSTER_NAME=SunshineCore
+      - LOG_LEVEL=INFO
+    ports:
+      - "8081:8080" # Sunshine Core API (HTTP)
+      - "8082:8081" # Sunshine Core API (HTTPS, if you set up TLS)
+      - "9443:9443"  # MQTT Broker (if enabled and configured)
+    depends_on:
+      - sunshine-db
+      - sunshine-message-queue
+      - sunshine-identity
+
+  sunshine-db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_DB=sunshine
+      - POSTGRES_USER=sunshine
+      - POSTGRES_PASSWORD=secret
+    volumes:
+      - sunshine-db-data:/var/lib/postgresql/data
+    environment:
+      SunshineCore_DatabaseURL: "postgres://sunshine:secret@localhost:5432/sunshine"
+
+  sunshine-message-queue:
+    image: hawtio/activemq:latest
+    ports:
+      - "61616:61616" # ActiveMQ (if you need to access it directly)
+    volumes:
+      - sunshine-message-queue-data:/opt/wildfly/data/localhost/activemq.db
+
+  sunshine-identity:
+    image: bitnami/keycloak:latest
+    environment:
+      - KEYCLOAK_USER=admin
+      - KEYCLOAK_PASSWORD=admin
+      - DB_URL=jdbc:postgresql://sunshine-db:5432/sunshine
+      - DB_USER=sunshine
+      - DB_PASSWORD=secret
+    ports:
+      - "8180:8080" # Keycloak Admin Console
+    volumes:
+      - sunshine-identity-data:/bitnami
+
+  sunshine-notifications:
+    image: alexa/sunshine-notification-services:latest
+    depends_on:
+      - sunshine-core
+      - sunshine-db
+      - sunshine-message-queue
+    environment:
+      - ENABLE_EMAIL=true
+      - EMAIL_SMTP_HOST="smtp.example.com"
+      - EMAIL_SMTP_PORT=587
+      - EMAIL_SMTP_USERNAME="your-email@example.com"
+      - EMAIL_SMTP_PASSWORD="your-email-password"
+
+volumes:
+  sunshine-db-data:
+    driver: local
+  sunshine-message-queue-data:
+    driver: local
+  sunshine-identity-data:
+    driver: local

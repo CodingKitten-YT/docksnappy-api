@@ -1,56 +1,48 @@
-version: '3'
-
+version: '3.8'
 services:
-  etcd:
-    image: registry.k8s.io/etcd:3.5.0-lin
-    command: --advertise-client-urls=http://0.0.0.0:2379 --listen-client-urls=http://0.0.0.0:2379 --data-dir=/var/etcd
+  cannery_cannery:
+    image: cansuds/cannery:latest
+    container_name: cannery
     environment:
-      ETCD_NAME: 'etcd-0'
-      ETCD_LISTEN_CLIENT_URLS: '0.0.0.0:2379'
-      ETCD_ADVERTISE_CLIENT_URLS: '0.0.0.0:2379'
+      - HOSTNAME=Cannery
+      # Uncomment and set the following if your cluster has a different storage backend
+      # - STORAGE_BACKEND=minio
+      # - MINIO_ACCESS_KEY=your_minio_access_key
+      # - MINIO_SECRET_KEY=your_minio_secret_key
+      # - MINIO_ENDPOINT=http://minio-service:9000
     ports:
-      - "2379:2379"
+      - "8080:8080"
     volumes:
-      - etcd-data:/var/etcd
+      - ./cannery-data:/var/lib/cannery
+    depends_on:
+      - minio # If you are using MinIO as the storage backend
 
-  flannel:
-    image: flannel/flannel:v0.14.0-linux
-    command: -etcd -iface eth0
-    volumes:
-      - flannel-data:/run/flannel
+  # Uncomment and add the following service if you need a MinIO service
+  # minio-service:
+  #   image: minio:latest
+  #   environment:
+  #     - MINIO_ACCESS_KEY=minio
+  #     - MINIO_SECRET_KEY=minio1234
+  #   volumes:
+  #     - minio-data:/root/.minio
+  #   command: server /data
 
-  swarm-manager:
-    image: swarmkit/swarm:v1.14.2-lin
-    environment:
-      SWARM_LOCAL_MANAGER_ADVERTENZE_SUBNETS: '10.244.0.0/16'
-      SWARM_HOST: 'manager:2379'
-    ports:
-      - "8300-8301:8300-8301"
-      - "8500:8500"
+  # Uncomment and add the following service if you need a PostgreSQL database for Cannery
+  # postgres:
+  #   image: postgres:latest
+  #   environment:
+  #     - POSTGRES_DB=cannery
+  #     - POSTGRES_USER=cannery
+  #     - POSTGRES_PASSWORD=changeit
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
 
-  swarm-agent:
-    image: swarmkit/swarm:v1.14.2-lin
-    environment:
-      SWARM_MANAGER: 'manager:2379'
-      SWARM_LOCAL_AGENT_ADVERTENZE_SUBNETS: '10.244.0.0/16'
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-
-  swarm-worker:
-    image: swarmkit/swarm:v1.14.2-lin
-    environment:
-      SWARM_MANAGER: 'manager:2379'
-      SWARM_LOCAL_WORKER_ADVERTENZE_SUBNETS: '10.244.0.0/16'
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-
-volumes:
-  etcd-data:
-  flannel-data:
+# Uncomment and add the following if you need a monitoring service like Prometheus or Grafana
+# prometheus:
+#   image: prom/prometheus:latest
+# grafana:
+#   image: grafana/grafana:latest
 
 networks:
   default:
-    driver: overlay
-    ipam:
-      config:
-        - subnet: '10.244.0.1/24'
+    name: cannery_default

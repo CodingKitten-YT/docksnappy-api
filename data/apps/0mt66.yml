@@ -1,36 +1,30 @@
-version: '3.8'
+version: '3.7'
 
 services:
   mongooseim:
-    image: 'mongooseim/mongooseim:latest' # Use the official MongooseIM image
-    container_name: mongooseim
+    image: erlang:22.0
+    command: sh -c 'trap exit TERM; mongooseim console & wait $${!}; sleep infinity;'
     ports:
-      - "5280:5280" # XMPP client port (canonical)
-      - "5445:5445" # XMPP client port (non-canonical, optional)
-    environment:
-      MONGOOSEIM_ADMIN_PASSWORD: change_me # Set an admin password for the admin user
-      MONGOOSEIM_ADMIN_USERNAME: admin # Admin user credentials
-      MONGOOSEIM_DOMAIN: example.com # Set your domain/bare JID
-      MONGOOSEIM_STORAGE_DBTYPE: postgres # Storage backend (postgres, mysql, or sqlite3)
-      MONGOOSEIM_STORAGE_PG_HOST: db # Host for the PostgreSQL server if using PostgreSQL
-      MONGOOSEIM_STORAGE_MY_HOST: db-mysql # Host for the MySQL server if using MySQL
-      MONGOOSEIM_POSTGRESQL__USER: mongooseim # User for the PostgreSQL database
-      MONGOOSEIM_POSTGRESQL__DB: mongooseim # Database for MongooseIM to use
+      - "5280-5290:5280-5290" # Expose XMPP ports
     volumes:
-      - mongooseim-data:/var/lib/mongooseim # Persistent storage for MongooseIM data
+      - mongooseim_data:/var/lib/mongooseim
+      - ./config.yaml:/etc/mongooseim/config.yaml
+    environment:
+      - SERVICES_IMS_ENABLE=1
+      - SERVICES_IMS_DOMAIN=example.com
+      - MONGOOSEIM_USERNAME='admin'
+      - MONGOOSEIM_PASSWORD='password'
     depends_on:
-      - db  # Depend on the database service defined below
+      - mongodb
 
-  db:
-    image: postgres:latest
-    container_name: mongooseim-db
-    environment:
-      POSTGRES_USER: mongooseim
-      POSTGRES_DB: mongooseim
-      POSTGRES_PASSWORD: change_me # Set a password for the PostgreSQL user
+  mongodb:
+    image: mongo:4.4
+    command: --logpath /dev/stdout
     volumes:
-      - mongooseim-db-data:/var/lib/postgresql # Persistent storage for the database data
+      - mongooseim_data:/data/db
+    environment:
+      MONGODB_ROOT_USERNAME: root
+      MONGODB_ROOT_PASSWORD: rootpassword
 
 volumes:
-  mongooseim-data:
-  mongooseim-db-data:
+  mongooseim_data:

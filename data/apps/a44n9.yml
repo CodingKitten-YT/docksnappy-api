@@ -1,32 +1,30 @@
-version: '3.7'
+version: '3.8'
 
 services:
   cerbos:
-    image: cerbos/cerbos:latest  # or use a specific tag if you need a stable version
+    image: cerbos/cerbos:latest
+    container_name: cerbos
     ports:
-      - "8501:8501"  # Cerbos default gRPC port (internal)
-      - "9000:9000"   # Cerbos UI for visualization of policies and access control contexts
-    command: ["-server", "--allow-root"]
-    environment:
-      ALLOW_ROOT_USER: "true"  # This is for local development/testing only, not recommended for production
-    networks:
-      - cerbos_network
-
-  postgres:
-    image: postgres:latest  # or use a specific tag if you need a stable version
+      - "9090:9090" # Cerbos HTTP API
+    command:
+      - "--auth-service=/tmp/oauthtoken" # Use an in-memory auth service for simplicity
+      - --allow-unauthenticated # Allows unauthenticated requests (not recommended for production)
     volumes:
-      - cerbos-postgres-data:/var/lib/postgresql
-    environment:
-      POSTGRES_DB: cerbos
-      POSTGRES_USER: cerbos
-      POSTGRES_PASSWORD: cerbos-secret  # You should use a proper secret management system in production
+      - ./cerbos-auth:/tmp/oauthtoken # Mount a directory for the OAuth token storage (optional, for persistence)
     networks:
       - cerbos_network
 
-volumes:
-  cerbos-postgres-data:
-    driver: local
+  cerbos-db:
+    image: postgres:latest
+    container_name: cerbos-db
+    volumes:
+      - ./cerbos-db-data:/var/lib/postgresql # Persist database data
+    environment:
+      POSTGRES_USER: cerbos
+      POSTGRES_PASSWORD: cerbos_password # Change this password for production use
+    networks:
+      - cerbos_network
 
 networks:
   cerbos_network:
-    name: cerbos_network
+    driver: bridge

@@ -1,0 +1,42 @@
+version: '3.8'
+services:
+  umami:
+    image: 'umamimeta/umami:latest'
+    container_name: umami
+    restart: unless-stopped
+    ports:
+      - "9000:9000" # Umami dashboard port (customize if needed)
+    environment:
+      UMAMI_SECRET_KEY: "${UMAMI_SECRET_KEY}" # Set this to a random secret key for your instance
+      UMAMI_DB_HOST: db
+      UMAMI_DB_USER: umami
+      UMAMI_DB_PASSWORD: umami
+      UMAMI_DB_NAME: umami
+      UMAMI_DB_PORT: 5432
+      UMAMI_SERVER_DOMAIN: "localhost" # Set this to your domain or subdomain
+      UMAMI_SMTP_ENABLED: "false" # Disable SMTP by default, you can enable and configure it if needed
+      UMAMI_LOG_LEVEL: "info" # Log level (debug, info, warning, error)
+      UMAMI_ANONYMOUS_ACCESS: "true" # Allow or disallow anonymous access to the reviews (default: true)
+    volumes:
+      - "./config:/code/umami/config" # Map a local directory to the config volume inside the container for custom settings, reviews, and imports (optional)
+      - "./uploads:/code/umami/uploads" # Map a local directory to the uploads volume inside the container for file storage (optional, recommended if persistent storage is needed)
+    depends_on:
+      - db
+    networks:
+      - umamicompose_default
+
+  db:
+    image: 'postgres:latest'
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: umami
+      POSTGRES_USER: umami
+      POSTGRES_PASSWORD: umami
+    volumes:
+      - "./db:/var/lib/postgresql/data" # Map a local directory to the database data volume for persistence (optional)
+    networks:
+      - umamicompose_default
+
+networks:
+  umamicompose_default:
+    driver: bridge

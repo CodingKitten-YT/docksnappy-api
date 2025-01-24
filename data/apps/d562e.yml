@@ -1,84 +1,35 @@
 version: '3.8'
+
 services:
   metabase:
-    image: metabase/metabase:latest
+    image: metabase/metabase:latest # or use a specific version like metabase/metabase:0.41.0
     container_name: metabase
     ports:
-      - "3000:3000" # Metabase web interface
-      - "9999:9999" # For long-running ELT jobs
+      - "3000:3000" # HTTP port, accessible from the host
+      - "3001:3001" # Admin interface on a different port for security reasons
+    volumes:
+      - "./metabase:/var/lib/metabase" # Mount your Metabase data here
+      - "./metabase-config.yml:/etc/metabase/conf/metabase.yml" # Optional, mount your custom Metabase configuration file if you have one
     environment:
-      MB_SERVING_ENVIRONMENT: production  # Set to 'development' for development use
-      JAVA_TOOL_OPTIONS: "-Xmx2g -Xms1g"  # Adjust JVM heap size as needed
-      MB_DB_URL: "jdbc:postgresql://db:5432/metabase"  # Database connection URL (include db service name)
+      MB_DATABASE_URL: "postgres://postgres:password@db:5432/database" # Replace with your database connection string
+      JVM_OPTS: "-Xmx756m -Xms512m" # Adjust JVM memory settings as needed
     depends_on:
       - db
-    volumes:
-      - "./data:/var/lib/metabase"  # Persist Metabase data to a host directory
-      - "./conf:/etc/metabase"       # Optionally override default configuration
-    healthcheck:
-      test: ["CMD-SHELL", "curl --fail http://localhost:3000/api/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 7
+    networks:
+      - metabase_network
 
-  db:
-    image: postgres:latest
-    container_name: metabase_db
+  postgres:
+    image: postgres:latest # or use a specific version like postgres:13.0
+    container_name: postgres
+    volumes:
+      - "./postgres-data:/var/lib/postgresql" # Persist your database data here
     environment:
-      POSTGRES_DB: metabase
-      POSTGRES_USER: metabase
-      POSTGRES_PASSWORD: change_this_password # Set with a secure password
-    volumes:
-      - "./metabase-db:/var/lib/postgresql/data"  # Persist database data to a host directory
+      POSTGRES_DB: database # Replace with your desired database name
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password # Make sure to change this in a secure manner, e.g., using Docker secrets or an env file that is not checked into version control
+    networks:
+      - metabase_network
 
-# (Optional) If you need a Redis cache for Metabase:
-redis:
-  image: redis:latest
-  container_name: metabase_redis
-  volumes:
-    - "./metabase-redis:/data"
-
-# (Optional) If you want to use an external service for search (like Elasticsearch), uncomment and configure the service below:
-search:
-  image: elasticsearch:latest
-  container_name: metabase_search
-  ports:
-    - "9200:9200"
-    - "9300:9300"
-  environment:
-    ELASTICSEARCH_DEFAULT_SETTING: "{\"cluster.routing.allocation.enable\": false}"
-    DISCOVERY_TYPE: single-node
-  volumes:
-    - "./metabase-search:/usr/share/elasticsearch/data"
-
-# (Optional) For Elasticsearch, you might also want to use logstash for ingesting data:
-logstash:
-  image: elastic/logstash-oss:latest
-  container_name: metabase_logstash
-  volumes:
-    - "./metabase-logstash-config:/usr/share/logstash/config.d"
-    - "./metabase-logstash-data:/usr/share/logstash/data"
-    - "./metabase-logstash-pipeline:/usr/share/logstash/pipeline"
-  environment:
-    LUMBUS_JAVA_OPTS: "-Xms512m -Xmx512m"
-  depends_on:
-    - search
-
-# (Optional) For managing and monitoring your docker containers, you might want to use Prometheus and Grafana:
-prometheus:
-  image: prom/prometheus:latest
-  container_name: metabase_prometheus
-  volumes:
-    - "./metabase-prometheus:/etc/prometheus"
-
-grafana:
-  image: grafana/grafana:latest
-  container_name: metabase_grafana
-  ports:
-    - "3000:3000"
-  environment:
-    GF_SECURITY_ADMIN_PASSWORD: admin # Set with a secure password
-  volumes:
-    - "./metabase-grafana:/etc/grafana"
-
-# Note: Make sure to set up proper secrets management for any sensitive information like passwords.
+networks:
+  metabase_network:
+    driver: bridge

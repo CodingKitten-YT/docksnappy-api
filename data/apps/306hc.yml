@@ -1,0 +1,46 @@
+version: '3'
+services:
+  # Master service
+  taskmaster:
+    image: microtask/microtask-master:latest
+    environment:
+      - TASKMASTER_ADVERTISE_PORT=2812
+    ports:
+      - "2812:2812"
+      # Optionally expose the UI if you want to interact with it
+      - "5000:5000"
+    networks:
+      - tasknetwork
+
+  # Worker services (2 workers in this example)
+  taskworker1:
+    image: microtask/microtask-worker:latest
+    environment:
+      - WORKER_TASKMASTER_HOST=taskmaster
+      - WORKER_ADVERTISE_PORT=2813
+    ports:
+      - "2813:2813"
+    depends_on:
+      - taskmaster
+    networks:
+      - tasknetwork
+
+  taskworker2:
+    image: microtask/microtask-worker:latest
+    environment:
+      - WORKER_TASKMASTER_HOST=taskmaster
+      - WORKER_ADVERTISE_PORT=2814
+    ports:
+      - "2814:2814"
+    depends_on:
+      - taskmaster
+    networks:
+      - tasknetwork
+
+networks:
+  tasknetwork:
+    driver: overlay
+
+# Optional volume for persisting tasks data
+volumes:
+  microtask-data:

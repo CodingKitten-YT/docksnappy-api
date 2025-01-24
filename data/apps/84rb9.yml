@@ -1,30 +1,32 @@
 version: '3.8'
 
 services:
-  mindwendel:
-    image: 'mindwendel/mindwendel:latest' # Assuming there is an official Mindwendel image available
+  mindwohl_api:
+    image: mindwohl/api:latest
     ports:
-      - "8080:80" # Expose Mindwendel on host port 8080
+      - "5000:5000"
+    command: --dbhost=db --dbport=5432 --dbuser=mindw user --dbpassword=mindp --dbname=mindw
     environment:
-      - JVM_OPTS=-Xms64M -Xmx512M # Example Java VM options, adjust as needed
-    restart: unless-stopped
+      - ADMIN_EMAIL=admin@example.com
+      - ADMIN_PASSWORD=changeme
+    depends_on:
+      - db
+    networks:
+      - mindwohl_net
 
-  redis:
-    image: 'redis:6'
-    healthcheck:
-      test: ["CMD", "REDIS-CLI", "PING"]
-      interval: 5s
-      timeout: 2s
-      retries: 10
-
-  database:
-    image: 'postgres:13'
+  postgres:
+    image: postgres:13
     environment:
-      - POSTGRES_DB=mindwendel
-      - POSTGRES_USER=mindwendel
-      - POSTGRES_PASSWORD=secret
+      - POSTGRES_USER=mindw
+      - POSTGRES_PASSWORD=mindp
+      - POSTGRES_DB=mindw
     volumes:
-      - 'database-data:/var/lib/postgresql' # Persist database data to a volume
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - mindwohl_net
 
 volumes:
-  database-data:
+  postgres_data:
+
+networks:
+  mindwohl_net:

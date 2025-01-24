@@ -1,39 +1,44 @@
 version: '3.8'
-
 services:
-  web:
-    image: ihatemoney/web:latest
+  webapp:
+    image: ihatemoney/webapp:latest
     ports:
-      - "8000:80"
+      - "5000:5000"
     environment:
-      - DATABASE_URL=postgres://db:5432/ihate_money
+      - NAME=Value
+      - ANOTHER_VARIABLE=AnotherValue
     depends_on:
-      - db
-      - celery
-    volumes:
-      - .:/code
+      - api
+    networks:
+      - backendnet
 
-  worker:
-    image: ihatemoney/worker:latest
+  api:
+    image: ihatemoney/api:latest
+    ports:
+      - "8000:8000"
     environment:
-      - DATABASE_URL=postgres://db:5432/ihate_money
-      - CELERY_RESULT_BACKEND=redis
-      - REDIS_URL=redis://redis:6379
-    depends_on:
-      - db
-      - redis
+      - API_KEY=secretkey123
+    networks:
+      - backendnet
 
   db:
     image: postgres:13
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - db-data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_DB=ihate_money
-      - POSTGRES_USER=db
-      - POSTGRES_PASSWORD=docker
+      - POSTGRES_DB=ihatemoney
+      - POSTGRES_USER=apiuser
+      - POSTGRES_PASSWORD=apipassword
+    networks:
+      - backendnet
 
   redis:
-    image: redis:6
+    image: redis:6-alpine
+    networks:
+      - backendnet
 
 volumes:
-  postgres_data:
+  db-data:
+
+networks:
+  backendnet:

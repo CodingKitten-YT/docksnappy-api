@@ -1,0 +1,25 @@
+version: '3.7'
+
+services:
+  pocketbase:
+    image: pocketbase/pocketbase:latest
+    container_name: pocketbase
+    command: /app/bin/server --listen=0.0.0.0:4339 --trace-level=debug
+    ports:
+      - "4339:4339"
+    environment:
+      POCKETBASE_SECRET: your_secret_key
+      POCKETBASE_DEBUG: true # Set to false for production
+    volumes:
+      - "./data:/app/code"
+      - "./pocketbase.db:/app/code/data/pocketbase.db"
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:4339/ready"]
+      timeout: 10s
+      retries: 5
+    networks:
+      - pocketbase_network
+
+networks:
+  pocketbase_network:
+    driver: bridge

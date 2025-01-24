@@ -1,53 +1,48 @@
 version: '3.8'
 
 services:
-  everydocs:
-    image: everydocs/everydocs:latest # Use the official EveryDocs image from Docker Hub
-    ports:
-      - "5000:5000" # Expose the default server port
+  everydns:
+    image: 'everydns/everydns:latest'
     environment:
-      EVERYDOCS_HOSTNAME: ${DOMAIN-localhost} # Set the hostname, use 'localhost' if running on the same machine or the domain otherwise
-      EVERYDOCS_JWT_SECRET: your_jwt_secret # A secret key for JWT authentication, change this to a secure random string
-      EVERYDOCS_DB_HOST: db                     # The service name of the database server (defined below)
-      EVERYDOCS_DB_USERNAME: everydocs         # Database username
-      EVERYDOCS_DB_PASSWORD: your_db_password   # Database password, change this to a secure value
-      EVERYDOCS_DB_NAME: everydocs             # The name of the database to use
-      EVERYDOCS_SMTP_HOST: smtp                  # The service name of the SMTP server (defined below if you need it)
-      EVERYDOCS_SMTP_USERNAME: your_smtp_username # Your SMTP username, if needed
-      EVERYDOCS_SMTP_PASSWORD: your_smtp_password # Your SMTP password, if needed
-    volumes:
-      - everydocs-data:/var/lib/everydocs # Persistent storage for EveryDocs data
-      - ./everydocs:/code            # Bind the local EveryDocs code directory to the container's code directory (optional, for local development)
+      EVERYDNS_DB_HOST: db
+      EVERYDNS_DB_USERNAME: everydns
+      EVERYDNS_DB_PASSWORD: secret
+      EVERYDNS_DB_DATABASE: everydns
+      EVERYDNS_CACHE_REDIS_DSN: redis://redis:6379/0
+    ports:
+      - "8080:8080" # HTTP API port
     depends_on:
       - db
-      # - smtp # Uncomment if you are using the SMTP service
+      - redis
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: 'redis:6'
+    command: 'Redis'
+    volumes:
+      - './data/redis:/data' # Optional: Persist data to the host machine
+
+  nginx-proxy:
+    image: 'jwilder/nginx-proxy':latest
+    ports:
+      - "80:80" # HTTP port
+      - "443:443" # HTTPS port (requires Let's Encrypt or similar for SSL certificates)
+    depends_on:
+      - everydns
+      - redis
+    volumes:
+      - './data/nginx:/data/nginx' # Optional: Persist configuration to the host machine
+      - './letsencrypt:/etc/letsencrypt' # Optional: For Let's Encrypt certificates if you want to automate it
 
   db:
-    image: postgres:latest
-    volumes:
-      - everydocs-db:/var/lib/postgresql # Persistent storage for PostgreSQL data
+    image: 'postgres:13'
     environment:
-      POSTGRES_USER: everydocs
-      POSTGRES_PASSWORD: your_db_password # Use the same password as specified in EveryDocs environment variables
-      POSTGRES_DB: everydocs
-
-volumes:
-  everydocs-data:
-  everydocs-db:
-
-# Define any networks, configurations, etc. if needed
-networks:
-  default:
-    driver: bridge
-
-# Uncomment the SMTP service if you need to send emails from EveryDocs
-services:
-  smtp:
-    image: postfix:latest
+      POSTGRES_DB: everydns
+      POSTGRES_USER: everydns
+      POSTGRES_PASSWORD: secret
     volumes:
-      - ./postfix-config:/etc/postfix # Bind a local Postfix configuration directory (optional, for custom configurations)
-    environment:
-      POSTFIX_MYHOST: ${DOMAIN-localhost} # Set the hostname for outgoing mail
-      TZ=Europe/London  # Set the timezone, change to your preferred timezone
-    expose:
-      - "25"
+      - './data/db:/var/lib/postgresql/data' # Optional: Persist data to the host machine

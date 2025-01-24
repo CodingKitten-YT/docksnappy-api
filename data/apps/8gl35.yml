@@ -1,43 +1,44 @@
 version: '3.8'
 services:
   focalboard:
-    image: focalboard/focalboard
+    image: focalboard/focalboard:latest
     container_name: focalboard
     ports:
       - "80:80" # HTTP
-      - "443:443" # HTTPS (only if you have a reverse proxy like Traefik, NGINX, etc. configured)
-    restart: unless-stopped
-    environment:
-      JAVA_OPTIONS: "-Xms512M -Xmx512M"
-      SERVER_SERVLETI_CONTEXTPATH: "/focalboard" # Optional if you want to change the context path
-      FOCALBOARD_DB_HOST: db
-      FOCALBOARD_DB_USERNAME: root
-      FOCALBOARD_DB_PASSWORD: yourdbpassword
-      FOCALBOARD_DB_DATABASE: focalboard
-      FOCALBOARD_DB_PORT_OFFSET: 3306 # Offset for the default port 3306 if you have other services using it
+      - "443:443" # HTTPS (requires SSL setup)
     volumes:
-      - "./data:/docker-entrypoint-initdb.d"
-      - focalboard-data:/var/lib/focalboard
-      - focalboard-conf:/etc/focalboard
+      - "./data:/data"  # This is a directory on the host where Focalboard will store its data. Make sure it exists and has appropriate permissions.
+      - focalboard-letsencrypt.yaml:/docker-entrypoint-initdb.d/focalboard-letsencrypt.yaml  # Optional, if you want to set up Let's Encrypt SSL automatically.
+    environment:
+      - TZ=Europe/London  # Set the timezone as required.
+      - JWT_SECRET=your_jwt_secret  # Set your own JWT secret for authentication.
+    networks:
+      - focalboard_network
+    restart: unless-stopped
+
+  nginx-proxy:
+    image: nginxProxy/nginx-proxy:stable
+    container_name: nginx-proxy
+    ports:
+      - "80:80"  # HTTP (can be redirected to Focalboard)
+      - "443:443" # HTTPS (handled by nginx-proxy)
     depends_on:
-      - db
-
-  postgresql:
-    image: postgres:13
-    container_name: db
-    environment:
-      POSTGRES_DB: focalboard
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: yourdbpassword
+      - focalboard
     volumes:
-      - postgresql-data:/var/lib/postgresql
+      - ./nginx.conf:/etc/nginx/nginx.conf  # Custom NGINX configuration if needed.
+    networks:
+      - focalboard_network
     restart: unless-stopped
 
-volumes:
-  focalboard-data:
-  focalboard-conf:
-  postgresql-data:
+  nginx-dynamic-proxy:
+    image: nginxProxy/nginx-dynamic-proxy:stable
+    container_name: nginx-dynamic-proxy
+    depends_on:
+      - nginx-proxy
+    networks:
+      - focalboard_network
+    restart: unless-stopped
 
 networks:
-  default:
+  focalboard_network:
     driver: bridge

@@ -1,37 +1,50 @@
 version: '3.8'
-
 services:
-  kresus-api:
-    image: kresus/kresus-api:latest
-    container_name: kresus-api
+  kresus_frontend:
+    image: kresus/kresus-frontend:latest
+    container_name: kresus_frontend
     ports:
-      - "5000:5000"
-    networks:
-      - kresus-network
+      - "8080:80"
+    depends_on:
+      - kresus_api
     environment:
-      - ENV=production
-      # Optional: Uncomment and set the SECRET_KEY if needed for your application
-      # - SECRET_KEY=your_secret_key
-    volumes:
-      - ./kresus-api/data:/code/data
-      - ./kresus-api/logs:/code/logs
+      - API_URL=http://kresus_api:8000
+    restart: unless-stopped
 
-  kresus-db:
-    image: postgres:13
-    container_name: kresus-db
-    volumes:
-      - db-data:/var/lib/postgresql/data
+  kresus_backend:
+    image: kresus/kresus-backend:latest
+    container_name: kresus_backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - kresus_database
     environment:
-      POSTGRES_DB: kresus
-      POSTGRES_USER: kresus
-      POSTGRES_PASSWORD: kresuspassword
-    networks:
-      - kresus-network
+      - DATABASE_URL=postgres://kresus_db:5432/kresus
+      # Add other environment variables as needed
+    restart: unless-stopped
 
-# Define named volumes
-volumes:
-  db-data:
+  kresus_database:
+    image: postgres:13.1
+    container_name: kresus_database
+    volumes:
+      - ./db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=kresus
+      - POSTGRES_USER=kresus_db
+      - POSTGRES_PASSWORD=your_secure_password
+      # You should set these values in a more secure way, such as through Docker secrets or environment variables from a file
+    restart: unless-stopped
+
+  kresus_worker:
+    image: kresus/kresus-worker:latest
+    container_name: kresus_worker
+    depends_on:
+      - kresus_backend
+    restart: unless-stopped
 
 networks:
-  kresus-network:
+  default:
     driver: bridge
+
+volumes:
+  kresus_db_data:

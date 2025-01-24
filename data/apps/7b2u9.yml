@@ -1,36 +1,35 @@
 version: '3.8'
-
 services:
   neonlink-api:
     image: "neonlink/neonlink-api:latest"
     ports:
-      - "4001:4001" # Default port for NeonLink API
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4001/health"]
-      timeout: 5s
-      interval: 30s
-    environment:
-      - PGPASSWORD=${POSTGRES_PASSWORD} PGUSER=neonlink neonlink-db=neonlink neonlink__postgis=true
+      - "80:80" # Expose HTTP port (adjust the host port as needed)
+    command: server --config=/app/config.json # Ensure your config.json is in the correct location within the image or container
     depends_on:
-      - postgres
-
-  neonlink-pg:
-    image: "postgres:13"
+      - database
     environment:
-      - POSTGRES_DB=neonlink
-      - POSTGRES_USER=neonlink
-      - POSTGRES_PASSWORD=change_this_password
+      DATABASE_HOST: database
+      DATABASE_USERNAME: neonlink
+      DATABASE_PASSWORD: your_password # Replace with your actual password
+      DATABASE_DB: neonlink_db # Your database name
     volumes:
-      - neonlink-pg-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U neonlink"]
-      timeout: 5s
-      interval: 30s
+      - ./app/config.json:/app/config.json # Mount your local config file to the container
+      - neonlink-api-persistent:/app/data # Optional volume for data persistence
+
+  database:
+    image: "postgres:latest"
+    command: postgres --password='your_password' # Replace with your actual password
+    volumes:
+      - db-data:/var/lib/postgresql/data # Persistent storage for the database data
 
   redis:
-    image: "redis:6.2"
-    command: "redis-server --appendonly yes"
+    image: "redis:latest"
+    command: redis-server --appendonly yes # Enable append only mode for persistence
 
 volumes:
-  neonlink-pg-data:
-    driver: "postgres"
+  neonlink-api-persistent:
+  db-data:
+
+networks:
+  default:
+    name: neonlink_network # Optional: Define a custom network for your services

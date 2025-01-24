@@ -1,43 +1,65 @@
 version: '3.8'
-
 services:
   db:
-    image: postgres:12
+    image: postgres:latest
     volumes:
-      - db_data:/var/lib/postgresql
+      - ./db:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: chevereto
       POSTGRES_USER: chevereto
       POSTGRES_PASSWORD: change_this_password
-    command: postgres -c 'listen_addresses = 0.0.0.0'
+    command: postgres -c 'listen_addresses = "0.0.0.0, ::"'
 
-  php:
-    image: chevereto/chevereto-php:latest
-    volumes:
-      - php_data:/var/www/html
-      - ./chevereto.env:/etc/Chevereto/.env
-    depends_on:
-      - db
+  frontend:
+    image: chevereto/chevereto:latest
     environment:
-      CHEVERETO_DB_HOST: db
-      CHEVERETO_DB_NAME: chevereto
-      CHEVERETO_DB_USER: chevereto
-      CHEVERETO_DB_PASSWORD: change_this_password
-      CHEVERETO_ADMIN_EMAIL: admin@example.com
-      CHEVERETO_ADMIN_USERNAME: admin
-      CHEVERETO_ADMIN_PASSWORD: admin_password
-    ports:
-      - "8080:80"
-
-  nginx:
-    image: chevereto/chevereto-nginx:latest
-    volumes:
-      - php_data:/var/www/html
-    depends_on:
-      - php
+      CHEVERETO_DB_DSN: 'host=db user=chevereto password=change_this_password dbname=chevereto sslmode=disable'
+      CHEVERETO_APP_KEY: 32-characters-random-string # Replace with your app key
+      CHEVERETO_MAILER_DRIVER: smtp # or 'mailgun', 'ses', etc.
+      CHEVERETO_MAILER_HOST: mail.example.com # Replace with your mailer host
+      CHEVERETO_MAILER_PORT: 587 # Replace with your mailer port
+      CHEVERETO_MAILER_USERNAME: user@example.com # Replace with your mailer username
+      CHEVERETO_MAILER_PASSWORD: password # Replace with your mailer password
     ports:
       - "80:80"
+      - "443:443" # If you want to use HTTPS with a reverse proxy or Let's Encrypt
+    depends_on:
+      - db
+    volumes:
+      - ./chevereto:/var/www/html
 
-volumes:
-  db_data:
-  php_data:
+  php:
+    image: chevereto/php:latest
+    command: php-fpm
+    volumes:
+      - ./chevereto:/var/www/html
+    depends_on:
+      - db
+      - frontend
+
+  worker:
+    image: chevereto/worker:latest
+    environment:
+      CHEVERETO_RABBITMQ_HOST: rabbitmq
+      CHEVERETO_RABBITMQ_USER: guest
+      CHEVERETO_RABBITMQ_PASSWORD: guest
+    depends_on:
+      - db
+      - frontend
+
+  rabbitmq:
+    image: rabbitmq:latest
+
+# Uncomment and configure the following services if you need them:
+# queue:
+#   image: chevereto/queue:latest
+#   environment:
+#     CHEVERETO_QUEUE_HOST: rabbitmq
+#   depends_on:
+#     - db
+#     - frontend
+#     - worker
+
+networks:
+  default:
+    driver: bridge

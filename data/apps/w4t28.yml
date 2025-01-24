@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  passit:
+    image: passit/pass:latest
+    container_name: passit
+    ports:
+      - "80:80" # HTTP
+      - "443:443" # HTTPS
+    volumes:
+      - ./certs:/etc/ssl/certs
+      - passit-data:/var/lib/pass
+    environment:
+      PASSIT_HTTP_PORT: 80
+      PASSIT_HTTPS_PORT: 443
+      PASSIT_ADMIN_EMAIL: your_admin_email@example.com
+      PASSIT_DOMAIN: example.com
+    networks:
+      - passit-network
+
+  # Nginx as reverse proxy (optional, if you want to use PassIt behind a reverse proxy)
+  nginx-proxy:
+    image: nginx:stable-alpine
+    container_name: nginx_proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - passit-data:/var/lib/pass
+      - passit-web:/usr/share/nginx/html
+    depends_on:
+      - passit
+    networks:
+      - passit-network
+
+  # Certbot for obtaining SSL certificates (optional)
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - ./certs:/etc/ssl/certs
+      - passit-web:/var/www/certbot
+    entrypoint: /bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait ${!}; done;'
+    networks:
+      - passit-network
+
+volumes:
+  passit-data:
+  passit-web:
+
+networks:
+  passit-network:

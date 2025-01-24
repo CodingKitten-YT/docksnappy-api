@@ -1,47 +1,45 @@
 version: '3.8'
 
 services:
-  koi_collection_web:
-    image: koi_collection/koi_collection_web:latest
+  app:
+    image: koillection/app:latest # Replace with the specific image tag you want to use
+    build: .
+    container_name: koillection_app
     ports:
-      - "5000:5000"
-    environment:
-      - SERVICE_NAME=koi_collection_web
-      - SERVICE_ENVIRONMENT=production
+      - "8080:8080" # Expose the desired port, if necessary
     depends_on:
-      - koi_collection_db
-    networks:
-      - koi_network
-
-  koi_collection_api:
-    image: koi_collection/koi_collection_api:latest
-    ports:
-      - "8000:8000"
+      - db
     environment:
-      - SERVICE_NAME=koi_collection_api
-      - SERVICE_ENVIRONMENT=production
-      - DATABASE_HOST=koi_collection_db
-      - DATABASE_USER=coiuser
-      - DATABASE_PASSWORD=coipassword
-      - DATABASE_NAME=koi_collection_db
-    depends_on:
-      - koi_collection_db
-    networks:
-      - koi_network
-
-  koi_collection_db:
-    image: postgres:13
-    environment:
-      - POSTGRES_USER=coiuser
-      - POSTGES_PASSWORD=coipassword
-      - POSTGRES_DB=koi_collection_db
+      DB_HOST: db
+      DB_USER: your_db_user
+      DB_PASSWORD: your_db_password
+      DB_NAME: your_db_name
     volumes:
-      - koi_collection_db_data:/var/lib/postgresql/data
-    networks:
-      - koi_network
+      - .:/code # For local development, to mount the source code into the container
+      - app-redis:/data # To persist data (if needed)
+
+  db:
+    image: postgres:13 # Use the PostgreSQL image version you need
+    container_name: koillection_db
+    volumes:
+      - db-data:/var/lib/postgresql/data # To persist database data
+    environment:
+      POSTGRES_USER: your_db_user
+      POSTGRES_PASSWORD: your_db_password
+      POSTGRES_DB: your_db_name
+    env_file:
+      - .env # If you have database credentials in a .env file
+
+  redis:
+    image: redis:6-alpine # Use the Redis image version you need
+    container_name: koillection_redis
+    volumes:
+      - app-redis:/data # To persist Redis data (if needed)
 
 volumes:
-  koi_collection_db_data:
+  db-data:
+  app-redis:
 
 networks:
-  koi_network:
+  default:
+    driver: bridge

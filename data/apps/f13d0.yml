@@ -1,34 +1,41 @@
 version: '3.7'
 
 services:
-  gophish:
+  gophish_application:
     image: gophish/gophish:latest
+    container_name: gophish
     ports:
-      - "9090:90" # HTTP Server
-      - "8443:8443" # HTTPS Server (Useful if you generate a self-signed certificate)
-    depends_on:
-      - db
-    environment:
-      DJANGO_SETTINGS_MODULE: gophish.settings
-      SECRET_KEY: "${SECRET_KEY}"
-      POSTGRES_DB: "${DB_NAME}"
-      POSTGRES_USER: "${DB_USER}"
-      POSTGRES_PASSWORD: "${DB_PASSWORD}"
-      USE_SSL: "false" # Set to 'true' if you have SSL setup
+      - "90:80" # HTTP
+      - "9443:443" # HTTPS (if you have a reverse proxy like Traefik or Nginx)
     volumes:
-      - "./data:/data"
-      - "./ssl:/etc/ssl" # Mount this volume if using SSL
+      - ./gophish_data:/data
+      - ./gophish_letsencrypt:/etc/letsencrypt
+      - ./gophish_ssl:/etc/ssl
+    environment:
+      - DB_TYPE=mysql
+      - DB_HOST=db_gophish
+      - DB_NAME=gophish
+      - DB_USER=gophish
+      - DB_PASSWORD=changeit
+      - SECURE_COOKIE=false # Set to true in production for HTTPS
+      - DEFAULT_EMAIL_DOMAIN=example.com # Replace with your domain
+      - ADMINS=admin@example.com # Comma-separated list of admin emails
+      - SUPERSECRET=supersecretkey # Change to a random secret for security
+    depends_on:
+      - db_gophish
     networks:
       - gophish_network
 
-  db:
-    image: postgres:latest
+  gophish_database:
+    image: mysql:5.7
+    container_name: db_gophish
     environment:
-      POSTGRES_DB: "${DB_NAME}"
-      POSTGRES_USER: "${DB_USER}"
-      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+      MYSQL_DATABASE=gophish
+      MYSQL_USER=gophish
+      MYSQL_PASSWORD=changeit
+      MYSQL_ROOT_PASSWORD=rootpassword
     volumes:
-      - "./db:/var/lib/postgresql/data"
+      - ./gophish_db_data:/var/lib/mysql
     networks:
       - gophish_network
 

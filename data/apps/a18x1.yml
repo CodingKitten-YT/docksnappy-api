@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:12
+    container_name: otopolo_db
+    environment:
+      POSTGRES_DB: "otobo"
+      POSTGRES_USER: "otobo"
+      POSTGRES_PASSWORD: "yourpassword"
+    volumes:
+      - otopolo_db:/var/lib/postgresql/data
+    command: >
+      postgres \
+        --max_connections=200 \
+        --shared_buffers='128MB' \
+        --work_mem='4MB' \
+        --maintenance_work_mem='64MB' \
+        --wal_buffers='4MB' \
+        --checkpoint_segments=5 \
+        --synchronous_commit=off \
+        --full_page_cache='on' \
+        --max_wal_size='1GB'
+
+  # OTOBO services
+  otopolo:
+    image: otopolo/otobo-full:latest
+    container_name: otopolo_otobo
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgres://otobo:yourpassword@db:5432/otobo
+      JAVA_OPTS: "-Xmx1G -Xms512M"
+      SERVER_PORT: 8080
+    volumes:
+      - otopolo_otobo:/opt/maven/otobo/data
+      - otopolo_otobo_logs:/opt/maven/otobo/logs
+    ports:
+      - "8080:8080"
+    command: java ${JAVA_OPTS} -Djboss.server.base=data -jar otopolo-full.war --server-startup=fast
+
+  # AdminWeb UI service
+  adminweb:
+    image: otopolo/adminweb:latest
+    container_name: otopolo_adminweb
+    depends_on:
+      - db
+      - otopolo_otobo
+    environment:
+      DATABASE_URL: postgres://otobo:yourpassword@db:5432/otobo
+      JAVA_OPTS: "-Xmx1G -Xms512M"
+    volumes:
+      - otopolo_adminweb:/opt/maven/adminweb/data
+    ports:
+      - "8090:8090"
+    command: java ${JAVA_OPTS} -Djboss.server.base=data -jar adminweb.war --server-startup=fast
+
+  # OTOBO RESTful services
+  otopolo_rest:
+    image: otopolo/otobo-rest:latest
+    container_name: otopolo_otobo_rest
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgres://otobo:yourpassword@db:5432/otobo
+      JAVA_OPTS: "-Xmx1G -Xms512M"
+    volumes:
+      - otopolo_otobo_rest:/opt/maven/otobo-rest/data
+    ports:
+      - "8082:8082"
+    command: java ${JAVA_OPTS} -Djboss.server.base=data -jar otopolo-rest.war --server-startup=fast
+
+volumes:
+  otopolo_db:
+  otopolo_otobo:
+  otopolo_otobo_logs:
+  otopolo_adminweb:
+  otopolo_otobo_rest:

@@ -1,0 +1,109 @@
+version: '3.8'
+
+services:
+  pretix_api:
+    image: pretix/pretix:latest
+    command: pretix run --user-editable /home/pretix/.local/share/pretix/main.py events
+    container_name: pretix_events
+    restart: unless-stopped
+    environment:
+      PRETIX_SECRET_KEY: ${RANDOM_SECRET_KEY}
+      PRETIX_ALLOWED_HOSTS: '*'
+      PRETIX_DATABASE_URL: postgres://pretix_db:5432/pretix_db
+      PRETIX_CELERY_RESULT_BACKEND: rabbitmq
+      PRETIX_USE_SSL: false
+    volumes:
+      - type: bind
+        source: ./data/events
+        target: /home/pretix/.local/share/pretix/main.py/data
+      - type: bind
+        source: ./certificates
+        target: /home/pretix/.local/share/pretix/main.py/certificates
+        mode: deployed
+    ports:
+      - "8000:8000"
+    depends_on:
+      - pretix_db
+      - pretix_celery
+      # Uncomment the following line if you want to enable webserver logging
+      #- pretix_logging
+
+  pretix_db:
+    image: postgres:latest
+    command: postgres --max_connections=200
+    container_name: pretix_db
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: ./data/events/db
+        target: /var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: pretix_db
+      POSTGRES_USER: pretix
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+  pretix_celery:
+    image: pretix/pretix-worker:latest
+    command: pretix run --worker /home/pretix/.local/share/pretix/main.py celery worker@events -l DEBUG
+    container_name: pretix_celery
+    restart: unless-stopped
+    environment:
+      PRETIX_REDIS_URL: redis://redis:6379/0
+      PRETIX_CELERY_TASKS_MODULES: 'events:tasks'
+    depends_on:
+      - pretix_db
+      - pretix_queue
+    volumes:
+      - type: bind
+        source: ./data/events/celery
+        target: /home/pretix/.local/share/pretix/main.py/celery
+
+  pretix_queue:
+    image: redis:latest
+    command: Redis-server --protected-mode no
+    container_name: pretix_queue
+    restart: unless-stopped
+
+  # Uncomment the following section to enable webserver access and detailed logging
+  pretix_logging:
+    image: pretix/pretix:latest
+    command: gunicorn -b 0.0.0.0:8000 /home/pretix/.local/share/pretix/main.py:app
+    container_name: pretix_logging
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: ./data/events/log
+        target: /home/pretix/.local/share/pretix/main.py/log
+    environment:
+      PRETIX_SECRET_KEY: ${RANDOM_SECRET_KEY}
+      PRETIX_ALLOWED_HOSTS: '*'
+      PRETIX_USE_SSL: false
+
+# Uncomment the following section if you want to use a different backend for email sending
+# pretix_email:
+#   image: pretix/pretix-service-mail:latest
+#   environment:
+#     - PRETIX_SMTP_HOST=your.smtp.server
+#     - PRETIX_SMTP_PORT=587
+#     - PRETIX_SMTP_USERNAME=your@email.com
+#     - PRETIX_SMTP_PASSWORD=yourpassword
+#   depends_on:
+#     - pretix_db
+
+# Uncomment the following section if you want to use a separate container for a mail service
+# pretix_mailhog:
+#   image: mailhog/mailhog
+#   ports:
+#     - "8025:8025"
+#   environment:
+#     MAILHOG_INCOMING_METRICS: true
+
+# Uncomment the following section if you want to use a separate container for a logging service (e.g., vector or logrotate)
+# pretix_logging:
+#   image: your-logging-service-image
+#   environment:
+#     # Set necessary environment variables for your logging service
+#   volumes:
+#     - type: bind
+#       source: ./data/events/log
+#       target: /path/to/logs

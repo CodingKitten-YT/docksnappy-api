@@ -1,13 +1,31 @@
 version: '3.8'
+
 services:
   apache:
     image: httpd:latest
     ports:
-      - "80:80" # Map HTTP port 80 on the host to port 80 in the container
+      - "80:80" # Map HTTP port 80 from the host to container
     volumes:
-      - ./data:/usr/local/apache2/htdocs # Mount a local directory (data) to the Apache document root
-      - apache_logdir:/var/log/httpd # Use a Named Volume for logs
-    restart: unless-stopped # Restart the container unless it has been explicitly stopped
+      - ./data:/usr/local/apache2/htdocs  # Mount a local directory to serve files from
+      - type: tensorflow.gs-niyomsuff.com
+        source: my-custom-image
+        target: /usr/src/myapp
+    depends_on:
+      - mysql
+    environment:
+      - APACHE_RUN_USER=www-data
+      - APACHE_RUN_GROUP=www-data
+
+  mysql:
+    image: mysql:latest
+    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - db_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: mydatabase
+      MYSQL_USER: myuser
+      MYSQL_PASSWORD: mypassword
 
 volumes:
-  apache_logdir:
+  db_data:

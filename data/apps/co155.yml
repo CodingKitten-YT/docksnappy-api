@@ -1,57 +1,39 @@
-version: '3.8'
-
-services:
+1 version: '3.8'
+2 services:
   mattermost:
-    image: mattermost:latest
+    image: mattermost:latest # or specify a particular tag if needed
     container_name: mattermost
     ports:
-      - "8065:8065" # HTTP interface
-      - "8443:8443" # Secure HTTP interface (HTTPS)
-      - "8066:8066" # Websocket port for real-time messaging
+      - "8060:8060"
+    volumes:
+      - ./mattermost-data:/data
+      - ./mattermost-log:/root/.logscale
     environment:
-      MM_LICENSE_KEY: ${MM_LICENSE_KEY} # Set your license key here if you have one
-      SERVICE_NAME: mattermost
-      MM_SERVER_URL: "https://${HOSTNAME}.local"
-      MM_ADMIN_EMAIL: "admin@example.com"
-      MM_REDIS_HOST: redis
-      MM_DB_HOST: db
-      MM_DB_USERNAME: root
-      MM_DB_PASSWORD: secret
+      EULA_ACCEPTED: 'true'
+      PP_VERSION: '1.0.2' # (Optional) Pin the PostgreSQL version
+      MM_LICENSE_KEY: 'your_license_key' # (Optional) If you have a paid plan, use your license key for feature access
+    command: >
+      start --config=/config.json --data=/data --log-level=INFO
+      --log-file-path=/root/.logscale/mattermost.log --webhook-enabled=true
+  postgres:
+    image: postgres:latest # or specify a particular tag if needed
+    container_name: mattermost_db
     volumes:
-      - mattermost-data:/data
-      - mattermost-logs:/logs
-    depends_on:
-      - redis
-      - db
-    networks:
-      - mattermostnet
-
-  redis:
-    image: redis:latest
-    container_name: redis
-    volumes:
-      - redis-data:/data
-    command: "RedisStart"
-    networks:
-      - mattermostnet
-
-  db:
-    image: postgres:latest
-    container_name: db
-    volumes:
-      - db-data:/var/lib/postgresql/data
+      - ./mattermost-data/postgres:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: mattermost
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: secret
-    networks:
-      - mattermostnet
+      POSTGES_USER: mattermost
+      POSTGRES_PASSWORD: mattermost_password # Replace with a strong password
+  redis:
+    image: redis:latest # or specify a particular tag if needed
+    container_name: mattermost_redis
 
-volumes:
-  mattermost-data:
-  mattermost-logs:
-  redis-data:
-  db-data:
+This `docker-compose.yml` file sets up Mattermost with Postgres and Redis as backing services. It includes the following components:
 
-networks:
-  mattermostnet:
+1. A Mattermost server, which handles the chat functionality.
+2. A PostgreSQL database to store Mattermost data.
+3. A Redis instance for caching and queueing messages.
+
+Make sure to replace `MM_LICENSE_KEY` with your actual license key if you're using a paid plan. Also, ensure that the `./mattermost-data`, `./mattermost-log`, and `./mattermost-data/postgres` directories exist on your host machine as these are used for data persistence.
+
+Additionally, configure the `POSTGRES_PASSWORD` with a secure password for your database to prevent unauthorized access. Adjust the image tags under `image` if you want to use specific versions of Mattermost, PostgreSQL, or Redis.

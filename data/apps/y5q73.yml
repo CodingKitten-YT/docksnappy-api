@@ -1,39 +1,24 @@
-version: '3.7'
+version: '3.8'
+
 services:
   navidrome:
     image: navidrome/navidrome:latest # Use the official Navidrome image from Docker Hub
     container_name: navidrome
-    command: -log_level debug -storage_type local -upload_endpoint /upload -scrobble_endpoint /scrobble -web_root /data/www -database_name navidrome -db_user navidrome -db_pass password -webui_host 0.0.0.0
+    command: /run.sh -conf /root/.config/navidrome --background & tail -f /dev/null
     ports:
-      - "8080:8080": # Expose the web UI on port 8080 of the host
-        protows:
-          - "tcp"
+      - "80:80" # Expose web UI on host port 80
+      - "8432:8432" # Socket for Android client (optional, remove if not needed)
+      - "5348236:5348236" # WebSocket for web frontend (optional, remove if not needed)
     volumes:
-      - "./navidrome-data:/data" # Mount your local navidrome-data directory for music storage and database
-      - "./navidrome.env:/etc/navidrome/.env" # Optional: Mount a .env file for environment variables (if you prefer not to use command line arguments)
-      - "./config:/root/.config/navidrome" # Optional: Mount a directory for custom configurations like Lua scripts, themes, etc.
+      - "./config:/root/.config/navidrome:rw" # Mount your configuration directory
+      - "./music:/root/Music" # Mount your music files directory
+      - "./cache:/root/.cache/navidrome" # Optional cache directory (for caching downloaded covers, etc.)
     environment:
-      TZ: "Your/Timezone" # Set your timezone if not using the command line option
-    restart: unless-stopped # Ensure Navidrome restarts on failure or system reboot
-
-  postgres:
-    image: postgres:latest
-    container_name: navidrome_postgres
-    volumes:
-      - "./navidrome-data/db:/var/lib/postgresql/data" # Persist PostgreSQL data
-    environment:
-      POSTGRES_DB: navidrome
-      POSTGRES_USER: navidrome
-      POSTGRES_PASSWORD: password # Replace 'password' with a strong, unique password
-    restart: unless-stopped
-
-  redis:
-    image: redis:latest
-    container_name: navidrome_redis
-    volumes:
-      - "./navidrome-data/redis:/data" # Optional: Persist Redis data (if you want to enable volume persistence for Redis)
-    restart: unless-stopped
+      TZ: "Your/Timezone" # Set your time zone
+    restart: unless-stopped # Restart on failure or if the container is stopped
+    networks:
+      - navidrome_network
 
 networks:
-  default:
-    name: navidrome_network
+  navidrome_network:
+    driver: bridge

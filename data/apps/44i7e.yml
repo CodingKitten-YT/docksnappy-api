@@ -1,41 +1,55 @@
-version: '3.8'
+1 version: '3.8'
+2 services:
+3   garagehq_api:
+4     image: garagehq/garagehq-api:latest
+5     ports:
+6       - "8000:8000"
+7     environment:
+8       - DATABASE_URL=postgres://garagehq_db:5432/garagehq
+9       - REDIS_URL=redis://garagehq_redis:6379/0
+10     depends_on:
+11      - garagehq_db
+12      - garagehq_redis
+13   garagehq_db:
+14     image: postgres:latest
+15     environment:
+16     - POSTGRES_DB=garagehq
+17     - POSTGRES_USER=garagehq_db
+18     - POSTGRES_PASSWORD=someSecurePassword
+19   garagehq_redis:
+20     image: redis:latest
+21     ports:
+22       - "6379:6379"
+23   garagehq_worker:
+24     image: garagehq/garagehq-worker:latest
+25     environment:
+26       - WORKER_QUEUES=default
+27       - REDIS_URL=redis://garagehq_redis:6379/0
+28     depends_on:
+29       - garagehq_db
+30       - garagehq_redis
+31     command: worker
+32   garagehq_webhook:
+33     image: garagehq/garagehq-webhook:latest
+34     environment:
+35       - WEBHOOK_API_KEY=someApiKey
+36       - REDIS_URL=redis://garagehq_redis:6379/0
+37     ports:
+38       - "8081:80"
+39     depends_on:
+40       - garagehq_api
+41   volumes:
+42     - ./data/db:/var/lib/postgresql/data
+43     - ./data/redis:/data
+44   networks:
+45     default:
+46       external:
+47         name: garagehq_network
+48 # Optionally, you can define a custom network if needed
+49 # networks:
+50 #   garagehq_network:
+51 #     driver: bridge
 
-services:
-  web:
-    image: garagehq/web:latest
-    ports:
-      - "8000:80" # Expose the web application on port 8000 of the host
-    environment:
-      - DATABASE_URL=postgres://user:password@db:5432/dbname
-    depends_on:
-      - db
-    volumes:
-      - ./web/static:/code/static
-      - ./web/templates:/code/templates
+This `docker-compose.yml` file defines four services for GarageHQ: an API service, a database service, a Redis service, and a worker service. It also includes a webhook service that listens to external events. The volumes are mounted for persistent storage of the database and Redis data. The webhook service is mapped to port 8081 for incoming HTTP requests. Remember to replace `someSecurePassword`, `someApiKey`, and other sensitive values with your actual configuration.
 
-  worker:
-    image: garagehq/worker:latest
-    environment:
-      - WORKER_QUEUE=default
-    depends_on:
-      - rabbitmq
-
-  redis:
-    image: redis:latest
-    command: redis-server --requirepass changeme
-
-  db:
-    image: postgres:latest
-    environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=dbname
-    volumes:
-      - garagehq-db-data:/var/lib/postgresql/data
-
-  rabbitmq:
-    image: rabbitmq:latest
-    command: rabbitmq-server --acceptor_heartbeat_limit=60 --handlers_heartbeat_limit=60
-
-volumes:
-  garagehq-db-data:
+Please note that the exact version of the images (`garagehq/garagehq-api`, `garagehq/garagehq-worker`, etc.) should be specified according to the version you intend to use, and you may need to adjust the environment variables and other settings based on GarageHQ's specific requirements.

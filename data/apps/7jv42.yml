@@ -1,87 +1,76 @@
 version: '3.7'
 
 services:
-  postgres:
-    image: postgres:latest
-    command: -c 'max_connections=500'
+  web:
+    image: 'farmos/farmos:latest' # Use a specific tag if needed
+    container_name: farmos_web
+    ports:
+      - "8000:80" # Map the container's port 80 to host port 8000
+    environment:
+      # Set the default values for configuration variables. These can be overridden by environment variables or command-line options when running `docker-compose up`.
+      FARMOS__POSTgres__NAME: postgres
+      FARMOS__POSTgres__USER: farmos
+      FARMOS__POSTgres__PASSWORD: change_this_password
+      FARMOS__SECRET_KEY: 'secret_key' # Change this to a secret key for your installation
+      FARMOS__EMAIL_BACKEND: 'django.core.mail.backends.smtp.EmailBackend'
+      FARMOS__EMAIL_HOST: 'localhost'
+      FARMOS__EMAIL_PORT: 1025
+      FARMOS__EMAIL_USE_TLS: 'true'
+      # Additional environment variables can be set here for other services like API, TaskQueue, etc.
     volumes:
-      - type: bind
-        source: ./data/postgres
-        target: /var/lib/postgresql/data
+      - './data:/code/farmos/data' # Mount a volume for data persistence
+      - './media:/code/farmos/media' # Mount a volume for media files
+      - './log:/code/farmos/logs' # Mount a volume for log directory
+    depends_on:
+      - db
+      - celery
+
+  db:
+    image: 'postgres:latest' # Use a specific tag if needed
+    container_name: farmos_db
     environment:
       POSTGRES_DB: farmos
       POSTGRES_USER: farmos
       POSTGRES_PASSWORD: change_this_password
-    ports:
-      - "5432:5432"
-
-  mysql:
-    image: mysql:latest
-    command: --default-authentication-plugin=mysql_native_password
     volumes:
-      - type: bind
-        source: ./data/mysql
-        target: /var/lib/mysql
+      - 'db_data:/var/lib/postgresql' # Use a named volume for data persistence
+
+  celery:
+    image: 'farmos/farmos-worker:latest' # Use a specific tag if needed
+    container_name: farmos_celery
     environment:
-      MYSQL_ROOT_PASSWORD: change_this_password
-      MYSQL_USER: farmos
-      MYSQL_PASSWORD: change_this_password
-      MYSQL_DATABASE: farmos
-    ports:
-      - "3306:3306"
-
-  redis:
-    image: redis:latest
-    volumes:
-      - type: bind
-        source: ./data/redis
-        target: /data
-
-  php74-fpm:
-    image: farmos/php74-fpm
+      FARMOS__REDIS_URL: redis://redis:6379/0
     depends_on:
-      - db
       - redis
-    environment:
-      DB_HOST: db
-      DB_NAME: farmos
-      DB_USER: farmos
-      DB_PASSWORD: change_this_password
-      REDIS_HOST: redis
-      SECRET: change_this_password
-      PUBNUB_PUBLISH_KEY: your-publish-key
-      PUBNUB_SUBSCRIBE_KEY: your-subscribe-key
-    volumes:
-      - ./app:/var/www/html
-    ports:
-      - "8080:80"
 
-  nginx:
-    image: farmos/nginx
-    depends_on:
-      - php74-fpm
-    ports:
-      - "80:80"
-    volumes:
-      - ./app/public:/var/www/html/public
-      - ./data/nginx:/etc/nginx/conf.d
+  # Uncomment and configure the following services if you need them.
+  # redis:
+  #   image: 'redis:latest'
+  #   volumes:
+  #     - 'redis_data:/data'
 
-  cron:
-    image: farmos/cron
-    volumes:
-      - ./data/cron:/tmp/cron.d
+  # redis_sentinel (if using Redis Sentinel for high availability):
+  #   image: 'redis:latest'
+  #   command: sentinel --parallel-tests
+  #   volumes:
+  #     - 'redis_sentinel_data:/data'
 
-  mailcatcher:
-    image: mailcatcher:latest
-    ports:
-      - "1080:1080"
+  # redis_master (if using Redis Sentinel and you have a master node):
+  #   image: 'redis:latest'
+  #   environment:
+  #     REDIS_MASTER_PASSWORD: password
+  #   volumes:
+  #     - 'redis_master_data:/data'
 
-# Optional service for logs
-logs:
-  image: kennypoint/docker-log-monitor
-  volumes:
-    - type: bind
-      source: ./data/logs
-      target: /data/logs
-  environment:
-    LOG_FILES: "/var/log/containers/*.log"
+networks:
+  default:
+    driver: bridge
+
+volumes:
+  db_data:
+  media:
+  log:
+# Uncomment the following if you need to configure custom networks.
+# networks:
+#   farmos_net:
+#     driver: bridge

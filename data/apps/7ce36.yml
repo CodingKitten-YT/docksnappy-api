@@ -1,42 +1,72 @@
-version: '3.7'
-
+version: '3.8'
 services:
   gerrit:
-    image: gerrit/gerrit:latest # Use a specific version if needed, e.g., "8-rc-x.y"
+    image: gerrit/gerrit:latest
     container_name: gerrit
     ports:
-      - "29418:29418" # HTTPS port for Gerrit (adjust the host port as needed)
-      - "8030:29418"   # HTTP port for Gerrit (optional, for non-HTTPS setups)
+      - "29418:29418" # HTTP and SSH from host to container
+      - "80:80"         # Optional: Proxy server (e.g., for Nginx or Apache)
+      - "443:443"        # Optional: SSL termination (e.g., with Traefik, Nginx, etc.)
     volumes:
-      - gerrit-data:/var/lib/gerrit
-      - gerrit-config:/etc/gerrit
-      - gerrit-logs:/var/log/gerrit
+      - gerrit-data:/var/lib/gerrit/review
+      - gerrit-config:/etc/gerrit/conf.d
+      - gerrit-log:/var/log/gerrit
     environment:
-      GERRIT_TIMEZONE: UTC
-      JVM_OPTIONS: "-Xms512m -Xmx1024m" # Memory options for the JVM
-      GERRIT_PROJECTS: default,public,private # Default projects to initialize
+      GERRIT_TIMEZONE: UTC # Set timezone for Gerrit
+      JVM_OPTS: "-Xmx2G -Xms1G" # Recommended minimum heap size for Gerrit, adjust as needed
+    user: "gerrit"
     networks:
       - gerrit-network
-    depends_on:
-      - postgres
+    restart: unless-stopped
 
   postgres:
-    image: postgres:latest # Use a specific version if needed
-    container_name: postgres
+    image: postgres:latest
     volumes:
-      - postgres-data:/var/lib/postgresql
+      - postgres-data:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: gerrit
       POSTGRES_USER: gerrit
-      POSTGRES_PASSWORD: gerrit-password # Replace with a strong password
+      POSTGRES_PASSWORD: gerrit
     networks:
       - gerrit-network
+    restart: unless-stopped
+
+# Optional: Nginx as a reverse proxy for Gerrit and SSL termination
+nginx:
+  image: nginx:latest
+  container_name: nginx
+  ports:
+    - "80:80"
+    - "443:443"
+  volumes:
+    - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    - gerrit-data:/var/lib/gerrit/review:ro # Optional: If you want to serve Gerrit content directly from Nginx
+  depends_on:
+    - gerrit
+  networks:
+    - gerrit-network
+  restart: unless-stopped
+
+# Optional: Let's Encrypt for SSL certificates with Nginx
+letsencrypt:
+  image: certbot/certbot:latest
+  container_name: letsencrypt
+  volumes:
+    - certbot-conf:/etc/letsencrypt
+    - certbot-www:/var/www/certbot
+  entrypoint: /bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'
+  networks:
+    - gerrit-network
+  restart: unless-stopped
 
 volumes:
   gerrit-data:
   gerrit-config:
-  gerrit-logs:
+  gerrit-log:
   postgres-data:
+  certbot-conf:
+  certbot-www:
 
 networks:
   gerrit-network:
+    driver: bridge

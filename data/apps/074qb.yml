@@ -1,70 +1,90 @@
 version: '3'
 
 services:
+  # Postfix + Dovecot (IMAP/SMTP)
   mailcow:
-    image: mailcow/mailcow:latest
+    image: mailcow/mailcow
     container_name: mailcow
+    ports:
+      - "5871:5870/tcp" # SMTP submit port, adjust host port as needed
+      - "4651:465/tcp"  # SMTPS port, adjust host port as needed (SSL/TLS)
+      - "1101:110/tcp"  # IMAP port, adjust host port as needed
+      - "9931:993/tcp"  # IMAPS port, adjust host port as needed (SSL/TLS)
+      - "8080:80/tcp"   # Admin UI, adjust host port as needed
+    volumes:
+      - "mailcow_configs:/etc/mailcow"
+      - "mailcow_log:/var/log/mailcow"
+      - "mailcow_cache:/var/spool/postfix"
+      - "mailcow_letsencrypt:/etc/letsencrypt"
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Europe/Berlin
-      - MYSQL_PASSWORD=your_secure_password
-      - MAILCOW_LANGS=en
-      - MAILCOW_ADMINS=admin@example.com,info@example.com
-      - MAILCOW_DOMAIN=example.com
-      - MAILCOW_PROXY_ENABLE=true
-      - MAILCOW_LETSENCRYPT_EMAIL=youremail@example.com
-    volumes:
-      - '{{ .Dir "data" }}/mailcow/:/etc/mailcow/'
-      - '{{ .Dir "config" }}/mailcow/:/etc/mailcow/config/'
-      - '{{ .Dir "certificates" }}/ certs/letsencrypt:/etc/letsencrypt'
-    ports:
-      - "5871:5870" # SMTP out/submission
-      - "4651:4650" # SMTP in/IMAPS
-      - "9931:9930" # IMAP/s
-      - "9951:9950" # POP3/s
+      - DOMAIN=example.com # Replace with your domain
+      - EMAIL=admin@example.com # Replace with an admin email
+      - MYSQL_DATABASE=mailcow
+      - MYSQL_USER=mailcow
+      - MYSQL_PASSWORD=yourpassword
+      - REDIS_HOST=redis # If you use a separate redis service, set its service name
+      - MAILCOW_PLUGINS="incidence_reporting,spamassassin,dmarc,dkim" # Optional plugins
+    depends_on:
+      - redis
+      - mariadb
     restart: unless-stopped
-    networks:
-      - mailcow_network
 
+  # Redis cache for Mailcow
+  redis:
+    image: redis:alpine
+    volumes:
+      - "mailcow_redis:/data"
+    command: "--save-mode no-flush-dbtend-backing-files"
+
+  # MariaDB for Mailcow
   mariadb:
-    image: mariadb:latest
+    image: mysql:5.7
     container_name: mariadb
+    volumes:
+      - "mailcow_mysql:/var/lib/mysql"
     environment:
-      - MYSQL_ROOT_PASSWORD=your_secure_password
-      - MYSQL_DATA_DIR=/databases
-    volumes:
-      - '{{ .Dir "data" }}/mailcow/db/:/databases/'
+      - MYSQL_DATABASE=mailcow
+      - MYSQL_USER=mailcow
+      - MYSQL_PASSWORD=yourpassword
+      - MYSQL_ROOT_PASSWORD=anotherpassword
     restart: unless-stopped
-    networks:
-      - mailcow_network
 
-  nginx-proxy:
-    image: nginxproxy/nginx-proxy:latest
-    container_name: nginx-proxy
+  # Nginx as reverse proxy and load balancer
+  nginx:
+    image: mailcow/nginx
+    container_name: nginx
     ports:
-      - "80:80"
-      - "443:443"
+      - "80:80/tcp"   # HTTP, adjust host port as needed
+      - "443:443/tcp"  # HTTPS, adjust host port as needed
     volumes:
-      - '/var/run/docker.sock:/var/run/docker.sock'
-      - '{{ .Dir "data" }}/nginx-proxy/:/data'
+      - "mailcow_nginx:/etc/nginx"
+      - "mailcow_certs:/etc/letsencrypt"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - DOMAIN=example.com # Replace with your domain
+      - EMAIL=admin@example.com # Replace with an admin email
+      - MAILCOW_PLUGINS="incidence_reporting,spamassassin,dmarc,dkim" # Optional plugins
     depends_on:
       - mailcow
-    networks:
-      - mailcow_network
 
+  # Let's Encrypt for SSL certificates
   letsencrypt:
-    image: leandersteiner/letsencrypt-nginx-helper:latest
-    container_name: letsencrypt
-    environment:
-      - EMAIL=youremail@example.com
-      - DOMAIN=example.com
-      - AGREE_TERMS=true
+    image: certbot/certbot
     volumes:
-      - '{{ .Dir "data" }}/certs/:/etc/letsencrypt'
-      - '/var/run/docker.sock:/var/run/docker.sock'
-    networks:
-      - mailcow_network
+      - "mailcow_letsencrypt:/etc/letsencrypt"
+      - "mailcow_webroot:/var/www/certbot"
+    environment:
+      - EMAIL=admin@example.com # Replace with an admin email
+      - DOMAIN=example.com # Replace with your domain
 
-networks:
-  mailcow_network:
+volumes:
+  mailcow_configs:
+  mailcow_log:
+  mailcow_cache:
+  mailcow_mysql:
+  mailcow_letsencrypt:
+  mailcow_certs:
+  mailcow_webroot:

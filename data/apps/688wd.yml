@@ -2,34 +2,26 @@ version: '3.8'
 
 services:
   kyoo_web:
-    image: kyoo/kyoo:latest
-    container_name: kyoo-web
-    command: -q -v /var/lib/kyoo/media --bind /path/to/your/media/directory:/var/lib/kyoo/media
+    image: 'kyootechnologies/kyoo:latest'
+    container_name: kyoo
     restart: unless-stopped
     ports:
-      - "8000:8000" # Kyoo's default port for the web interface
+      - "5001:5001" # Kyoo service on port 5001 (you can change the host port as needed)
     volumes:
-      - ./kyoo.toml:/etc/kyoo/config.toml # Optional, mount your custom kyoo.toml configuration if you have one
-      - kyoo_media:/var/lib/kyoo/media
-
-  kyoo_db:
-    image: postgres:latest
-    command: 'postgres -c "fsync=off"'
-    container_name: kyoo-db
-    restart: unless-stopped
-    volumes:
-      - kyoo_db_data:/var/lib/postgresql/data
+      - ./data:/app/data
+      - ./uploads:/app/uploads
     environment:
-      POSTGRES_USER: kyoo
-      POSTGRES_PASSWORD: kyoo
-      POSTGRES_DB: kyoo
-    expose:
-      - "5432"
-
-volumes:
-  kyoo_media:
-  kyoo_db_data:
+      - PREFIX=kyoo
+      - LOG_LEVEL=INFO
+      - SECRET_KEY=${SECRET_KEY} # Replace with your own secret key for security
+      - ALLOWED_HOSTS=0.0.0.0,localhost # Allows access from any host and localhost
+    networks:
+      - kyoo_network
 
 networks:
-  default:
+  kyoo_network:
     driver: bridge
+
+volumes:
+  kyoo_data:
+  kyoo_uploads:

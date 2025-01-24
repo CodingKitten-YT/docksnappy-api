@@ -1,35 +1,45 @@
 version: '3.8'
-
 services:
   archivebox:
-    image: archivebox/archivebox:latest # Use the latest tag or a specific version
+    image: archivebox/archivebox:dev
     container_name: archivebox
     volumes:
-      - ./config.yml:/app/config.yml # Mount your custom config.yml (optional, use if you have one)
-      - archivebox-data:/app/data    # Persistent volume for ArchiveBox data
-    restart: unless-stopped # Restart the container unless it's been explicitly stopped
-
-  archivebox-tor:
-    image: archivebox/tor:latest # Use the latest tag or a specific version
-    volumes:
-      - tor-data:/var/lib/tor     # Persistent volume for Tor data
+      - ./archivebox.toml:/code/archivebox.toml
+      - ~/.local/share/archivebox/:/root/.local/share/archivebox/
+      - ./downloads:/root/Downloads
     environment:
-      - TOR_NO_LOG=1                # Disable Tor logs to reduce disk usage
-    restart: unless-stopped        # Restart the container unless it's been explicitly stopped
-
-  webui:
-    image: archivebox/webui:latest # Use the latest tag or a specific version
-    container_name: archivebox-webui
+      - PATH=/usr/local/bin:/usr/local/sbin:$PATH
+      - DISPLAY=${DOCKER_HOST_IP}:0.0
     ports:
-      - "8000:8000"                    # Map WebUI port to host
-    volumes:
-      - ./webui.yml:/app/webui.yml # Mount your custom webui.yml (optional, use if you have one)
+      - "8001:8001" # web UI
+      - "5000:5000"  # Tor Control Port
+      - "9051:9051"  # Tor Socks Proxy Port (if you enable the socks proxy)
     depends_on:
-      - archivebox
+      - tor
+    restart: unless-stopped
 
-volumes:
-  archivebox-data:
-  tor-data:
+  tor:
+    image: archivebox/tor:dev
+    container_name: tor
+    volumes:
+      - ./archives/tor:/var/lib/tor/archives
+    environment:
+      - DATA_DIR /var/lib/tor/archives
+      - HIDE_AND_CHECK 1
+    ports:
+      - "9050-9051:9050-9051"  # Tor Socks Proxy Client Port(s)
+    depends_on:
+      - torsocks
+    restart: unless-stopped
+
+  torsocks:
+    image: archivebox/torsocks:dev
+    container_name: torsocks
+    environment:
+      - TZ=America/New_York
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
 
 networks:
   default:

@@ -1,28 +1,52 @@
 version: '3.8'
-services:
-  app:
-    image: lesscss/lesscss:latest
-    ports:
-      - "8080:8080" # Expose the Less server on port 8080
-    volumes:
-      - ./src:/app/src
-      - ./dist:/app/dist
-    command: lessc --source-map --modify-vinyl-files ./src/less/*.less <= $TmpDir/\* @watch
 
-  nginx:
-    image: nginx:latest
+services:
+  wordpress:
+    image: wordpress:latest
     ports:
-      - "80:80" # Map port 80 to the container for Nginx
-      - "443:443" # Map port 443 to the container for Nginx with HTTPS (if using SSL)
+      - "80:80" # HTTP
+      - "443:443" # HTTPS (optional, requires SSL certificates)
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: root
+      WORDPRESS_DB_PASSWORD: your_database_password
+      WORDPRESS_DB_NAME: wordpressdb
+      WORDPRESS_TABLE_PREFIX: wp_ # important for security, prevents table enumeration attacks
     volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./nginxy/ssl:/etc/nginx/ssl
-      - app:/app
+      - ./data/wordpress:/var/www/html
     depends_on:
-      - app
+      - db
+      #- mailhog  # Uncomment if you want to use MailHog for testing email functionalities
     networks:
-      - localness
+      - localess_network
+
+  phpmyadmin:
+    image: phpmyadmin
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db:3306
+      MYSQL_ROOT_PASSWORD: your_database_password
+    depends_on:
+      - db
+    networks:
+      - localess_network
+
+  database:
+    image: mysql:5.7
+    volumes:
+      - ./data/db:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: your_database_password
+      MYSQL_DATABASE: wordpressdb
+    networks:
+      - localess_network
 
 networks:
-  localness:
+  localess_network:
     driver: bridge
+
+# Optional volumes for data persistence
+volumes:
+  wordpress_data:
+  db_data:

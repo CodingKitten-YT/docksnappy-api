@@ -1,51 +1,21 @@
-version: '3'
+version: '3.8'
 services:
-  gokapi:
-    image: bioskopk/gokapi:latest
-    container_name: gokapi
-    restart: unless-stopped
-    environment:
-      - TZ=Europe/Berlin  # Set your own timezone if needed
+  go-kapi:
+    image: ghcr.io/kubearmor/go-kapi:latest # Use the official image from kubearmor's repository
     ports:
-      - "8081:8080"        # HTTP API (Kodi Addons)
-      - "5432:5432"        # PostgreSQL database (Optional, if you want to access it directly)
-    volumes:
-      - "./gokapi_config:/config"  # Mount your own config directory to preserve changes
-      - "./gokapi_media:/media"     # Mount a directory with your media files or set up a data volume
-      - "./gokapi_addons:/addons"   # Mount a directory for Kodi addons or set up a data volume
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "localhost:8080/ping"]
-      interval: 15s
-      timeout: 30s
-      retries: 7
-
-  postgres:
-    image: postgres:13
-    container_name: gokapi-postgres
-    restart: unless-stopped
+      - "4000:4000" # Expose Go-KAPI HTTP API on port 4000
     environment:
-      - POSTGRES_DB=gokapi
-      - POSTGRES_USER=gokapi
-      - POSTGRES_PASSWORD=changeit
-    volumes:
-      - "./gokapi_db:/var/lib/postgresql/data"  # Optional, persist database data if needed
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U gokapi"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-
-  nginx-reverse-proxy:
-    image: jwilder/nginx-proxy
-    container_name: nginx-proxy
-    restart: unless-stopped
-    ports:
-      - "80:80"           # Map HTTP port 80 to the Nginx proxy (Docker host must be reachable on host machine)
-      - "443:443"          # Map HTTPS port 443 to the Nginx proxy (Requires a SSL certificate)
-    volumes:
-      - "/var/run/docker.sock:/tmp/docker.sock"
-      - "./nginx.conf:/etc/nginx/conf.d/default.conf"  # Custom Nginx configuration, if needed
+      GO_KAPI_AUTO_ADMIT_SERVICES: "true" # Automatically admit services
+      KUBEARMOR_CONTROLLER_IMAGE: "kubearmor/controller:latest" # Specify the kubearmor controller image to use
+      KUBEARMOR_POLICY_IMAGE: "kubearmor/policy-server:latest" # Specify the kubearmor policy server image to use
+    resources:
+      limits:
+        memory: 500Mi
+      requests:
+        memory: 250Mi
+    networks:
+      - go-kapi_network
 
 networks:
-  default:
+  go-kapi_network:
     driver: bridge

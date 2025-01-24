@@ -1,54 +1,69 @@
-version: '3.7'
+version: '3.8'
 
 services:
-  cloudlog-frontend:
-    image: cloudlog/cloudlog-frontend:latest
+  cloudlog-api:
+    image: cloudlog/cloudlog-api:latest
     ports:
-      - "80:3000" # Expose Cloudlog frontend on host port 80 (HTTP)
+      - "8080:8080" # Expose the API on port 8080
     depends_on:
-      - cloudlog-backend
+      - cloudlog-storage
+      - cloudlog-database
     environment:
-      - LOG_BACKEND=http://cloudlog-backend:8080/v1
+      CLOUDLOG_STORAGE_ENDPOINT: http://cloudlog-storage:9200
+      CLOUDLOG_DATABASE_ENDPOINT: http://cloudlog-database:5432
+      # Additional environment variables specific to CloudLog API
+    networks:
+      - cloudlog-network
 
-  cloudlog-backend:
-    image: cloudlog/cloudlog-backend:latest
+  cloudlog-storage:
+    image: elasticsearch:7.10.2
     ports:
-      - "8080:8080" # Expose Cloudlog backend on host port 8080 (gRPC)
-    volumes:
-      - "./data:/etc/cloudlog/config/data" # Mount a volume for data storage
-      - "./logs:/var/log" # Mount logs to a local directory
+      - "9200:9200" # Elasticsearch default HTTP port
+      - "9300:9300" # Elasticsearch default TCP port for node discovery (optional)
     environment:
-      - ENV=prod # Set the environment to production
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+      # Additional Elasticsearch settings if needed
+    networks:
+      - cloudlog-network
 
-  postgres:
+  cloudlog-database:
     image: postgres:latest
-    volumes:
-      - "./data/postgres:/var/lib/postgresql/data" # Persist PostgreSQL data
+    ports:
+      - "5432:5432" # PostgreSQL default port
     environment:
-      - POSTGRES_DB=cloudlog
-      - POSTGRES_USER=cloudlog
-      - POSTGRES_PASSWORD=changeit
+      POSTGRES_USER: cloudlog
+      POSTGRES_PASSWORD: changeit
+      # Additional database configurations if needed
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - cloudlog-network
+
+  redis:
+    image: redis:latest
+    networks:
+      - cloudlog-network
 
   prometheus:
-    image: prom/prometheus:v1.8.2
+    image: prom/prometheus:v1.8.3
     ports:
-      - "9090:9090" # Expose Prometheus UI on host port 9090
-    volume_mountings_config:
-      - source: /etc/cloudlog/config/data, target: /data
-        read_only: true
-    depends_on:
-      - cloudlog-backend
+      - "9090:9090"
+    networks:
+      - prometheus-network
 
   grafana:
-    image: grafana/grafana:7.4.3
+    image: grafana/grafana:7.5.4
     ports:
-      - "3000:3000" # Expose Grafana UI on host port 3000 (default)
-    depends_on:
-      - prometheus
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=grafanadmin
+      - "3000:3000"
+    networks:
+      - prometheus-network
 
-  logging-sidecar:
-    image: cloudlog/logging-sidecar:latest
-    depends_on:
-      - cloudlog-backend
+volumes:
+  postgres-data:
+    driver: local
+
+networks:
+  cloudlog-network:
+    driver: bridge
+  prometheus-network:
+    driver: bridge

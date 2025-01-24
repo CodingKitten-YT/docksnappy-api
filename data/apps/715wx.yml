@@ -2,47 +2,34 @@ version: '3.8'
 
 services:
   firezone:
-    image: 'firezone/firezone:latest'
+    image: firezone/firezone-app:latest
     container_name: firezone
-    environment:
-      FIREZONE_SECRET_KEY: ${RANDOM} # Use a random secret key for production environments
-      FIREZONE_DEBUG: False
-      FIREZONE_ALLOWED_HOSTS: '*'
-      FIREZONE_DATABASE_ENGINE: 'django.db.backends.mysql'
-      FIREZONE_DATABASE_NAME: 'firezone'
-      FIREZONE_DATABASE_USER: 'firezoneuser'
-      FIREZONE_DATABASE_PASSWORD: 'firezonepassword'
-      FIREZONE_DATABASE_HOST: 'db'
-      FIREZONE_DATABASE_PORT: '3306'
-      FIREZONE_CELERY_BROKER_URL: 'redis://redis:6379/0'
-      FIREZONE_CELERY_RESULT_BACKEND: 'redis://redis:6379/0'
     ports:
-      - '8000:8000' # Firezone default port
+      - "3000:3000" # Firezone web app interface
+    environment:
+      FIREZONE_DB_HOST: db
+      FIREZONE_DB_NAME: firezone
+      FIREZONE_DB_USER: firezone
+      FIREZONE_DB_PASSWORD: your_secure_password
+      FIREZONE_DB_PORT: 5432
+      NODE_ENV: development
+    volumes:
+      - ./data:/data
+      - ./log:/logs
     depends_on:
       - db
-      - redis
-    volumes:
-      - ./data:/var/task
-      - ./logs:/var/log/firezone
     restart: unless-stopped
 
   db:
-    image: 'mysql:5.7'
-    container_name: db
+    image: postgres:13
+    container_name: firezone_db
     environment:
-      MYSQL_DATABASE: 'firezone'
-      MYSQL_USER: 'firezoneuser'
-      MYSQL_PASSWORD: 'firezonepassword'
-      MYSQL_ROOT_PASSWORD: 'rootpassword'
+      POSTGRES_DB: firezone
+      POSTGRES_USER: firezone
+      POSTGRES_PASSWORD: your_secure_password
+      POSTGRES_PORT: 5432
     volumes:
-      - ./data/db:/var/lib/mysql
-    restart: unless-stopped
+      - postgres_data:/var/lib/postgresql/data
 
-  redis:
-    image: 'redis:6-alpine'
-    container_name: redis
-    ports:
-      - '6379:6379' # Redis default port
-    volumes:
-      - ./data/redis:/data
-    restart: unless-stopped
+volumes:
+  postgres_data:

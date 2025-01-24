@@ -1,49 +1,29 @@
 version: '3.8'
 
 services:
-  homelabos-api:
-    image: homelabos/homelabos-api:latest
-    container_name: homelabos-api
+  homelabos:
+    image: homelabos/homelabos:latest # Use the official HomelabOS image or a specific tag/version
+    container_name: homelabos
     ports:
-      - "8081:80" # HTTP API
+      - "80:80" # Expose HTTP on host, mapping to container's port 80
+      - "443:443": # Expose HTTPS on host, mapping to container's port 443 if SSL is enabled
+    restart: unless-stopped # Restart the container if it stops (but not if it's being manually removed)
+    volumes:
+      - "./config:/etc/homelabos" # Mount a local config directory to the container for configuration files
+      - "./data:/var/lib/homelabos" # Mount a local data directory to store persistent data
+      - "./webroot:/var/www/html" # Mount a local webroot directory to serve static content (optional)
     environment:
-      POSTGRES_DB: postgres
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: pass
-      SECRET_KEY: 'your_secret_key' # Replace with a real secret key
-    volumes:
-      - ./homelabos.db.sql:/docker-entrypoint-initdb.d/01_initial_setup.sql
-      - homelabos-api-data:/var/lib/postgresql
-      - homelabos-api-config:/etc/homelabos
-
-  homelabos-frontend:
-    image: homelabos/homelabos-frontend:latest
-    container_name: homelabos-frontend
-    ports:
-      - "8080:3000" # Web UI
-    depends_on:
-      - homelabos-api
-    volumes:
-      - homelabos-frontend-data:/var/lib/homelabos-frontend
-      - homelabos-frontend-public:/var/www/html
-
-  postgres:
-    image: postgres:13
-    container_name: postgres
-    volumes:
-      - postgres-data:/var/lib/postgresql
-    environment:
-      POSTGRES_DB: homelabos
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: pass
-
-volumes:
-  homelabos-api-data:
-  homelabos-api-config:
-  postgres-data:
-  homelabos-frontend-data:
-  homelabos-frontend-public:
+      TZ: "Europe/Paris" # Set the timezone (change to your timezone)
+      # Other environment variables specific to HomelabOS configuration can be set here
+    networks:
+      - homelabos_net
 
 networks:
-  default:
+  homelabos_net:
     driver: bridge
+
+# Uncomment the following if you need to use a custom DNS server within your HomelabOS instance
+# dns:
+#   options:
+#     - "8.8.8.8"
+#     - "208.67.222.222"

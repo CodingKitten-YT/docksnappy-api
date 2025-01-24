@@ -1,49 +1,76 @@
-version: '3.7'
+version: '3.8'
 
 services:
   discourse:
-    image: discourse/discourse:latest
+    image: discourse/discourse
     container_name: discourse
     ports:
-      - "80:80" # HTTP (redirects to HTTPS)
-      - "443:443" # HTTPS
-      - "2222:22" # SSH for admin access (optional but recommended for initial setup)
+      - "80:80" # HTTP
+      - "443:443" # HTTPS (If you have SSL setup)
+      - "22:22"  # SSH for admin console (optional, disable with -1)
     volumes:
-      - "./discourse_data:/var/discourse"  # For data persistence (user-generated content, attachments, etc.)
-      - "./letsencrypt:/etc/letsencrypt"   # Optional, for Let's Encrypt certificates if you don't use docker-compose-resource
+      - "./path/to/discourse_data:/var/lib/discourse" # The path to the data volume. Change this to where you want your data to persist.
+      - "./path/to/discourse_config:/etc/discourse"   # The path to the config volume. Change this to where you want your Discourse configuration to be stored and managed.
+      - "./path/to/letsencrypt:/etc/letsencrypt"       # If using SSL, mount this directory for Let's Encrypt certificates (optional)
     environment:
-      DISCOURSE_SITE_URL: example.com
-      DISCOURSE_EMAIL_DOMAIN: example.com
-      DISCOURSE_ENFORCE_HTTPS: '1'
-      TZ: 'Europe/London' # Set your timezone, e.g., Europe/Berlin, America/New_York, etc.
-      VIRTUAL_HOST: example.com
-      VIRTUAL_PORT: 80
-      GITHUB_TOKEN_REPO_SECRETS: 'your github token here' # Optional, for GitHub integration
-    command: /bin/sh -c 'trap exit TERM; while [ 1 -eq $(ssserver -s) ]; do sleep 1; done; rm -f /var/run/discourse/certs/*.pem; ssserver -c /etc/letsencrypt/$DISCOURSE_SITE_URL/*.pem -k /etc/letsencrypt/$DISCOURSE_SITE_URL/*.key -d $VIRTUAL_HOST -p $VIRTUAL_PORT'
+      - DISCOURSE_EMAIL_ADDRESS=your@email.com
+      - DISCOURSE_PASSWORD=your_strong_password
+      - DISCOURSE_DATABASE_URL=postgres://user:password@db:5432/dbname  # Adjust as necessary for your DB setup
+      - DISCOURSE_MEEWIUM_HOST=meewium  # If you are running Meewium (Mastodon) alongside Discourse
+      - DISCOURCE_SILENCES_TABLESPACE=discourse_silences  # Only if you have limited disk space for silences
+      - SELF_HOSTED_DOMAIN=yourdomain.com
+      - DOMAIN=yourdomain.com
+      - RAILS_ENV=production
     depends_on:
-      - redis
-      - postgres
-    networks:
-      - discourse_net
+      - db
+    restart: unless-stopped
 
-  postgres:
-    image: postgres:latest
+  db:
+    image: postgres:13
     volumes:
-      - "./discourse_data/db:/var/lib/postgresql"
+      - "./path/to/discourse_db:/var/lib/postgresql"  # The path to the database volume. Change this to where you want your database data to be stored.
     environment:
-      POSTGRES_DB: discourse_production
-      POSTGRES_USER: discourse
-      POSTGRES_PASSWORD: change_this_password # Change this password
-    networks:
-      - discourse_net
+      - POSTGRES_DB=discourse_production
+      - POSTGRES_USER=discourse
+      - POSTGRES_PASSWORD=your_strong_password  # Must match DISCOURSE_DATABASE_URL password
+    restart: unless-stopped
 
   redis:
-    image: redis:latest
+    image: redis:6-alpine
+    command: redis-server --appendonly yes
     volumes:
-      - "./discourse_data/redis:/data"
-    networks:
-      - discourse_net
+      - "./path/to/discourse_redis:/data"              # The path to the Redis data volume. Change this to where you want your Redis data to be stored.
+    restart: unless-stopped
 
-networks:
-  discourse_net:
-    driver: bridge
+  meewium:
+    image: discourse/meewoo
+    environment:
+      - DISCOURSE_HOSTNAME=yourdomain.com
+      - MEEWOO_DB_URL=postgres://user:password@db:5432/meewoo_production
+      - SELF_HOSTED_DOMAIN=yourdomain.com
+    depends_on:
+      - db
+      - discourse
+    ports:
+      - "8080:8080"  # Mastodon web interface
+    restart: unless-stopped
+
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "8025:8025" # SMTP interface on port 1025
+      - "8001:8001" # Dashboard UI on port 8001
+    restart: unless-stopped
+
+# Uncomment the following service if you want to run a reverse proxy like Nginx or Traefik in front of Discourse.
+# nginx:
+#   image: discourse/nginx
+#   container_name: nginx
+#   volumes:
+#     - ./path/to/discourse_nginx.conf:/etc/nginx/conf.d/default.conf
+#   ports:
+#     - "80:80"
+#     - "443:443"
+#   depends_on:
+#     - discourse
+#   restart: unless-stopped

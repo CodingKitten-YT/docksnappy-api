@@ -1,29 +1,66 @@
 version: '3.8'
 
 services:
-  app:
-    image: maybe/maybe:latest # Use the official Maybe image from Docker Hub
+  maybe_gateway:
+    image: stripe/stripe-clients-lib:0.9.2 # Maybe uses Stripe clients library
+    command: /usr/local/bin/MaybeGateway
     ports:
-      - "4000:4000" # Expose the default port Maybe runs on (can be changed if different)
+      - "8080:8080"
     environment:
-      - JVM_OPTS=-Xmx8g -Xms4g # Set Java heap size (adjust as needed for your application)
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      MAYBE_DATABASE_URL: ${POSTGRES_URL}
+      MAYBE_REDIS_URL: ${REDIS_URL}
+      MAYBE_ENVIRONMENT: production # or 'development', 'testing' depending on your setup
+    depends_on:
+      - maybe_postgres
+      - redis
     volumes:
-      - maybe-data:/var/lib/maybe # Map a volume for data persistence
+      - ./logs/maybe-gateway:/var/log/MaybeGateway
 
-  db:
-    image: postgres:latest # Use the official PostgreSQL image from Docker Hub
+  maybe_postgres:
+    image: postgres:13.2 # Use the PostgreSQL version compatible with Maybe
     environment:
-      - POSTGRES_USER=maybe
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=maybe
+      POSTGRES_DB: maybe
+      POSTGRES_USER: maybeuser
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - postgres-data:/var/lib/postgresql # Map a volume for database data persistence
+      - ./data/maybe-postgres:/var/lib/postgresql/data
 
   redis:
-    image: redis:latest # Use the official Redis image from Docker Hub
+    image: redis:6.0-alpine # Use the Redis version compatible with Maybe
     ports:
-      - "6379:6379" # Expose the default port Redis runs on (can be changed if different)
+      - "6379:6379"
 
-volumes:
-  maybe-data:
-  postgres-data:
+  maybe_worker:
+    image: ghcr.io/maybecompany/maybe:production # Replace with the correct image tag
+    command: worker
+    environment:
+      MAYBE_QUEUE: redis://redis:6379/0
+      WORKERS: 2
+      QUEUE_NAME: default
+      MAYBE_ENVIRONMENT: production # or 'development', 'testing' depending on your setup
+    depends_on:
+      - maybe_postgres
+      - redis
+
+  maybe_api:
+    image: ghcr.io/maybecompany/maybe:production # Replace with the correct image tag
+    ports:
+      - "4001:4001"
+    environment:
+      MAYBE_ENVIRONMENT: production # or 'development', 'testing' depending on your setup
+      MAYBE_DATABASE_URL: ${POSTGRES_URL}
+      MAYBE_REDIS_URL: ${REDIS_URL}
+    depends_on:
+      - maybe_postgres
+      - redis
+      - maybe_worker
+
+caches:
+  cache:
+    enable: true
+    pull: "always"
+
+networks:
+  default:
+    driver: bridge

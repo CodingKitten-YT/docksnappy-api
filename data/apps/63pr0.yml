@@ -1,0 +1,43 @@
+version: '3.8'
+services:
+  redaxo:
+    image: 'redaxo/redaxo:latest' # Use a specific version if needed, e.g., 'redaxo/redaxo:7.4-php7.4'
+    container_name: redaxo
+    environment:
+      REDAXO_INSTALLATION_LANGUAGE: 'en' # Set the default language (e.g., 'de' for German)
+      MYSQL_DATABASE: 'redaxo'
+      MYSQL_USER: 'redaxo'
+      MYSQL_PASSWORD: 'your_very_secure_password' # Replace with your MySQL password
+    ports:
+      - '8080:80' # Redirect port 80 to port 8080 on the host for HTTP
+      - '4432:443' # Redirect port 443 to port 4432 on the host for HTTPS (if you have SSL)
+    volumes:
+      - './redaxo:/var/www/html' # Path to your local directory where you want to store REDAXO files
+    depends_on:
+      - db
+    networks:
+      - redaxo-network
+
+  db:
+    image: 'mysql:5.7' # Use a specific version if needed, e.g., '5.7' or '8.0'
+    container_name: redaxo_db
+    environment:
+      MYSQL_DATABASE: 'redaxo'
+      MYSQL_USER: 'redaxo'
+      MYSQL_PASSWORD: 'your_very_secure_password' # Same password as above
+    volumes:
+      - './mysql_data:/var/lib/mysql' # Path to your local directory for MySQL data
+    networks:
+      - redaxo-network
+
+  php:
+    image: 'php:7.4-fpm' # Use a specific PHP version if needed, e.g., '8.0-fpm'
+    container_name: redaxo_php
+    volumes:
+      - './redaxo:/var/www/html'
+    networks:
+      - redaxo-network
+
+networks:
+  redaxo-network:
+    driver: bridge
