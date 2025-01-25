@@ -1,6 +1,8 @@
+import os
 import json
 import requests
-import os
+import cairosvg
+import shutil  # For clearing the terminal
 
 # Define paths to the log and JSON files
 LOG_FILE = "missing_files.log"
@@ -9,6 +11,11 @@ ICONS_DIR = "icons"  # Directory to save downloaded icons
 
 # Create the icons directory if it doesn't exist
 os.makedirs(ICONS_DIR, exist_ok=True)
+
+def clear_terminal():
+    """Clear the terminal output."""
+    shutil.get_terminal_size()  # Ensure cross-platform support
+    os.system("cls" if os.name == "nt" else "clear")
 
 def read_missing_files(log_file):
     """Read missing files from the log file."""
@@ -35,16 +42,26 @@ def find_app_by_id(apps, app_id):
     return None
 
 def download_icon(url, save_path):
-    """Download an icon from the given URL and save it to the specified path."""
+    """Download an icon from the given URL."""
     try:
         response = requests.get(url, stream=True)
         response.raise_for_status()
-        with open(save_path, "wb") as file:
-            for chunk in response.iter_content(chunk_size=8192):
-                file.write(chunk)
+        # Check if the file is an SVG
+        content_type = response.headers.get("Content-Type", "").lower()
+        if "svg" in content_type:
+            svg_content = response.content
+            # Convert SVG to PNG and save
+            cairosvg.svg2png(bytestring=svg_content, write_to=save_path)
+            print(f"SVG converted to PNG and saved at: {save_path}")
+        else:
+            # Save directly as a PNG
+            with open(save_path, "wb") as file:
+                for chunk in response.iter_content(chunk_size=8192):
+                    file.write(chunk)
+            print(f"PNG saved at: {save_path}")
         return True
     except Exception as e:
-        print(f"Error downloading icon: {e}")
+        print(f"Error downloading or converting icon: {e}")
         return False
 
 def main():
@@ -71,7 +88,8 @@ def main():
                     if icon_url:
                         save_path = os.path.join(ICONS_DIR, f"{app_id}.png")
                         if download_icon(icon_url, save_path):
-                            print(f"Icon downloaded and saved to {save_path}.")
+                            clear_terminal()  # Clear terminal after successful download
+                            print(f"Icon for '{app_info['Name']}' successfully downloaded and converted.")
                             break
                         else:
                             print("Failed to download the icon. Please try again.")
