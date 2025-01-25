@@ -1,7 +1,7 @@
 import os
 import json
 import requests
-import cairosvg
+from wand.image import Image
 import shutil  # For clearing the terminal
 
 # Define paths to the log and JSON files
@@ -41,27 +41,34 @@ def find_app_by_id(apps, app_id):
             return app
     return None
 
-def download_icon(url, save_path):
-    """Download an icon from the given URL."""
+def process_icon(icon_source, save_path):
+    """Process the icon from a URL or local file path."""
     try:
-        response = requests.get(url, stream=True)
-        response.raise_for_status()
-        # Check if the file is an SVG
-        content_type = response.headers.get("Content-Type", "").lower()
-        if "svg" in content_type:
-            svg_content = response.content
-            # Convert SVG to PNG and save
-            cairosvg.svg2png(bytestring=svg_content, write_to=save_path)
-            print(f"SVG converted to PNG and saved at: {save_path}")
-        else:
-            # Save directly as a PNG
-            with open(save_path, "wb") as file:
-                for chunk in response.iter_content(chunk_size=8192):
-                    file.write(chunk)
-            print(f"PNG saved at: {save_path}")
+        if os.path.exists(icon_source):  # Check if it's a local file path
+            with Image(filename=icon_source) as img:
+                img.format = 'png'
+                img.save(filename=save_path)
+            print(f"Local file processed and saved at: {save_path}")
+        else:  # Assume it's a URL
+            response = requests.get(icon_source, stream=True)
+            response.raise_for_status()
+
+            # Save content temporarily
+            temp_svg_path = "temp_icon.svg"
+            with open(temp_svg_path, "wb") as temp_file:
+                temp_file.write(response.content)
+
+            # Convert SVG to PNG
+            with Image(filename=temp_svg_path) as img:
+                img.format = 'png'
+                img.save(filename=save_path)
+
+            os.remove(temp_svg_path)  # Cleanup
+            print(f"URL icon processed and saved at: {save_path}")
+
         return True
     except Exception as e:
-        print(f"Error downloading or converting icon: {e}")
+        print(f"Error processing icon: {e}")
         return False
 
 def main():
@@ -84,17 +91,21 @@ def main():
                 print(f"Tag: {app_info['Tag']}")
 
                 while True:
-                    icon_url = input(f"Enter the icon URL for '{app_info['Name']}' (App ID: {app_id}): ").strip()
-                    if icon_url:
+                    icon_source = input(
+                        f"Enter the icon URL or file path for '{app_info['Name']}' (App ID: {app_id}): "
+                    ).strip()
+                    if icon_source:
                         save_path = os.path.join(ICONS_DIR, f"{app_id}.png")
-                        if download_icon(icon_url, save_path):
-                            clear_terminal()  # Clear terminal after successful download
-                            print(f"Icon for '{app_info['Name']}' successfully downloaded and converted.")
+                        if process_icon(icon_source, save_path):
+                            clear_terminal()  # Clear terminal after successful processing
+                            print(
+                                f"Icon for '{app_info['Name']}' successfully downloaded and converted."
+                            )
                             break
                         else:
-                            print("Failed to download the icon. Please try again.")
+                            print("Failed to process the icon. Please try again.")
                     else:
-                        print("Icon URL cannot be empty. Please try again.")
+                        print("Icon source cannot be empty. Please try again.")
             else:
                 print(f"No app information found for App ID: {app_id}.")
 
