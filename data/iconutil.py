@@ -45,31 +45,42 @@ def process_icon(icon_source, save_path):
     """Process the icon from a URL or local file path."""
     try:
         if os.path.exists(icon_source):  # Check if it's a local file path
-            with Image(filename=icon_source) as img:
-                img.format = 'png'
-                img.save(filename=save_path)
-            print(f"Local file processed and saved at: {save_path}")
+            # If it's an ICO or SVG file, copy or save as is
+            if icon_source.lower().endswith((".ico", ".svg")):
+                shutil.copy(icon_source, save_path)
+                print(f"Local {os.path.splitext(icon_source)[-1].upper()} file saved as is at: {save_path}")
+            else:
+                # Convert non-ICO/SVG files to PNG
+                with Image(filename=icon_source) as img:
+                    img.format = 'png'
+                    img.save(filename=save_path)
+                print(f"Local file processed and saved as PNG at: {save_path}")
         else:  # Assume it's a URL
             response = requests.get(icon_source, stream=True)
             response.raise_for_status()
 
-            # Save content temporarily
-            temp_svg_path = "temp_icon.svg"
-            with open(temp_svg_path, "wb") as temp_file:
-                temp_file.write(response.content)
+            # If it's an ICO or SVG URL, save the file as is
+            if icon_source.lower().endswith((".ico", ".svg")):
+                with open(save_path, "wb") as file:
+                    file.write(response.content)
+                print(f"{os.path.splitext(icon_source)[-1].upper()} URL saved as is at: {save_path}")
+            else:
+                # Directly save the non-ICO/SVG file as PNG
+                with open(save_path, "wb") as file:
+                    file.write(response.content)
 
-            # Convert SVG to PNG
-            with Image(filename=temp_svg_path) as img:
-                img.format = 'png'
-                img.save(filename=save_path)
+                # Convert the file to PNG (only if necessary, otherwise we save as is)
+                with Image(filename=save_path) as img:
+                    img.format = 'png'
+                    img.save(filename=save_path)
 
-            os.remove(temp_svg_path)  # Cleanup
-            print(f"URL icon processed and saved at: {save_path}")
+                print(f"URL icon processed and saved as PNG at: {save_path}")
 
         return True
     except Exception as e:
         print(f"Error processing icon: {e}")
         return False
+
 
 def main():
     # Load data

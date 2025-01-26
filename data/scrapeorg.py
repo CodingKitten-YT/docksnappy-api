@@ -36,22 +36,16 @@ def get_source_url(app_id, apps_data):
 def get_github_profile_url(repo_url):
     """Extracts the GitHub profile URL from the repository URL."""
     parts = repo_url.split("/")
-    if len(parts) >= 5:  # Ensure it's a valid GitHub repo URL
-        return f"{parts[0]}//{parts[2]}/{parts[3]}"
+    if len(parts) >= 4:  # Ensure it's a valid GitHub URL
+        user_or_org = parts[3]
+        # If repo name matches the user/org name, it's likely a profile URL
+        if len(parts) == 5 and parts[4] == user_or_org:
+            return repo_url  # Direct profile URL
+        return f"{parts[0]}//{parts[2]}/{user_or_org}"
     return None
 
-def is_organization(profile_url):
-    """Checks if the GitHub profile belongs to an organization."""
-    response = requests.get(profile_url)
-    if response.status_code == 200:
-        soup = BeautifulSoup(response.text, "html.parser")
-        # Check for the "People" section, which is only present on organization pages
-        people_section = soup.find("h4", class_="f4 text-normal mb-3", string="People")
-        return people_section is not None
-    return False
-
-def download_organization_icon(profile_url, output_path):
-    """Downloads the organization's profile icon."""
+def download_avatar(profile_url, output_path):
+    """Downloads the avatar from the GitHub profile."""
     response = requests.get(profile_url)
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, "html.parser")
@@ -85,14 +79,11 @@ def main():
 
         profile_url = get_github_profile_url(source_url)
         if not profile_url:
-            print(f"Invalid GitHub repository URL for App ID: {app_id}")
+            print(f"Invalid GitHub URL for App ID: {app_id}")
             continue
 
-        if is_organization(profile_url):
-            output_path = os.path.join(OUTPUT_DIR, f"{app_id}.png")
-            download_organization_icon(profile_url, output_path)
-        else:
-            print(f"Profile is not an organization for App ID: {app_id}")
+        output_path = os.path.join(OUTPUT_DIR, f"{app_id}.png")
+        download_avatar(profile_url, output_path)
 
 if __name__ == "__main__":
     main()
