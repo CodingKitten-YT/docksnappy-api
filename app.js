@@ -8,30 +8,18 @@ const PORT = process.env.PORT || 3000;
 // MongoDB connection URI
 const uri = 'mongodb://mongodb:27017';
 const client = new MongoClient(uri);
-let db;
 
-// Middleware
+// Middleware to parse JSON bodies
 app.use(express.json());
 app.use(cors({
-    origin: '*', // Allow all origins (or specify specific origins if needed)
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    origin: '*', // Allow all origins (or specify your origin)
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allow these methods
+    allowedHeaders: ['Content-Type', 'Authorization'] // Allow these headers
 }));
 
-// API Key Middleware
-const API_KEY = process.env.API_KEY;
-
-function apiKeyMiddleware(req, res, next) {
-    const apiKey = req.headers['x-api-key'];
-    if (apiKey && apiKey === API_KEY) {
-        next();
-    } else {
-        res.status(403).json({ error: 'Forbidden: Invalid API key' });
-    }
-}
-
-// MongoDB Connection Function
-async function connectToDatabase() {
+// Connect to MongoDB
+let db;
+async function connectToMongoDB() {
     try {
         await client.connect();
         console.log('Connected to MongoDB');
@@ -42,9 +30,7 @@ async function connectToDatabase() {
     }
 }
 
-// Routes
-
-// Get all apps
+// Route to get all apps
 app.get('/apps', async (req, res) => {
     try {
         const apps = await db.collection('apps').find().toArray();
@@ -55,12 +41,12 @@ app.get('/apps', async (req, res) => {
     }
 });
 
-// Get a single app by ID
+// Route to get a single app by ID
 app.get('/apps/:id', async (req, res) => {
     const appId = req.params.id;
 
     try {
-        const app = await db.collection('apps').findOne({ _id: appId });
+        const app = await db.collection('apps').findOne({ ID: appId });
         if (!app) {
             return res.status(404).json({ error: 'App not found' });
         }
@@ -71,28 +57,29 @@ app.get('/apps/:id', async (req, res) => {
     }
 });
 
-// Get Docker Compose file URL for an app
+// Route to get the Docker Compose file URL for an app
 app.get('/apps/:id/compose', async (req, res) => {
     const appId = req.params.id;
 
     try {
-        const app = await db.collection('apps').findOne({ _id: appId });
+        const app = await db.collection('apps').findOne({ ID: appId });
         if (!app) {
             return res.status(404).json({ error: 'App not found' });
         }
-        const jsDelivrUrl = `https://cdn.jsdelivr.net/gh/CodingKitten-YT/docksnappy-api@master/data/apps/${app._id}yml`;
-        res.json({ url: jsDelivrUrl });
+
+        // Return the Docker Compose URL from the app document
+        res.json({ url: app.docker_compose_url });
     } catch (err) {
         console.error('Error fetching Docker Compose URL:', err);
         res.status(500).json({ error: 'Failed to fetch Docker Compose URL', details: err.message });
     }
 });
 
-// Add a new app
-app.post('/apps', apiKeyMiddleware, async (req, res) => {
+// Route to add a new app
+app.post('/apps', async (req, res) => {
     const newApp = req.body;
 
-    if (!newApp._id || !newApp.name || !newApp.description) {
+    if (!newApp.ID || !newApp.Name || !newApp.Description) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
 
@@ -105,20 +92,25 @@ app.post('/apps', apiKeyMiddleware, async (req, res) => {
     }
 });
 
-// Update an app
-app.put('/apps/:id', apiKeyMiddleware, async (req, res) => {
+// Route to update an app
+app.put('/apps/:id', async (req, res) => {
     const appId = req.params.id;
     const updatedApp = req.body;
 
-    if (!updatedApp.name || !updatedApp.description) {
+    if (!updatedApp.Name || !updatedApp.Description) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
 
     try {
-        const result = await db.collection('apps').updateOne({ _id: appId }, { $set: updatedApp });
+        const result = await db.collection('apps').updateOne(
+            { ID: appId },
+            { $set: updatedApp }
+        );
+
         if (result.matchedCount === 0) {
             return res.status(404).json({ error: 'App not found' });
         }
+
         res.json({ message: 'App updated successfully' });
     } catch (err) {
         console.error('Error updating app:', err);
@@ -126,15 +118,17 @@ app.put('/apps/:id', apiKeyMiddleware, async (req, res) => {
     }
 });
 
-// Delete an app
-app.delete('/apps/:id', apiKeyMiddleware, async (req, res) => {
+// Route to delete an app
+app.delete('/apps/:id', async (req, res) => {
     const appId = req.params.id;
 
     try {
-        const result = await db.collection('apps').deleteOne({ _id: appId });
+        const result = await db.collection('apps').deleteOne({ ID: appId });
+
         if (result.deletedCount === 0) {
             return res.status(404).json({ error: 'App not found' });
         }
+
         res.json({ message: 'App deleted successfully' });
     } catch (err) {
         console.error('Error deleting app:', err);
@@ -142,9 +136,9 @@ app.delete('/apps/:id', apiKeyMiddleware, async (req, res) => {
     }
 });
 
-// Start Server
+// Start the server after connecting to MongoDB
 async function startServer() {
-    await connectToDatabase();
+    await connectToMongoDB();
     app.listen(PORT, () => {
         console.log(`Server is running on http://localhost:${PORT}`);
     });
