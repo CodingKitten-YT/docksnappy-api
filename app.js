@@ -11,11 +11,13 @@ const client = new MongoClient(uri);
 
 // Middleware to parse JSON bodies
 app.use(express.json());
-app.use(cors({
-    origin: '*', // Allow all origins (or specify your origin)
-    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allow these methods
-    allowedHeaders: ['Content-Type', 'Authorization'] // Allow these headers
-}));
+app.use(
+    cors({
+        origin: '*', // Allow all origins
+        methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allow these methods
+        allowedHeaders: ['Content-Type', 'Authorization'], // Allow these headers
+    })
+);
 
 // Connect to MongoDB
 let db;
@@ -33,7 +35,7 @@ async function connectToMongoDB() {
 // Route to get all apps
 app.get('/apps', async (req, res) => {
     try {
-        const apps = await db.collection('apps').find().toArray();
+        const apps = await db.collection('apps').find({}, { projection: { _id: 0 } }).toArray();
         res.json(apps);
     } catch (err) {
         console.error('Error fetching apps:', err);
@@ -46,7 +48,7 @@ app.get('/apps/:id', async (req, res) => {
     const appId = req.params.id;
 
     try {
-        const app = await db.collection('apps').findOne({ ID: appId });
+        const app = await db.collection('apps').findOne({ ID: appId }, { projection: { _id: 0 } });
         if (!app) {
             return res.status(404).json({ error: 'App not found' });
         }
@@ -62,12 +64,11 @@ app.get('/apps/:id/compose', async (req, res) => {
     const appId = req.params.id;
 
     try {
-        const app = await db.collection('apps').findOne({ ID: appId });
+        const app = await db.collection('apps').findOne({ ID: appId }, { projection: { _id: 0 } });
         if (!app) {
             return res.status(404).json({ error: 'App not found' });
         }
 
-        // Return the Docker Compose URL from the app document
         res.json({ url: app.docker_compose_url });
     } catch (err) {
         console.error('Error fetching Docker Compose URL:', err);
@@ -84,7 +85,14 @@ app.post('/apps', async (req, res) => {
     }
 
     try {
-        await db.collection('apps').insertOne(newApp);
+        // Ensure the `ID` is unique
+        const existingApp = await db.collection('apps').findOne({ ID: newApp.ID });
+        if (existingApp) {
+            return res.status(409).json({ error: 'App with this ID already exists' });
+        }
+
+        // Insert the app, suppressing MongoDB's `_id`
+        await db.collection('apps').insertOne({ ...newApp });
         res.status(201).json({ message: 'App added successfully', app: newApp });
     } catch (err) {
         console.error('Error adding app:', err);
